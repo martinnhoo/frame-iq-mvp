@@ -1634,6 +1634,2881 @@ export type Database = {
         }
         Relationships: []
       }
+      ci_ad_assets: {
+        Row: {
+          ad_id: string
+          asset_id: string
+          created_at: string
+          id: string
+          media_source_id: string | null
+          role: string
+          sort_order: number
+          user_id: string
+          was_deduplicated: boolean
+        }
+        Insert: {
+          ad_id: string
+          asset_id: string
+          created_at?: string
+          id?: string
+          media_source_id?: string | null
+          role?: string
+          sort_order?: number
+          user_id: string
+          was_deduplicated?: boolean
+        }
+        Update: {
+          ad_id?: string
+          asset_id?: string
+          created_at?: string
+          id?: string
+          media_source_id?: string | null
+          role?: string
+          sort_order?: number
+          user_id?: string
+          was_deduplicated?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_ad_assets_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_assets_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_assets_media_source_id_fkey"
+            columns: ["media_source_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ad_media_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_ad_media_sources: {
+        Row: {
+          ad_id: string
+          asset_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          media_url: string
+          sort_order: number
+          status: string
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          asset_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          media_url: string
+          sort_order?: number
+          status?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          asset_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          media_url?: string
+          sort_order?: number
+          status?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_ad_media_sources_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_media_sources_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_ad_taxonomy: {
+        Row: {
+          ad_id: string
+          asset_id: string | null
+          brand_id: string
+          confidence: number
+          created_at: string
+          evidence: string | null
+          evidence_kind: string | null
+          id: string
+          is_primary: boolean
+          model_version: string | null
+          source: string
+          term_id: string
+          timestamp_s: number | null
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          asset_id?: string | null
+          brand_id: string
+          confidence?: number
+          created_at?: string
+          evidence?: string | null
+          evidence_kind?: string | null
+          id?: string
+          is_primary?: boolean
+          model_version?: string | null
+          source: string
+          term_id: string
+          timestamp_s?: number | null
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          asset_id?: string | null
+          brand_id?: string
+          confidence?: number
+          created_at?: string
+          evidence?: string | null
+          evidence_kind?: string | null
+          id?: string
+          is_primary?: boolean
+          model_version?: string | null
+          source?: string
+          term_id?: string
+          timestamp_s?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_ad_taxonomy_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_angles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ctas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_hooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_objections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ad_taxonomy_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_taxonomy_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_ads: {
+        Row: {
+          ad_archive_id: string
+          analysis_status: string
+          body_text: string | null
+          brand_id: string
+          concept_id: string | null
+          countries: string[] | null
+          created_at: string
+          cta: string | null
+          description: string | null
+          display_format: string | null
+          ended_on: string | null
+          headline: string | null
+          id: string
+          import_run_id: string | null
+          import_source: string
+          imported_at: string
+          is_active: boolean | null
+          is_demo: boolean
+          landing_page: string | null
+          languages: string[] | null
+          last_seen_at: string
+          media_type: string | null
+          page_id: string | null
+          page_name: string | null
+          page_profile_uri: string | null
+          platforms: string[] | null
+          raw_payload: Json
+          running_days: number | null
+          source: string
+          started_on: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_archive_id: string
+          analysis_status?: string
+          body_text?: string | null
+          brand_id: string
+          concept_id?: string | null
+          countries?: string[] | null
+          created_at?: string
+          cta?: string | null
+          description?: string | null
+          display_format?: string | null
+          ended_on?: string | null
+          headline?: string | null
+          id?: string
+          import_run_id?: string | null
+          import_source?: string
+          imported_at?: string
+          is_active?: boolean | null
+          is_demo?: boolean
+          landing_page?: string | null
+          languages?: string[] | null
+          last_seen_at?: string
+          media_type?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          page_profile_uri?: string | null
+          platforms?: string[] | null
+          raw_payload: Json
+          running_days?: number | null
+          source?: string
+          started_on?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_archive_id?: string
+          analysis_status?: string
+          body_text?: string | null
+          brand_id?: string
+          concept_id?: string | null
+          countries?: string[] | null
+          created_at?: string
+          cta?: string | null
+          description?: string | null
+          display_format?: string | null
+          ended_on?: string | null
+          headline?: string | null
+          id?: string
+          import_run_id?: string | null
+          import_source?: string
+          imported_at?: string
+          is_active?: boolean | null
+          is_demo?: boolean
+          landing_page?: string | null
+          languages?: string[] | null
+          last_seen_at?: string
+          media_type?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          page_profile_uri?: string | null
+          platforms?: string[] | null
+          raw_payload?: Json
+          running_days?: number | null
+          source?: string
+          started_on?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_ads_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ads_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "ci_concepts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ads_import_run_id_fkey"
+            columns: ["import_run_id"]
+            isOneToOne: false
+            referencedRelation: "ci_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_analysis_jobs: {
+        Row: {
+          asset_id: string
+          attempts: number
+          brand_id: string
+          completed_stages: string[]
+          cost_usd: number | null
+          created_at: string
+          error: string | null
+          error_code: string | null
+          finished_at: string | null
+          id: string
+          lease_expires_at: string | null
+          llm_input_tokens: number | null
+          llm_model: string | null
+          llm_output_tokens: number | null
+          llm_provider: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          next_retry_at: string | null
+          priority: number
+          progress: number
+          requested_stages: string[]
+          skipped_stages: string[]
+          stage: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          warnings: Json
+        }
+        Insert: {
+          asset_id: string
+          attempts?: number
+          brand_id: string
+          completed_stages?: string[]
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_expires_at?: string | null
+          llm_input_tokens?: number | null
+          llm_model?: string | null
+          llm_output_tokens?: number | null
+          llm_provider?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          priority?: number
+          progress?: number
+          requested_stages?: string[]
+          skipped_stages?: string[]
+          stage?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          warnings?: Json
+        }
+        Update: {
+          asset_id?: string
+          attempts?: number
+          brand_id?: string
+          completed_stages?: string[]
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_expires_at?: string | null
+          llm_input_tokens?: number | null
+          llm_model?: string | null
+          llm_output_tokens?: number | null
+          llm_provider?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          priority?: number
+          progress?: number
+          requested_stages?: string[]
+          skipped_stages?: string[]
+          stage?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_analysis_jobs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: true
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_analysis_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_analysis_results: {
+        Row: {
+          ad_id: string | null
+          asset_id: string
+          brand_id: string
+          confidence: number | null
+          created_at: string
+          cut_count: number | null
+          cuts_per_second: number | null
+          fidelity: string
+          has_before_after: boolean | null
+          has_demonstration: boolean | null
+          has_problem_solution: boolean | null
+          has_social_proof: boolean | null
+          has_testimonial: boolean | null
+          has_urgency: boolean | null
+          hook_duration_s: number | null
+          id: string
+          kind: string
+          model: string | null
+          model_run_id: string | null
+          normalized_output: Json
+          prompt_version: string | null
+          provider: string | null
+          raw_output: Json
+          text_per_second: number | null
+          time_to_cta_s: number | null
+          time_to_offer_s: number | null
+          time_to_product_s: number | null
+          user_id: string
+          warnings: Json
+        }
+        Insert: {
+          ad_id?: string | null
+          asset_id: string
+          brand_id: string
+          confidence?: number | null
+          created_at?: string
+          cut_count?: number | null
+          cuts_per_second?: number | null
+          fidelity?: string
+          has_before_after?: boolean | null
+          has_demonstration?: boolean | null
+          has_problem_solution?: boolean | null
+          has_social_proof?: boolean | null
+          has_testimonial?: boolean | null
+          has_urgency?: boolean | null
+          hook_duration_s?: number | null
+          id?: string
+          kind?: string
+          model?: string | null
+          model_run_id?: string | null
+          normalized_output: Json
+          prompt_version?: string | null
+          provider?: string | null
+          raw_output: Json
+          text_per_second?: number | null
+          time_to_cta_s?: number | null
+          time_to_offer_s?: number | null
+          time_to_product_s?: number | null
+          user_id: string
+          warnings?: Json
+        }
+        Update: {
+          ad_id?: string | null
+          asset_id?: string
+          brand_id?: string
+          confidence?: number | null
+          created_at?: string
+          cut_count?: number | null
+          cuts_per_second?: number | null
+          fidelity?: string
+          has_before_after?: boolean | null
+          has_demonstration?: boolean | null
+          has_problem_solution?: boolean | null
+          has_social_proof?: boolean | null
+          has_testimonial?: boolean | null
+          has_urgency?: boolean | null
+          hook_duration_s?: number | null
+          id?: string
+          kind?: string
+          model?: string | null
+          model_run_id?: string | null
+          normalized_output?: Json
+          prompt_version?: string | null
+          provider?: string | null
+          raw_output?: Json
+          text_per_second?: number | null
+          time_to_cta_s?: number | null
+          time_to_offer_s?: number | null
+          time_to_product_s?: number | null
+          user_id?: string
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_analysis_results_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_analysis_results_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_analysis_results_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_analysis_results_model_run_id_fkey"
+            columns: ["model_run_id"]
+            isOneToOne: false
+            referencedRelation: "ci_model_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_assets: {
+        Row: {
+          analysis_status: string
+          analysis_version: string | null
+          analyzed_at: string | null
+          aspect_ratio: string | null
+          audio_codec: string | null
+          bitrate: number | null
+          brand_id: string
+          created_at: string
+          downloaded_at: string | null
+          duration_seconds: number | null
+          file_ext: string | null
+          file_size_bytes: number | null
+          fps: number | null
+          has_audio: boolean | null
+          height: number | null
+          id: string
+          integrity_note: string | null
+          integrity_ok: boolean | null
+          is_demo: boolean
+          media_type: string
+          mime_type: string | null
+          sha256: string
+          source_url: string | null
+          storage_bucket: string
+          storage_key: string
+          thumbnail_key: string | null
+          updated_at: string
+          user_id: string
+          video_codec: string | null
+          width: number | null
+        }
+        Insert: {
+          analysis_status?: string
+          analysis_version?: string | null
+          analyzed_at?: string | null
+          aspect_ratio?: string | null
+          audio_codec?: string | null
+          bitrate?: number | null
+          brand_id: string
+          created_at?: string
+          downloaded_at?: string | null
+          duration_seconds?: number | null
+          file_ext?: string | null
+          file_size_bytes?: number | null
+          fps?: number | null
+          has_audio?: boolean | null
+          height?: number | null
+          id?: string
+          integrity_note?: string | null
+          integrity_ok?: boolean | null
+          is_demo?: boolean
+          media_type?: string
+          mime_type?: string | null
+          sha256: string
+          source_url?: string | null
+          storage_bucket?: string
+          storage_key: string
+          thumbnail_key?: string | null
+          updated_at?: string
+          user_id: string
+          video_codec?: string | null
+          width?: number | null
+        }
+        Update: {
+          analysis_status?: string
+          analysis_version?: string | null
+          analyzed_at?: string | null
+          aspect_ratio?: string | null
+          audio_codec?: string | null
+          bitrate?: number | null
+          brand_id?: string
+          created_at?: string
+          downloaded_at?: string | null
+          duration_seconds?: number | null
+          file_ext?: string | null
+          file_size_bytes?: number | null
+          fps?: number | null
+          has_audio?: boolean | null
+          height?: number | null
+          id?: string
+          integrity_note?: string | null
+          integrity_ok?: boolean | null
+          is_demo?: boolean
+          media_type?: string
+          mime_type?: string | null
+          sha256?: string
+          source_url?: string | null
+          storage_bucket?: string
+          storage_key?: string
+          thumbnail_key?: string | null
+          updated_at?: string
+          user_id?: string
+          video_codec?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_assets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_brand_pages: {
+        Row: {
+          brand_id: string
+          category: string | null
+          created_at: string
+          discovered_at: string
+          id: string
+          ig_followers: number | null
+          ig_username: string | null
+          image_uri: string | null
+          is_selected: boolean
+          likes: number | null
+          page_alias: string | null
+          page_id: string
+          page_name: string
+          raw_payload: Json | null
+          user_id: string
+          verification: string | null
+        }
+        Insert: {
+          brand_id: string
+          category?: string | null
+          created_at?: string
+          discovered_at?: string
+          id?: string
+          ig_followers?: number | null
+          ig_username?: string | null
+          image_uri?: string | null
+          is_selected?: boolean
+          likes?: number | null
+          page_alias?: string | null
+          page_id: string
+          page_name: string
+          raw_payload?: Json | null
+          user_id: string
+          verification?: string | null
+        }
+        Update: {
+          brand_id?: string
+          category?: string | null
+          created_at?: string
+          discovered_at?: string
+          id?: string
+          ig_followers?: number | null
+          ig_username?: string | null
+          image_uri?: string | null
+          is_selected?: boolean
+          likes?: number | null
+          page_alias?: string | null
+          page_id?: string
+          page_name?: string
+          raw_payload?: Json | null
+          user_id?: string
+          verification?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_brand_pages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_brands: {
+        Row: {
+          created_at: string
+          id: string
+          is_demo: boolean
+          language: string | null
+          market: string | null
+          name: string
+          notes: string | null
+          slug: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          language?: string | null
+          market?: string | null
+          name: string
+          notes?: string | null
+          slug: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          language?: string | null
+          market?: string | null
+          name?: string
+          notes?: string | null
+          slug?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      ci_concept_members: {
+        Row: {
+          ad_id: string
+          added_by: string
+          brand_id: string
+          concept_id: string
+          created_at: string
+          id: string
+          is_baseline: boolean
+          match_method: string
+          match_reasons: Json
+          match_score: number | null
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          added_by?: string
+          brand_id: string
+          concept_id: string
+          created_at?: string
+          id?: string
+          is_baseline?: boolean
+          match_method: string
+          match_reasons?: Json
+          match_score?: number | null
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          added_by?: string
+          brand_id?: string
+          concept_id?: string
+          created_at?: string
+          id?: string
+          is_baseline?: boolean
+          match_method?: string
+          match_reasons?: Json
+          match_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_concept_members_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concept_members_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concept_members_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "ci_concepts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_concept_scale_components: {
+        Row: {
+          band: string
+          brand_id: string
+          computed_at: string
+          concept_id: string
+          config_version: string
+          contributions: Json
+          id: string
+          normalized: Json
+          raw: Json
+          signal: number
+          user_id: string
+        }
+        Insert: {
+          band?: string
+          brand_id: string
+          computed_at?: string
+          concept_id: string
+          config_version?: string
+          contributions?: Json
+          id?: string
+          normalized?: Json
+          raw?: Json
+          signal?: number
+          user_id: string
+        }
+        Update: {
+          band?: string
+          brand_id?: string
+          computed_at?: string
+          concept_id?: string
+          config_version?: string
+          contributions?: Json
+          id?: string
+          normalized?: Json
+          raw?: Json
+          signal?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_concept_scale_components_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concept_scale_components_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "ci_concepts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_concepts: {
+        Row: {
+          ad_count: number
+          angle_term_id: string | null
+          baseline_ad_id: string | null
+          brand_id: string
+          confidence: number | null
+          created_at: string
+          description: string | null
+          first_seen_at: string | null
+          format_count: number
+          grouping_method: string
+          hypothesis: string | null
+          id: string
+          is_active: boolean
+          is_demo: boolean
+          last_seen_at: string | null
+          longevity_days: number
+          market_count: number
+          mechanism_term_id: string | null
+          merged_into_id: string | null
+          name: string
+          person_count: number
+          product_term_id: string | null
+          proof_term_id: string | null
+          review_status: string
+          reviewed_at: string | null
+          scale_band: string | null
+          scale_signal: number | null
+          scenario_term_id: string | null
+          signature: string | null
+          signature_vector: Json | null
+          unique_asset_count: number
+          updated_at: string
+          user_id: string
+          variant_count: number
+        }
+        Insert: {
+          ad_count?: number
+          angle_term_id?: string | null
+          baseline_ad_id?: string | null
+          brand_id: string
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          first_seen_at?: string | null
+          format_count?: number
+          grouping_method?: string
+          hypothesis?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          last_seen_at?: string | null
+          longevity_days?: number
+          market_count?: number
+          mechanism_term_id?: string | null
+          merged_into_id?: string | null
+          name: string
+          person_count?: number
+          product_term_id?: string | null
+          proof_term_id?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          scale_band?: string | null
+          scale_signal?: number | null
+          scenario_term_id?: string | null
+          signature?: string | null
+          signature_vector?: Json | null
+          unique_asset_count?: number
+          updated_at?: string
+          user_id: string
+          variant_count?: number
+        }
+        Update: {
+          ad_count?: number
+          angle_term_id?: string | null
+          baseline_ad_id?: string | null
+          brand_id?: string
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          first_seen_at?: string | null
+          format_count?: number
+          grouping_method?: string
+          hypothesis?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          last_seen_at?: string | null
+          longevity_days?: number
+          market_count?: number
+          mechanism_term_id?: string | null
+          merged_into_id?: string | null
+          name?: string
+          person_count?: number
+          product_term_id?: string | null
+          proof_term_id?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          scale_band?: string | null
+          scale_signal?: number | null
+          scenario_term_id?: string | null
+          signature?: string | null
+          signature_vector?: Json | null
+          unique_asset_count?: number
+          updated_at?: string
+          user_id?: string
+          variant_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_angles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ctas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_hooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_objections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_angle_term_id_fkey"
+            columns: ["angle_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_taxonomy_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_baseline_ad_id_fkey"
+            columns: ["baseline_ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_angles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ctas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_hooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_objections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_mechanism_term_id_fkey"
+            columns: ["mechanism_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_taxonomy_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_merged_into_id_fkey"
+            columns: ["merged_into_id"]
+            isOneToOne: false
+            referencedRelation: "ci_concepts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_angles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ctas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_hooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_objections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_product_term_id_fkey"
+            columns: ["product_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_taxonomy_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_angles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ctas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_hooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_objections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_proof_term_id_fkey"
+            columns: ["proof_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_taxonomy_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_angles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ctas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_hooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_objections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_concepts_scenario_term_id_fkey"
+            columns: ["scenario_term_id"]
+            isOneToOne: false
+            referencedRelation: "ci_taxonomy_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_creative_variants: {
+        Row: {
+          ad_id: string
+          baseline_ad_id: string
+          brand_id: string
+          change_count: number
+          changed_body: boolean
+          changed_creator: boolean
+          changed_cta: boolean
+          changed_duration: boolean
+          changed_format: boolean
+          changed_framing: boolean
+          changed_hook: boolean
+          changed_intro: boolean
+          changed_landing_page: boolean
+          changed_music: boolean
+          changed_offer: boolean
+          changed_scene_order: boolean
+          changed_text: boolean
+          changes: Json
+          concept_id: string
+          created_at: string
+          distance: number | null
+          id: string
+          model_version: string | null
+          source: string
+          user_id: string
+          variant_index: number
+        }
+        Insert: {
+          ad_id: string
+          baseline_ad_id: string
+          brand_id: string
+          change_count?: number
+          changed_body?: boolean
+          changed_creator?: boolean
+          changed_cta?: boolean
+          changed_duration?: boolean
+          changed_format?: boolean
+          changed_framing?: boolean
+          changed_hook?: boolean
+          changed_intro?: boolean
+          changed_landing_page?: boolean
+          changed_music?: boolean
+          changed_offer?: boolean
+          changed_scene_order?: boolean
+          changed_text?: boolean
+          changes?: Json
+          concept_id: string
+          created_at?: string
+          distance?: number | null
+          id?: string
+          model_version?: string | null
+          source?: string
+          user_id: string
+          variant_index?: number
+        }
+        Update: {
+          ad_id?: string
+          baseline_ad_id?: string
+          brand_id?: string
+          change_count?: number
+          changed_body?: boolean
+          changed_creator?: boolean
+          changed_cta?: boolean
+          changed_duration?: boolean
+          changed_format?: boolean
+          changed_framing?: boolean
+          changed_hook?: boolean
+          changed_intro?: boolean
+          changed_landing_page?: boolean
+          changed_music?: boolean
+          changed_offer?: boolean
+          changed_scene_order?: boolean
+          changed_text?: boolean
+          changes?: Json
+          concept_id?: string
+          created_at?: string
+          distance?: number | null
+          id?: string
+          model_version?: string | null
+          source?: string
+          user_id?: string
+          variant_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_creative_variants_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_creative_variants_baseline_ad_id_fkey"
+            columns: ["baseline_ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_creative_variants_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_creative_variants_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "ci_concepts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_download_jobs: {
+        Row: {
+          ad_id: string
+          asset_id: string | null
+          attempts: number
+          brand_id: string
+          bytes_downloaded: number
+          bytes_per_second: number | null
+          bytes_total: number | null
+          created_at: string
+          error: string | null
+          error_code: string | null
+          finished_at: string | null
+          id: string
+          lease_expires_at: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          media_source_id: string
+          next_retry_at: string | null
+          priority: number
+          progress: number
+          stage: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          was_duplicate: boolean
+        }
+        Insert: {
+          ad_id: string
+          asset_id?: string | null
+          attempts?: number
+          brand_id: string
+          bytes_downloaded?: number
+          bytes_per_second?: number | null
+          bytes_total?: number | null
+          created_at?: string
+          error?: string | null
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_expires_at?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          media_source_id: string
+          next_retry_at?: string | null
+          priority?: number
+          progress?: number
+          stage?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          was_duplicate?: boolean
+        }
+        Update: {
+          ad_id?: string
+          asset_id?: string | null
+          attempts?: number
+          brand_id?: string
+          bytes_downloaded?: number
+          bytes_per_second?: number | null
+          bytes_total?: number | null
+          created_at?: string
+          error?: string | null
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_expires_at?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          media_source_id?: string
+          next_retry_at?: string | null
+          priority?: number
+          progress?: number
+          stage?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          was_duplicate?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_download_jobs_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_download_jobs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_download_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_download_jobs_media_source_id_fkey"
+            columns: ["media_source_id"]
+            isOneToOne: true
+            referencedRelation: "ci_ad_media_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_estimated_metrics: {
+        Row: {
+          ad_id: string
+          availability: string
+          brand_id: string
+          breakdown: Json | null
+          collected_at: string
+          created_at: string
+          currency: string | null
+          id: string
+          is_estimated: boolean
+          limitation: string
+          metric: string
+          source: string
+          user_id: string
+          value_max: number | null
+          value_min: number | null
+          value_numeric: number | null
+        }
+        Insert: {
+          ad_id: string
+          availability?: string
+          brand_id: string
+          breakdown?: Json | null
+          collected_at?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_estimated?: boolean
+          limitation?: string
+          metric: string
+          source: string
+          user_id: string
+          value_max?: number | null
+          value_min?: number | null
+          value_numeric?: number | null
+        }
+        Update: {
+          ad_id?: string
+          availability?: string
+          brand_id?: string
+          breakdown?: Json | null
+          collected_at?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_estimated?: boolean
+          limitation?: string
+          metric?: string
+          source?: string
+          user_id?: string
+          value_max?: number | null
+          value_min?: number | null
+          value_numeric?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_estimated_metrics_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_estimated_metrics_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_face_tracks: {
+        Row: {
+          asset_id: string
+          avg_face_area: number | null
+          brand_id: string
+          confidence: number | null
+          created_at: string
+          embedding: Json | null
+          embedding_model: string | null
+          end_seconds: number
+          frame_count: number
+          id: string
+          match_distance: number | null
+          person_cluster_id: string | null
+          start_seconds: number
+          thumbnail_key: string | null
+          track_index: number
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          avg_face_area?: number | null
+          brand_id: string
+          confidence?: number | null
+          created_at?: string
+          embedding?: Json | null
+          embedding_model?: string | null
+          end_seconds: number
+          frame_count?: number
+          id?: string
+          match_distance?: number | null
+          person_cluster_id?: string | null
+          start_seconds: number
+          thumbnail_key?: string | null
+          track_index: number
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          avg_face_area?: number | null
+          brand_id?: string
+          confidence?: number | null
+          created_at?: string
+          embedding?: Json | null
+          embedding_model?: string | null
+          end_seconds?: number
+          frame_count?: number
+          id?: string
+          match_distance?: number | null
+          person_cluster_id?: string | null
+          start_seconds?: number
+          thumbnail_key?: string | null
+          track_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_face_tracks_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_face_tracks_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_face_tracks_person_cluster_id_fkey"
+            columns: ["person_cluster_id"]
+            isOneToOne: false
+            referencedRelation: "ci_person_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_import_runs: {
+        Row: {
+          ads_created: number
+          ads_returned: number
+          ads_skipped_known: number
+          ads_updated: number
+          brand_id: string
+          brand_page_id: string | null
+          created_at: string
+          credits_estimated: number
+          credits_spent: number
+          endpoint: string
+          error: string | null
+          filters: Json
+          finished_at: string | null
+          id: string
+          max_ads: number
+          max_credits: number
+          media_urls_found: number
+          next_cursor: string | null
+          pages_fetched: number
+          source: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ads_created?: number
+          ads_returned?: number
+          ads_skipped_known?: number
+          ads_updated?: number
+          brand_id: string
+          brand_page_id?: string | null
+          created_at?: string
+          credits_estimated?: number
+          credits_spent?: number
+          endpoint: string
+          error?: string | null
+          filters?: Json
+          finished_at?: string | null
+          id?: string
+          max_ads?: number
+          max_credits?: number
+          media_urls_found?: number
+          next_cursor?: string | null
+          pages_fetched?: number
+          source?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ads_created?: number
+          ads_returned?: number
+          ads_skipped_known?: number
+          ads_updated?: number
+          brand_id?: string
+          brand_page_id?: string | null
+          created_at?: string
+          credits_estimated?: number
+          credits_spent?: number
+          endpoint?: string
+          error?: string | null
+          filters?: Json
+          finished_at?: string | null
+          id?: string
+          max_ads?: number
+          max_credits?: number
+          media_urls_found?: number
+          next_cursor?: string | null
+          pages_fetched?: number
+          source?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_import_runs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_import_runs_brand_page_id_fkey"
+            columns: ["brand_page_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brand_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_job_events: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          id: number
+          job_id: string | null
+          job_kind: string
+          level: string
+          message: string
+          payload: Json
+          stage: string | null
+          user_id: string
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          id?: number
+          job_id?: string | null
+          job_kind: string
+          level?: string
+          message: string
+          payload?: Json
+          stage?: string | null
+          user_id: string
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          id?: number
+          job_id?: string | null
+          job_kind?: string
+          level?: string
+          message?: string
+          payload?: Json
+          stage?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_job_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_keyframes: {
+        Row: {
+          asset_id: string
+          brand_id: string
+          created_at: string
+          frame_index: number
+          height: number | null
+          id: string
+          phash: string | null
+          reason: string
+          scene_id: string | null
+          size_bytes: number | null
+          storage_key: string
+          timestamp_s: number
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          asset_id: string
+          brand_id: string
+          created_at?: string
+          frame_index: number
+          height?: number | null
+          id?: string
+          phash?: string | null
+          reason?: string
+          scene_id?: string | null
+          size_bytes?: number | null
+          storage_key: string
+          timestamp_s: number
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          asset_id?: string
+          brand_id?: string
+          created_at?: string
+          frame_index?: number
+          height?: number | null
+          id?: string
+          phash?: string | null
+          reason?: string
+          scene_id?: string | null
+          size_bytes?: number | null
+          storage_key?: string
+          timestamp_s?: number
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_keyframes_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_keyframes_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_keyframes_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "ci_scenes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_learnings: {
+        Row: {
+          brand_id: string
+          category: string
+          confidence: number | null
+          created_at: string
+          evidence: Json
+          evidence_count: number
+          id: string
+          is_demo: boolean
+          limitation: string
+          statement: string
+          suggestion: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_id: string
+          category: string
+          confidence?: number | null
+          created_at?: string
+          evidence?: Json
+          evidence_count?: number
+          id?: string
+          is_demo?: boolean
+          limitation?: string
+          statement: string
+          suggestion?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_id?: string
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          evidence?: Json
+          evidence_count?: number
+          id?: string
+          is_demo?: boolean
+          limitation?: string
+          statement?: string
+          suggestion?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_learnings_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_model_runs: {
+        Row: {
+          ad_id: string | null
+          analysis_job_id: string | null
+          asset_id: string | null
+          brand_id: string
+          cost_usd: number | null
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          input_summary: Json
+          input_tokens: number | null
+          input_version: string | null
+          latency_ms: number | null
+          model: string
+          output_tokens: number | null
+          prompt_version: string
+          provider: string
+          purpose: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          ad_id?: string | null
+          analysis_job_id?: string | null
+          asset_id?: string | null
+          brand_id: string
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_summary?: Json
+          input_tokens?: number | null
+          input_version?: string | null
+          latency_ms?: number | null
+          model: string
+          output_tokens?: number | null
+          prompt_version: string
+          provider: string
+          purpose: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          ad_id?: string | null
+          analysis_job_id?: string | null
+          asset_id?: string | null
+          brand_id?: string
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_summary?: Json
+          input_tokens?: number | null
+          input_version?: string | null
+          latency_ms?: number | null
+          model?: string
+          output_tokens?: number | null
+          prompt_version?: string
+          provider?: string
+          purpose?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_model_runs_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_model_runs_analysis_job_id_fkey"
+            columns: ["analysis_job_id"]
+            isOneToOne: false
+            referencedRelation: "ci_analysis_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_model_runs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_model_runs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_ocr_tracks: {
+        Row: {
+          asset_id: string
+          bbox: Json | null
+          confidence: number | null
+          created_at: string
+          engine: string
+          id: string
+          keyframe_id: string | null
+          text: string
+          timestamp_s: number
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          bbox?: Json | null
+          confidence?: number | null
+          created_at?: string
+          engine: string
+          id?: string
+          keyframe_id?: string | null
+          text: string
+          timestamp_s: number
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          bbox?: Json | null
+          confidence?: number | null
+          created_at?: string
+          engine?: string
+          id?: string
+          keyframe_id?: string | null
+          text?: string
+          timestamp_s?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_ocr_tracks_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_ocr_tracks_keyframe_id_fkey"
+            columns: ["keyframe_id"]
+            isOneToOne: false
+            referencedRelation: "ci_keyframes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_onscreen_text: {
+        Row: {
+          asset_id: string
+          brand_id: string
+          confidence: number | null
+          created_at: string
+          end_seconds: number
+          id: string
+          model_version: string | null
+          normalized_text: string | null
+          position: string | null
+          role: string | null
+          source: string
+          start_seconds: number
+          text: string
+          track_index: number
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          brand_id: string
+          confidence?: number | null
+          created_at?: string
+          end_seconds: number
+          id?: string
+          model_version?: string | null
+          normalized_text?: string | null
+          position?: string | null
+          role?: string | null
+          source?: string
+          start_seconds: number
+          text: string
+          track_index: number
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          brand_id?: string
+          confidence?: number | null
+          created_at?: string
+          end_seconds?: number
+          id?: string
+          model_version?: string | null
+          normalized_text?: string | null
+          position?: string | null
+          role?: string | null
+          source?: string
+          start_seconds?: number
+          text?: string
+          track_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_onscreen_text_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_onscreen_text_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_person_clusters: {
+        Row: {
+          ad_count: number
+          appearance_count: number
+          asset_count: number
+          brand_id: string
+          centroid: Json | null
+          concept_count: number
+          confidence: number | null
+          created_at: string
+          display_name: string | null
+          embedding_model: string | null
+          first_seen_at: string | null
+          id: string
+          label: string
+          last_seen_at: string | null
+          merged_into_id: string | null
+          review_status: string
+          reviewed_at: string | null
+          thumbnail_key: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_count?: number
+          appearance_count?: number
+          asset_count?: number
+          brand_id: string
+          centroid?: Json | null
+          concept_count?: number
+          confidence?: number | null
+          created_at?: string
+          display_name?: string | null
+          embedding_model?: string | null
+          first_seen_at?: string | null
+          id?: string
+          label: string
+          last_seen_at?: string | null
+          merged_into_id?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          thumbnail_key?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_count?: number
+          appearance_count?: number
+          asset_count?: number
+          brand_id?: string
+          centroid?: Json | null
+          concept_count?: number
+          confidence?: number | null
+          created_at?: string
+          display_name?: string | null
+          embedding_model?: string | null
+          first_seen_at?: string | null
+          id?: string
+          label?: string
+          last_seen_at?: string | null
+          merged_into_id?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          thumbnail_key?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_person_clusters_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_person_clusters_merged_into_id_fkey"
+            columns: ["merged_into_id"]
+            isOneToOne: false
+            referencedRelation: "ci_person_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_scale_signal_config: {
+        Row: {
+          band_high: number
+          band_medium: number
+          band_very_high: number
+          brand_id: string
+          created_at: string
+          id: string
+          min_ads_for_band: number
+          recency_window_days: number
+          sat_ad_volume: number
+          sat_creators: number
+          sat_formats: number
+          sat_longevity_days: number
+          sat_markets: number
+          sat_unique_assets: number
+          sat_variants: number
+          updated_at: string
+          user_id: string
+          version: string
+          w_ad_volume: number
+          w_creators: number
+          w_estimated: number
+          w_evolution: number
+          w_formats: number
+          w_longevity: number
+          w_markets: number
+          w_recency: number
+          w_unique_assets: number
+          w_variants: number
+        }
+        Insert: {
+          band_high?: number
+          band_medium?: number
+          band_very_high?: number
+          brand_id: string
+          created_at?: string
+          id?: string
+          min_ads_for_band?: number
+          recency_window_days?: number
+          sat_ad_volume?: number
+          sat_creators?: number
+          sat_formats?: number
+          sat_longevity_days?: number
+          sat_markets?: number
+          sat_unique_assets?: number
+          sat_variants?: number
+          updated_at?: string
+          user_id: string
+          version?: string
+          w_ad_volume?: number
+          w_creators?: number
+          w_estimated?: number
+          w_evolution?: number
+          w_formats?: number
+          w_longevity?: number
+          w_markets?: number
+          w_recency?: number
+          w_unique_assets?: number
+          w_variants?: number
+        }
+        Update: {
+          band_high?: number
+          band_medium?: number
+          band_very_high?: number
+          brand_id?: string
+          created_at?: string
+          id?: string
+          min_ads_for_band?: number
+          recency_window_days?: number
+          sat_ad_volume?: number
+          sat_creators?: number
+          sat_formats?: number
+          sat_longevity_days?: number
+          sat_markets?: number
+          sat_unique_assets?: number
+          sat_variants?: number
+          updated_at?: string
+          user_id?: string
+          version?: string
+          w_ad_volume?: number
+          w_creators?: number
+          w_estimated?: number
+          w_evolution?: number
+          w_formats?: number
+          w_longevity?: number
+          w_markets?: number
+          w_recency?: number
+          w_unique_assets?: number
+          w_variants?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_scale_signal_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_scenes: {
+        Row: {
+          action: string | null
+          asset_id: string
+          brand_id: string
+          camera_style: string | null
+          confidence: number | null
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          end_seconds: number
+          framing: string | null
+          id: string
+          keyframe_key: string | null
+          lighting: string | null
+          model_version: string | null
+          objects: Json
+          product_visible: boolean | null
+          scene_function: string | null
+          scene_index: number
+          setting: string | null
+          setting_kind: string | null
+          source: string
+          start_seconds: number
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          asset_id: string
+          brand_id: string
+          camera_style?: string | null
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          end_seconds: number
+          framing?: string | null
+          id?: string
+          keyframe_key?: string | null
+          lighting?: string | null
+          model_version?: string | null
+          objects?: Json
+          product_visible?: boolean | null
+          scene_function?: string | null
+          scene_index: number
+          setting?: string | null
+          setting_kind?: string | null
+          source?: string
+          start_seconds: number
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          asset_id?: string
+          brand_id?: string
+          camera_style?: string | null
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          end_seconds?: number
+          framing?: string | null
+          id?: string
+          keyframe_key?: string | null
+          lighting?: string | null
+          model_version?: string | null
+          objects?: Json
+          product_visible?: boolean | null
+          scene_function?: string | null
+          scene_index?: number
+          setting?: string | null
+          setting_kind?: string | null
+          source?: string
+          start_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_scenes_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_scenes_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_speakers: {
+        Row: {
+          asset_id: string
+          association_conf: number | null
+          created_at: string
+          id: string
+          label: string
+          person_cluster_id: string | null
+          segment_count: number
+          total_seconds: number
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          association_conf?: number | null
+          created_at?: string
+          id?: string
+          label: string
+          person_cluster_id?: string | null
+          segment_count?: number
+          total_seconds?: number
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          association_conf?: number | null
+          created_at?: string
+          id?: string
+          label?: string
+          person_cluster_id?: string | null
+          segment_count?: number
+          total_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_speakers_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_speakers_person_cluster_fkey"
+            columns: ["person_cluster_id"]
+            isOneToOne: false
+            referencedRelation: "ci_person_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_storage_objects: {
+        Row: {
+          asset_id: string | null
+          brand_id: string
+          bucket: string
+          category: string
+          content_type: string | null
+          created_at: string
+          deleted_at: string | null
+          etag: string | null
+          id: string
+          object_key: string
+          sha256: string | null
+          size_bytes: number
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_id?: string | null
+          brand_id: string
+          bucket?: string
+          category: string
+          content_type?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          etag?: string | null
+          id?: string
+          object_key: string
+          sha256?: string | null
+          size_bytes?: number
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_id?: string | null
+          brand_id?: string
+          bucket?: string
+          category?: string
+          content_type?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          etag?: string | null
+          id?: string
+          object_key?: string
+          sha256?: string | null
+          size_bytes?: number
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_storage_objects_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_storage_objects_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_taxonomy_terms: {
+        Row: {
+          ad_count: number
+          asset_count: number
+          brand_id: string
+          concept_count: number
+          created_at: string
+          description: string | null
+          first_seen_at: string | null
+          id: string
+          is_demo: boolean
+          kind: string
+          label: string
+          last_seen_at: string | null
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_count?: number
+          asset_count?: number
+          brand_id: string
+          concept_count?: number
+          created_at?: string
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string
+          is_demo?: boolean
+          kind: string
+          label: string
+          last_seen_at?: string | null
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_count?: number
+          asset_count?: number
+          brand_id?: string
+          concept_count?: number
+          created_at?: string
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string
+          is_demo?: boolean
+          kind?: string
+          label?: string
+          last_seen_at?: string | null
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_transcript_segments: {
+        Row: {
+          asset_id: string
+          confidence: number | null
+          created_at: string
+          end_seconds: number
+          id: string
+          no_speech_prob: number | null
+          segment_index: number
+          speaker_id: string | null
+          start_seconds: number
+          text: string
+          transcript_id: string
+          user_id: string
+          words: Json | null
+        }
+        Insert: {
+          asset_id: string
+          confidence?: number | null
+          created_at?: string
+          end_seconds: number
+          id?: string
+          no_speech_prob?: number | null
+          segment_index: number
+          speaker_id?: string | null
+          start_seconds: number
+          text: string
+          transcript_id: string
+          user_id: string
+          words?: Json | null
+        }
+        Update: {
+          asset_id?: string
+          confidence?: number | null
+          created_at?: string
+          end_seconds?: number
+          id?: string
+          no_speech_prob?: number | null
+          segment_index?: number
+          speaker_id?: string | null
+          start_seconds?: number
+          text?: string
+          transcript_id?: string
+          user_id?: string
+          words?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_transcript_segments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_transcript_segments_speaker_id_fkey"
+            columns: ["speaker_id"]
+            isOneToOne: false
+            referencedRelation: "ci_speakers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_transcript_segments_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "ci_transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_transcripts: {
+        Row: {
+          asset_id: string
+          brand_id: string
+          confidence: number | null
+          created_at: string
+          duration_seconds: number | null
+          engine: string
+          engine_model: string | null
+          full_text: string
+          has_diarization: boolean
+          id: string
+          language: string | null
+          language_prob: number | null
+          speech_rate: number | null
+          user_id: string
+          word_count: number
+        }
+        Insert: {
+          asset_id: string
+          brand_id: string
+          confidence?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          engine: string
+          engine_model?: string | null
+          full_text?: string
+          has_diarization?: boolean
+          id?: string
+          language?: string | null
+          language_prob?: number | null
+          speech_rate?: number | null
+          user_id: string
+          word_count?: number
+        }
+        Update: {
+          asset_id?: string
+          brand_id?: string
+          confidence?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          engine?: string
+          engine_model?: string | null
+          full_text?: string
+          has_diarization?: boolean
+          id?: string
+          language?: string | null
+          language_prob?: number | null
+          speech_rate?: number | null
+          user_id?: string
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_transcripts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: true
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_transcripts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string | null
@@ -4149,6 +7024,516 @@ export type Database = {
       }
     }
     Views: {
+      ci_angles: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_ctas: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_dedup_stats: {
+        Row: {
+          ad_asset_links: number | null
+          brand_id: string | null
+          duplicates_avoided: number | null
+          naive_bytes: number | null
+          unique_assets: number | null
+          unique_bytes: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_assets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_hooks: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_objections: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_offers: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_products: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_proofs: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_scenarios: {
+        Row: {
+          ad_count: number | null
+          asset_count: number | null
+          brand_id: string | null
+          concept_count: number | null
+          created_at: string | null
+          description: string | null
+          first_seen_at: string | null
+          id: string | null
+          is_demo: boolean | null
+          label: string | null
+          last_seen_at: string | null
+          slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_count?: number | null
+          asset_count?: number | null
+          brand_id?: string | null
+          concept_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          first_seen_at?: string | null
+          id?: string | null
+          is_demo?: boolean | null
+          label?: string | null
+          last_seen_at?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_taxonomy_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ci_storage_usage: {
+        Row: {
+          brand_id: string | null
+          category: string | null
+          object_count: number | null
+          total_bytes: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_storage_objects_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_usage_overview: {
         Row: {
           bonus_credits: number | null
@@ -4279,6 +7664,23 @@ export type Database = {
       check_and_increment_ai_usage: {
         Args: { p_plan?: string; p_user_id: string }
         Returns: Json
+      }
+      ci_claim_job: {
+        Args: { p_kind: string; p_lease_secs?: number; p_worker_id: string }
+        Returns: Json[]
+      }
+      ci_compute_scale_signal: { Args: { p_brand_id: string }; Returns: number }
+      ci_owns_brand: { Args: { p_brand_id: string }; Returns: boolean }
+      ci_reap_stale_jobs: {
+        Args: never
+        Returns: {
+          kind: string
+          reaped: number
+        }[]
+      }
+      ci_refresh_taxonomy_stats: {
+        Args: { p_brand_id: string }
+        Returns: number
       }
       cleanup_old_error_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
