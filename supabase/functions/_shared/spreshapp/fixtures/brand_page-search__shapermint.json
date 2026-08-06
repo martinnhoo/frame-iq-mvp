@@ -1,0 +1,181 @@
+{
+  "_meta": {
+    "endpoint": "GET /v1/brand/page-search",
+    "query": {
+      "q": "Shapermint"
+    },
+    "captured_at": "2026-08-06",
+    "http_status": 200,
+    "credits_cost": 5,
+    "note": "image_uri query strings redacted (signed CDN tokens)"
+  },
+  "response": {
+    "pages": [
+      {
+        "page_id": "606426623024865",
+        "name": "Shapermint",
+        "category": "Clothing (Brand)",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/351522716_777637270524946_4956798524266501346_n.png?<REDACTED_SIGNED_QUERY>",
+        "likes": 582831,
+        "verification": "BLUE_VERIFIED",
+        "ig_username": "shapermint",
+        "ig_followers": 576484,
+        "page_alias": "Shapermint"
+      },
+      {
+        "page_id": "106333552092539",
+        "name": "Shapermint",
+        "category": "Clothing (Brand)",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/284599561_110032345055993_3243897935501390135_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 60,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": ""
+      },
+      {
+        "page_id": "966635563197042",
+        "name": "Shapermintpk",
+        "category": "Shopping Service",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/616816721_122094418167228561_4282213604020089465_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 484,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": ""
+      },
+      {
+        "page_id": "215551054968994",
+        "name": "Shapers By Shapermint",
+        "category": "Shopping Service",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/416983957_3660336684241788_9047490020360899109_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 1682,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": "Shapermintpk"
+      },
+      {
+        "page_id": "301867369671417",
+        "name": "Shapermintpk",
+        "category": "Shopping & Retail",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/436264052_122097191234285295_5143186313862664658_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 1595,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": ""
+      },
+      {
+        "page_id": "244205729427655",
+        "name": "Shapermint community",
+        "category": "Clothing (Brand)",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/415487730_1113062090050691_3667463550977009612_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 976,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": "orlalindjo"
+      },
+      {
+        "page_id": "157148954154389",
+        "name": "Shapermint community",
+        "category": "Business Service",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/418474104_122121985460120196_6724175245066999490_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 828,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": ""
+      },
+      {
+        "page_id": "106764141665697",
+        "name": "Shapermint Maroc",
+        "category": "Clothing (Brand)",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/209762065_106767388332039_7871251154742140967_n.png?<REDACTED_SIGNED_QUERY>",
+        "likes": 638,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": ""
+      },
+      {
+        "page_id": "300070926528419",
+        "name": "Shapermint UAE",
+        "category": "Shopping Service",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/525391797_122181468212321152_4977928982356359804_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 358,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": ""
+      },
+      {
+        "page_id": "518343251367701",
+        "name": "Shapermintpk",
+        "category": "Shopping Service",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/516770518_122133098090727271_5696575750698732530_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 298,
+        "verification": "NOT_VERIFIED",
+        "ig_username": "shapermintpk",
+        "ig_followers": 4298,
+        "page_alias": ""
+      },
+      {
+        "page_id": "159812423877606",
+        "name": "Shapers By Shapermint UAE",
+        "category": "Grocery Store",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/432232552_122151860180079504_6441635682366923839_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 209,
+        "verification": "NOT_VERIFIED",
+        "ig_username": "shapermintuae",
+        "ig_followers": 6,
+        "page_alias": ""
+      },
+      {
+        "page_id": "105610305538686",
+        "name": "Shapermint Bras",
+        "category": "Community Center",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/293497712_116602621106121_490713554644093689_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 203,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": ""
+      },
+      {
+        "page_id": "1042531508943146",
+        "name": "Shapermint UAE",
+        "category": "Shopping Service",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/661691615_122254943966253447_3957983208504859582_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 134,
+        "verification": "NOT_VERIFIED",
+        "ig_username": "shapermint_uae",
+        "ig_followers": 173,
+        "page_alias": ""
+      },
+      {
+        "page_id": "106047288319993",
+        "name": "Shape Your Way Shapermint",
+        "category": "Beauty, Cosmetic & Personal Care",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/308569501_417267140548366_8569423559361578693_n.png?<REDACTED_SIGNED_QUERY>",
+        "likes": 52,
+        "verification": "NOT_VERIFIED",
+        "ig_username": "tinahenderson80",
+        "ig_followers": 194,
+        "page_alias": "tinacrew20shapermint"
+      },
+      {
+        "page_id": "108409821514331",
+        "name": "Laurel and Shapermint. Good things together",
+        "category": "Writer",
+        "image_uri": "https://scontent.fgse3-1.fna.fbcdn.net/v/t39.30808-1/298593812_383910970518208_2230383357110607654_n.jpg?<REDACTED_SIGNED_QUERY>",
+        "likes": 52,
+        "verification": "NOT_VERIFIED",
+        "ig_username": null,
+        "ig_followers": null,
+        "page_alias": "LaurelsPCbiz"
+      }
+    ]
+  }
+}
