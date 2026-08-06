@@ -240,11 +240,16 @@ def main() -> int:
     signal.signal(signal.SIGTERM, _handle_signal)
     signal.signal(signal.SIGINT, _handle_signal)
 
-    supa = Supa(settings.supabase_url, settings.service_role_key)
+    supa = Supa(settings.supabase_url, settings.service_role_key,
+                worker_secret=settings.worker_secret)
     storage = make_storage(settings)
 
     boot = JobLogger(worker_id=settings.worker_id, job_kind="system")
-    boot.emit("worker_up", storage=settings.storage_backend,
+    # Falhar aqui é muito melhor que falhar no meio do primeiro job, com um
+    # lease pendurado e um download pela metade.
+    supa.ping()
+
+    boot.emit("worker_up", mode=supa.mode, storage=settings.storage_backend,
               bucket=settings.storage_bucket, lease_s=settings.lease_seconds,
               concurrency=settings.concurrency, max_attempts=settings.max_job_attempts)
 

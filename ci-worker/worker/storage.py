@@ -413,9 +413,88 @@ class S3Storage(StorageBackend):
         self.client.delete_object(Bucket=self.bucket, Key=key)
 
 
+class ProxyStorage(StorageBackend):
+    """
+    Storage pela edge function ci-worker-write, para quando a service role não
+    é acessível.
+
+    O ARQUIVO não passa pela função: ela devolve uma URL de upload assinada e o
+    worker faz o PUT direto no storage. Um vídeo de 80 MB atravessando uma edge
+    function estouraria o limite de corpo e o timeout — e ainda pagaria a
+    transferência duas vezes.
+    """
+
+    def __init__(self, settings: Settings) -> None:
+        self.base = f"{settings.supabase_url}/storage/v1"
+        self.proxy = f"{settings.supabase_url}/functions/v1/ci-worker-write"
+        self.secret = settings.worker_secret
+        self.bucket = settings.storage_bucket
+
+    def _call(self, payload: dict) -> dict:
+        request = urllib.request.Request(
+            self.proxy, data=json.dumps(payload).encode(), method="POST",
+            headers={"Content-Type": "application/json", "x-ci-worker-secret": self.secret},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310
+                return json.loads(response.read().decode() or "{}")
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", "replace")[:300]
+            raise StorageError(f"ci-worker-write {payload.get('action')} → {exc.code}: {detail}") from exc
+        except urllib.error.URLError as exc:
+            raise StorageError(f"ci-worker-write inacessível: {exc.reason}") from exc
+
+    def put_file(self, key: str, path: Path, content_type: str) -> str:
+        signed = (self._call({"action": "sign_upload", "key": key}) or {}).get("data") or {}
+        token = signed.get("token")
+        if not token:
+            raise StorageError("a função não devolveu token de upload")
+
+        url = f"{self.base}/object/upload/sign/{self.bucket}/{urllib.parse.quote(key)}?token={urllib.parse.quote(token)}"
+        with path.open("rb") as fh:
+            request = urllib.request.Request(
+                url, data=fh, method="PUT",
+                headers={
+                    "Content-Type": content_type,
+                    "Content-Length": str(path.stat().st_size),
+                    "x-upsert": "true",
+                },
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=300) as response:  # noqa: S310
+                    response.read()
+            except urllib.error.HTTPError as exc:
+                detail = exc.read().decode("utf-8", "replace")[:300]
+                raise StorageError(f"upload assinado falhou ({exc.code}): {detail}") from exc
+            except urllib.error.URLError as exc:
+                raise StorageError(f"upload assinado falhou: {exc.reason}") from exc
+        return key
+
+    def signed_url(self, key: str, expires_in: int = 3600) -> str:
+        out = (self._call({"action": "sign_download", "key": key,
+                           "expires_in": expires_in}) or {}).get("data") or {}
+        url = out.get("signedUrl") or out.get("signedURL") or ""
+        if not url:
+            raise StorageError("a função não devolveu URL assinada")
+        return url if url.startswith("http") else f"{self.base}{url}"
+
+    def exists(self, key: str) -> bool:
+        try:
+            self.signed_url(key, 60)
+            return True
+        except StorageError:
+            return False
+
+    def delete(self, key: str) -> None:
+        self._call({"action": "storage_remove", "key": key})
+
+
 def make_storage(settings: Settings) -> StorageBackend:
     if settings.storage_backend == "s3":
         return S3Storage(settings)
+    # Sem service role, o caminho é a edge function.
+    if not settings.service_role_key and settings.worker_secret:
+        return ProxyStorage(settings)
     return SupabaseStorage(settings)
 
 

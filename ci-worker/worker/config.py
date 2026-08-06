@@ -39,6 +39,9 @@ def _float(name: str, default: float) -> float:
 class Settings:
     supabase_url: str
     service_role_key: str
+    # Alternativa à service role quando ela não é acessível (Lovable Cloud):
+    # o worker fala com a edge function ci-worker-write usando este segredo.
+    worker_secret: str
 
     worker_id: str
     concurrency: int
@@ -83,16 +86,16 @@ class Settings:
 
     def require(self) -> None:
         """Falha na largada, não no meio do primeiro job."""
-        missing = [
-            name for name, value in (
-                ("SUPABASE_URL", self.supabase_url),
-                ("SUPABASE_SERVICE_ROLE_KEY", self.service_role_key),
-            ) if not value
-        ]
-        if missing:
+        if not self.supabase_url:
             raise RuntimeError(
-                "Faltam variáveis obrigatórias: " + ", ".join(missing) +
-                ". No Fly: fly secrets set -a <app> NOME=valor"
+                "Falta SUPABASE_URL. No Fly: fly secrets set -a <app> SUPABASE_URL=..."
+            )
+        # Um dos dois basta. A service role é o caminho direto; o segredo do
+        # worker é o caminho via edge function, para quando ela não é acessível.
+        if not self.service_role_key and not self.worker_secret:
+            raise RuntimeError(
+                "Defina SUPABASE_SERVICE_ROLE_KEY (acesso direto) ou CI_WORKER_SECRET "
+                "(via edge function ci-worker-write). Sem um dos dois o worker não escreve."
             )
         if self.storage_backend == "s3":
             s3_missing = [
@@ -114,6 +117,7 @@ def load_settings() -> Settings:
     return Settings(
         supabase_url=os.getenv("SUPABASE_URL", "").rstrip("/"),
         service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
+        worker_secret=os.getenv("CI_WORKER_SECRET", ""),
 
         worker_id=os.getenv("CI_WORKER_ID") or f"worker-{os.getpid()}",
         concurrency=max(1, _int("CI_WORKER_CONCURRENCY", 1)),
