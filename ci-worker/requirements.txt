@@ -1,0 +1,21 @@
+# O download e o acesso ao Supabase usam só a biblioteca padrão — urllib e
+# hashlib bastam para quatro verbos HTTP e um SHA-256. Cada dependência a mais
+# é superfície de falha num container que precisa subir sozinho.
+#
+# O que está aqui é o pipeline de análise, que não dá para fazer na mão.
+
+# Transcrição. faster-whisper roda em CPU e é ~4x mais rápido que o whisper
+# de referência no mesmo modelo.
+faster-whisper>=1.1,<2
+
+# Leitura de frame e operações de imagem para OCR e detecção de rosto.
+opencv-python-headless>=4.10,<5
+numpy>=2.0,<3
+Pillow>=11,<12
+
+# OCR temporal do texto na tela.
+easyocr>=1.7,<2
+
+# Só quando CI_STORAGE_BACKEND=s3 (Cloudflare R2 ou Backblaze B2). Com o
+# backend supabase, que é o padrão, nada disto é usado.
+boto3>=1.35,<2
