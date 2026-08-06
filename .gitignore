@@ -36,3 +36,7 @@ dist-ssr
 
 # Gerado por `deno check` ao verificar as edge functions localmente.
 deno.lock
+
+# Bytecode do worker Python
+__pycache__/
+*.py[cod]
