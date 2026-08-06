@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from worker.config import load_settings  # noqa: E402
 from worker.download import PermanentFailure, run_download_job  # noqa: E402
+from worker.main import LeaseLost, run_with_heartbeat  # noqa: E402
 from worker.storage import (  # noqa: E402
     InvalidMedia,
     MediaTooLarge,
@@ -37,6 +38,12 @@ from worker.storage import (  # noqa: E402
     storage_key,
     stream_download,
 )
+from worker.urlguard import BlockedUrl, UrlPolicy, validate_url  # noqa: E402
+
+# O servidor de teste roda em 127.0.0.1 sobre http — exatamente o que a política
+# de produção bloqueia. Este é o único lugar do código onde as travas são
+# afrouxadas, e é explícito de propósito.
+TEST_POLICY = UrlPolicy(allow_private=True, require_https=False)
 
 FAILURES: list[str] = []
 PASSED = 0
@@ -196,12 +203,13 @@ def main() -> int:
         supabase_url="http://fake", service_role_key="fake",
         tmp_dir=tmp, max_media_mb=2, download_timeout_s=30,
         storage_bucket="ci-media",
+        allow_private_urls=True, require_https=False,
     )
 
     try:
         # ── Streaming e hash ─────────────────────────────────────────────────
         dest = tmp / "direto.mp4"
-        result = stream_download(f"{base}/ad.mp4", dest, replace(settings, max_media_mb=50))
+        result = stream_download(f"{base}/ad.mp4", dest, replace(settings, max_media_mb=50), policy=TEST_POLICY)
         import hashlib
         expected = hashlib.sha256(video.read_bytes()).hexdigest()
         check("SHA-256 calculado no download bate com o do arquivo", result.sha256 == expected)
@@ -215,7 +223,7 @@ def main() -> int:
         chamadas: list[tuple[int, int | None, float]] = []
         dest2 = tmp / "progresso.mp4"
         stream_download(f"{base}/ad.mp4", dest2, replace(settings, max_media_mb=50),
-                        on_progress=lambda d, t, s: chamadas.append((d, t, s)))
+                        on_progress=lambda d, t, s: chamadas.append((d, t, s)), policy=TEST_POLICY)
         check("callback de progresso é chamado durante o download", len(chamadas) > 0,
               f"{len(chamadas)} chamadas")
         dest2.unlink(missing_ok=True)
@@ -224,7 +232,7 @@ def main() -> int:
         # Corpo vazio: sem esta checagem viraria um asset de 0 byte no bucket,
         # e o pipeline de análise falharia depois sem explicação.
         try:
-            stream_download(f"{base}/vazio.mp4", tmp / "vazio", settings)
+            stream_download(f"{base}/vazio.mp4", tmp / "vazio", settings, policy=TEST_POLICY)
             vazio_ok = False
         except InvalidMedia:
             vazio_ok = True
@@ -232,13 +240,61 @@ def main() -> int:
 
         # Teto de tamanho: 3 MB contra teto de 2 MB.
         try:
-            stream_download(f"{base}/grande.mp4", tmp / "grande", settings)
+            stream_download(f"{base}/grande.mp4", tmp / "grande", settings, policy=TEST_POLICY)
             grande_ok = False
         except MediaTooLarge:
             grande_ok = True
         check("arquivo acima do teto é recusado", grande_ok)
         check("temporário do arquivo recusado não fica para trás",
               not (tmp / "grande").exists())
+
+        # ── SSRF ─────────────────────────────────────────────────────────────
+        #
+        # O worker baixa URLs vindas da resposta da SpreshApp — dados externos —
+        # num processo que segura a service role. Sem estas travas, uma URL
+        # apontando para o metadata da nuvem viraria requisição interna com o
+        # resultado gravado no bucket.
+        prod = UrlPolicy()  # a política real: https, sem rede privada
+
+        bloqueios = [
+            ("http://169.254.169.254/latest/meta-data/", "metadata de nuvem"),
+            ("https://127.0.0.1/x.mp4", "loopback"),
+            ("https://localhost/x.mp4", "localhost"),
+            ("https://10.0.0.5/x.mp4", "rede privada 10/8"),
+            ("https://192.168.1.1/x.mp4", "rede privada 192.168/16"),
+            ("https://172.16.0.1/x.mp4", "rede privada 172.16/12"),
+            ("https://0.0.0.0/x.mp4", "endereço não especificado"),
+            ("file:///etc/passwd", "esquema file://"),
+            ("ftp://exemplo.com/x.mp4", "esquema ftp://"),
+            ("https://user:senha@exemplo.com/x.mp4", "credencial embutida"),
+            ("https://exemplo.com:22/x.mp4", "porta fora de 80/443"),
+        ]
+        for url_ruim, motivo in bloqueios:
+            try:
+                validate_url(url_ruim, prod)
+                bloqueado = False
+            except BlockedUrl:
+                bloqueado = True
+            except Exception:
+                # DNS que não resolve também recusa — o efeito é o mesmo.
+                bloqueado = True
+            check(f"SSRF: bloqueia {motivo}", bloqueado, url_ruim[:44])
+
+        # http puro também é recusado na política de produção.
+        try:
+            validate_url("http://exemplo.com/x.mp4", prod)
+            http_bloqueado = False
+        except BlockedUrl:
+            http_bloqueado = True
+        check("SSRF: http sem TLS é recusado em produção", http_bloqueado)
+
+        # E o download real recusa antes de qualquer conexão.
+        try:
+            stream_download(f"{base}/ad.mp4", tmp / "ssrf", settings)  # sem policy = produção
+            dl_bloqueado = False
+        except BlockedUrl:
+            dl_bloqueado = True
+        check("SSRF: download recusa endereço privado sem conectar", dl_bloqueado)
 
         # ── Chaves do bucket ─────────────────────────────────────────────────
         k = storage_key("marca-1", "originals", "abc123.mp4")
@@ -311,6 +367,71 @@ def main() -> int:
               supa.select("ci_ad_media_sources", params={"id": "eq.ms-3"})[0]["status"] == "invalid")
         check("temporário limpo mesmo quando o job falha",
               not (tmp / "dl-job-3").exists())
+
+        # ── Heartbeat de lease ───────────────────────────────────────────────
+        #
+        # Um lease fixo "maior que o job mais longo" não existe: a duração
+        # depende do vídeo. Sem renovação, uma análise de 20 min com lease de
+        # 15 é devolvida à fila pelo reaper ENQUANTO ainda roda, outro worker
+        # pega, e os dois processam o mesmo asset — Gemini pago duas vezes.
+        class HeartbeatSupa(FakeSupa):
+            def __init__(self, perde_apos: int | None = None) -> None:
+                super().__init__()
+                self.renovacoes = 0
+                self.perde_apos = perde_apos
+                self.match_recebido: list[dict[str, str]] = []
+
+            def renew_lease(self, table, job_id, worker_id, lease_seconds):  # noqa: ANN001
+                self.renovacoes += 1
+                self.match_recebido.append({"id": job_id, "locked_by": worker_id})
+                if self.perde_apos is not None and self.renovacoes > self.perde_apos:
+                    return False
+                return True
+
+        import time as _t
+        hb_settings = replace(settings, lease_seconds=60, worker_id="worker-A")
+
+        hb = HeartbeatSupa()
+        job_longo = {"id": "job-longo", "user_id": "u", "brand_id": "b"}
+        valor = run_with_heartbeat(hb, "ci_download_jobs", job_longo, hb_settings,
+                                   lambda: (_t.sleep(0.35), "pronto")[1], interval_s=0.05)
+        check("job longo tem o lease renovado durante a execução",
+              hb.renovacoes >= 3, f"{hb.renovacoes} renovações")
+        check("resultado do job longo é devolvido normalmente", valor == "pronto")
+        check("renovação é condicionada ao worker dono",
+              all(m["locked_by"] == "worker-A" for m in hb.match_recebido))
+
+        # Se o reaper já devolveu o job e outro worker o pegou, renovar seria
+        # roubar o lease de volta — e aí sim haveria dois donos. O UPDATE
+        # condicionado devolve 0 linhas, e nós abandonamos.
+        hb2 = HeartbeatSupa(perde_apos=1)
+        try:
+            run_with_heartbeat(hb2, "ci_download_jobs", {"id": "job-perdido", "user_id": "u"},
+                               hb_settings, lambda: (_t.sleep(0.4), "resultado")[1],
+                               interval_s=0.05)
+            perdeu = False
+        except LeaseLost:
+            perdeu = True
+        check("perder o lease aborta em vez de gravar resultado de job alheio", perdeu)
+
+        # Job curto não precisa renovar nada.
+        hb3 = HeartbeatSupa()
+        run_with_heartbeat(hb3, "ci_download_jobs", {"id": "job-curto", "user_id": "u"},
+                           hb_settings, lambda: "rapido", interval_s=0.05)
+        check("job curto não gera renovação desnecessária", hb3.renovacoes == 0,
+              f"{hb3.renovacoes} renovações")
+
+        # Exceção do job continua propagando através do heartbeat.
+        hb4 = HeartbeatSupa()
+        def explode():
+            raise PermanentFailure("erro de dentro do job")
+        try:
+            run_with_heartbeat(hb4, "ci_download_jobs", {"id": "job-erro", "user_id": "u"},
+                               hb_settings, explode, interval_s=0.05)
+            propagou = False
+        except PermanentFailure:
+            propagou = True
+        check("exceção do job atravessa o heartbeat sem ser engolida", propagou)
 
         # ── Guarda do cleanup ────────────────────────────────────────────────
         fora = workdir / "nao-apagar.txt"

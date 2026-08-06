@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Callable, Iterator
 
 from .config import Settings
+from .urlguard import BlockedUrl, UrlPolicy, content_type_allowed, validate_redirect, validate_url
 
 CHUNK = 1024 * 256  # 256 KB
 
@@ -60,24 +61,41 @@ class DownloadResult:
 
 # ── Download ────────────────────────────────────────────────────────────────
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """
+    Desliga o redirecionamento automático do urllib.
+
+    Precisamos revalidar CADA salto: um destino público pode responder 302
+    apontando para 127.0.0.1 ou para o metadata da nuvem, e validar só a URL
+    inicial deixaria esse caminho aberto.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, D102
+        return None
+
+
+_opener = urllib.request.build_opener(_NoRedirect)
+
+
 def stream_download(
     url: str,
     dest: Path,
     settings: Settings,
     *,
     on_progress: Callable[[int, int | None, float], None] | None = None,
+    policy: "UrlPolicy | None" = None,
 ) -> DownloadResult:
     """
     Baixa para arquivo temporário calculando o SHA-256 no mesmo passe.
 
     Calcular o hash durante o download, e não depois, evita reler o arquivo
     inteiro do disco — em 3.000 vídeos isso é hora de I/O à toa.
+
+    A URL passa pelo urlguard antes de qualquer conexão, e de novo a cada
+    redirecionamento. Ver worker/urlguard.py para o porquê.
     """
-    request = urllib.request.Request(url, headers={
-        # O CDN da Meta recusa User-Agent vazio.
-        "User-Agent": "Mozilla/5.0 (compatible; AdBrief-CI/1.0)",
-        "Accept": "*/*",
-    })
+    policy = policy or UrlPolicy()
+    current = validate_url(url, policy)
 
     max_bytes = settings.max_media_mb * 1024 * 1024
     digest = hashlib.sha256()
@@ -86,8 +104,40 @@ def stream_download(
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with urllib.request.urlopen(request, timeout=settings.download_timeout_s) as response:  # noqa: S310
+        response = None
+        for hop in range(policy.max_redirects + 1):
+            request = urllib.request.Request(current, headers={
+                # O CDN da Meta recusa User-Agent vazio.
+                "User-Agent": "Mozilla/5.0 (compatible; AdBrief-CI/1.0)",
+                "Accept": "*/*",
+            })
+            try:
+                response = _opener.open(request, timeout=settings.download_timeout_s)  # noqa: S310
+                break
+            except urllib.error.HTTPError as exc:
+                if exc.code in (301, 302, 303, 307, 308):
+                    location = exc.headers.get("Location")
+                    if not location:
+                        raise StorageError(f"HTTP {exc.code} sem cabeçalho Location") from exc
+                    if hop >= policy.max_redirects:
+                        raise StorageError(
+                            f"mais de {policy.max_redirects} redirecionamentos"
+                        ) from exc
+                    current = validate_redirect(location, current, policy)
+                    continue
+                raise
+
+        if response is None:
+            raise StorageError("não foi possível abrir a URL")
+
+        with response:
             content_type = response.headers.get_content_type() or "application/octet-stream"
+            # Content-Type sozinho não é confiável — o servidor escolhe o que
+            # declarar — mas recusa cedo o que obviamente não é mídia, como uma
+            # página de erro HTML servida com 200.
+            if not content_type_allowed(content_type):
+                raise InvalidMedia(f"Content-Type '{content_type}' não é mídia")
+
             declared = response.headers.get("Content-Length")
             expected = int(declared) if declared and declared.isdigit() else None
 
@@ -114,6 +164,10 @@ def stream_download(
                     if on_progress:
                         elapsed = max(time.monotonic() - started, 1e-6)
                         on_progress(total, expected, total / elapsed)
+    except BlockedUrl:
+        # Recusa de segurança. Nunca vira retry: a URL não vai ficar boa.
+        dest.unlink(missing_ok=True)
+        raise
     except urllib.error.HTTPError as exc:
         raise StorageError(f"HTTP {exc.code} ao baixar a mídia") from exc
     except urllib.error.URLError as exc:

@@ -109,21 +109,35 @@ class Supa:
             return None
         return rows[0] if isinstance(rows, list) else rows
 
-    def renew_lease(self, table: str, job_id: str, lease_seconds: int) -> None:
+    def renew_lease(self, table: str, job_id: str, worker_id: str, lease_seconds: int) -> bool:
         """
-        Estende o lease de um job longo. Sem isto, um vídeo que demora mais que
-        o lease é devolvido à fila pelo reaper e processado duas vezes — pagando
-        LLM duas vezes.
+        Estende o lease de um job em execução. Devolve False quando o job não é
+        mais nosso.
+
+        ── Por que a condição `locked_by` importa ──────────────────────────────
+        Um lease fixo "maior que o job mais longo" não existe: o job mais longo
+        varia com a duração do vídeo. Sem renovação, uma análise de 20 min com
+        lease de 15 é devolvida à fila pelo reaper enquanto ainda está rodando,
+        outro worker pega, e os dois processam o mesmo asset — pagando Gemini
+        duas vezes e gravando resultado em duplicidade.
+
+        Mas renovar cegamente é igualmente errado: se o reaper JÁ devolveu o
+        job e outro worker o pegou, renovar roubaria o lease de volta e aí sim
+        haveria dois donos. Por isso o UPDATE é condicionado a locked_by ainda
+        ser este worker. Zero linhas afetadas = perdemos o job, e quem está
+        executando deve parar.
 
         O timestamp é calculado aqui, não em SQL: o PostgREST manda o valor como
         literal, então "now() + interval '900 seconds'" iria para o banco como
-        texto e o UPDATE falharia. A diferença de relógio entre worker e banco
-        é irrelevante na escala de minutos do lease.
+        texto e o UPDATE falharia.
         """
         expires = datetime.now(timezone.utc) + timedelta(seconds=int(lease_seconds))
-        self.update(table, {
-            "lease_expires_at": expires.isoformat(),
-        }, match={"id": f"eq.{job_id}"})
+        rows = self.update(
+            table,
+            {"lease_expires_at": expires.isoformat()},
+            match={"id": f"eq.{job_id}", "locked_by": f"eq.{worker_id}"},
+        )
+        return len(rows) > 0
 
     def log(self, **row: Any) -> None:
         try:

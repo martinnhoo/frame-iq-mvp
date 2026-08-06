@@ -57,6 +57,11 @@ class Settings:
     tmp_max_mb: int
     download_timeout_s: int
     max_media_mb: int
+    # Segurança do downloader. O padrão é o seguro: se alguém esquecer de
+    # configurar, o comportamento restritivo é o que vale.
+    allow_private_urls: bool
+    require_https: bool
+    max_redirects: int
 
     gemini_api_key: str
     gemini_model: str
@@ -109,7 +114,7 @@ def load_settings() -> Settings:
         service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
 
         worker_id=os.getenv("CI_WORKER_ID") or f"worker-{os.getpid()}",
-        concurrency=max(1, _int("CI_WORKER_CONCURRENCY", 2)),
+        concurrency=max(1, _int("CI_WORKER_CONCURRENCY", 1)),
         poll_interval_s=max(1.0, _float("CI_POLL_INTERVAL_S", 5.0)),
         # Precisa ser maior que o job mais longo esperado, senão o reaper
         # devolve à fila um job que ainda está rodando e ele roda duas vezes.
@@ -129,6 +134,9 @@ def load_settings() -> Settings:
         tmp_max_mb=_int("CI_TMP_MAX_MB", 4096),
         download_timeout_s=_int("CI_DOWNLOAD_TIMEOUT_S", 180),
         max_media_mb=_int("CI_MAX_MEDIA_MB", 500),
+        allow_private_urls=_bool("CI_ALLOW_PRIVATE_URLS", False),
+        require_https=_bool("CI_REQUIRE_HTTPS", True),
+        max_redirects=_int("CI_MAX_REDIRECTS", 3),
 
         gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
         gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),

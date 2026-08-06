@@ -105,16 +105,52 @@ Reiniciar o worker não perde nada: o estado inteiro está no Postgres.
 
 ---
 
-## Deduplicação
+## Deduplicação — e o que ela NÃO faz
 
-É o que torna 3.000 anúncios viáveis. Uma marca recicla a mesma peça em dezenas
-de anúncios com copy e público diferentes. A chave é o **SHA-256 do conteúdo**,
-não a URL — o CDN da Meta assina as URLs com token de expiração, então a mesma
-mídia aparece com endereços diferentes a cada requisição.
+Uma marca recicla a mesma peça em dezenas de anúncios com copy e público
+diferentes. A chave é o **SHA-256 do conteúdo**, não a URL — o CDN da Meta
+assina as URLs com token de expiração, então a mesma mídia aparece com
+endereços diferentes a cada requisição.
 
 Quando o hash já existe na marca, o worker vincula o asset existente ao novo
 anúncio e pula upload e análise. Um vídeo usado por 40 anúncios é baixado,
-armazenado e analisado **uma vez**.
+armazenado e analisado uma vez.
+
+**Mas SHA-256 só pega duplicata binária exata.** Não pega:
+
+- o mesmo vídeo reencodado ou em outra resolução
+- versão com legenda diferente ou bordas adicionadas
+- 1 segundo de intro removido
+- áudio levemente alterado
+
+Isso é deliberado, e são duas camadas distintas que não devem se sobrepor:
+
+| Camada | Ferramenta | Para quê |
+|---|---|---|
+| Duplicata exata | SHA-256 | não armazenar nem analisar o mesmo arquivo duas vezes |
+| Similaridade criativa | hash perceptual, similaridade de keyframe e de transcript | agrupar versões do mesmo criativo **sem** tratá-las como o mesmo arquivo |
+
+A segunda camada é a Fase 8 (conceitos e variações), não esta.
+
+---
+
+## Lease e heartbeat
+
+O worker renova `lease_expires_at` a cada 1/3 do lease enquanto o job roda, e a
+renovação é **condicionada a `locked_by` ainda ser este worker**.
+
+As duas metades importam. Sem renovar, uma análise de 20 minutos com lease de 15
+é devolvida à fila pelo reaper enquanto ainda está rodando, outro worker pega, e
+os dois processam o mesmo asset — pagando Gemini duas vezes. Renovar sem a
+condição é igualmente errado: se o reaper já devolveu o job e outro worker o
+pegou, renovar roubaria o lease de volta e aí sim haveria dois donos.
+
+Quando a renovação devolve zero linhas, o worker abandona o job sem escrever
+nada — quem grava o resultado é quem tem o lease agora.
+
+**A garantia é at-least-once, não exactly-once.** Qualquer etapa pode rodar de
+novo após timeout, queda, erro de rede ou expiração de lease. Por isso as
+escritas são upsert com constraint, e não insert cego.
 
 ---
 

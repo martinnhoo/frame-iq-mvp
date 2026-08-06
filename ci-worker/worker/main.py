@@ -20,10 +20,11 @@ from __future__ import annotations
 
 import signal
 import sys
+import threading
 import time
 import traceback
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 
 from .config import Settings, load_settings
 from .download import PermanentFailure, run_download_job
@@ -81,6 +82,77 @@ def _fail_job(supa: Supa, table: str, job: dict[str, Any], exc: BaseException,
     )
 
 
+class LeaseLost(RuntimeError):
+    """
+    O job deixou de ser nosso no meio da execução. Não é falha do job — é a
+    gente descobrindo que outro worker assumiu. Quem escreve o resultado é
+    ele; nós paramos e não tocamos mais na linha.
+    """
+
+
+def run_with_heartbeat(
+    supa: Supa,
+    table: str,
+    job: dict[str, Any],
+    settings: Settings,
+    fn: Callable[[], Any],
+    *,
+    interval_s: float | None = None,
+) -> Any:
+    """
+    Executa `fn` numa thread e renova o lease enquanto ela roda.
+
+    Um lease fixo "maior que o job mais longo" não existe: o job mais longo
+    depende da duração do vídeo, que varia de 6s a vários minutos. A renovação
+    periódica é o que torna o lease uma garantia em vez de um chute.
+
+    O intervalo é 1/3 do lease: dá duas chances de renovar antes de vencer, o
+    que absorve uma falha de rede isolada sem perder o job.
+    """
+    result: dict[str, Any] = {}
+    error: dict[str, BaseException] = {}
+
+    def target() -> None:
+        try:
+            result["value"] = fn()
+        except BaseException as exc:  # noqa: BLE001
+            error["value"] = exc
+
+    thread = threading.Thread(target=target, daemon=True)
+    thread.start()
+
+    # 1/3 do lease dá duas chances de renovar antes de vencer, o que absorve
+    # uma falha de rede isolada. `interval_s` é injetável para o teste não
+    # precisar esperar minutos para provar o comportamento.
+    interval = interval_s if interval_s is not None else max(5, settings.lease_seconds // 3)
+    lost = False
+    while thread.is_alive():
+        thread.join(timeout=interval)
+        if not thread.is_alive():
+            break
+        try:
+            if not supa.renew_lease(table, job["id"], settings.worker_id, settings.lease_seconds):
+                lost = True
+                break
+        except SupabaseError as exc:
+            # Falha de rede na renovação não é motivo para abortar: o lease
+            # ainda tem 2/3 de folga e a próxima tentativa provavelmente passa.
+            print(f"[worker] renovação de lease falhou (segue tentando): {exc}", flush=True)
+
+    if lost:
+        # Não esperamos a thread: ela pode estar num download longo. Ela é
+        # daemon e morre com o processo; o importante é não gravar resultado
+        # de um job que agora tem outro dono.
+        raise LeaseLost(
+            f"lease do job {job['id']} foi assumido por outro worker — abandonando"
+        )
+
+    thread.join()
+    if "value" in error:
+        raise error["value"]
+    return result.get("value")
+
+
 def tick(supa: Supa, storage: Any, settings: Settings) -> bool:
     """Executa no máximo um job. Devolve True se pegou algo."""
 
@@ -99,12 +171,19 @@ def tick(supa: Supa, storage: Any, settings: Settings) -> bool:
     started = time.monotonic()
     print(f"[worker] download {job['id']} (tentativa {job.get('attempts')})", flush=True)
     try:
-        result = run_download_job(job, supa, storage, settings)
+        result = run_with_heartbeat(
+            supa, "ci_download_jobs", job, settings,
+            lambda: run_download_job(job, supa, storage, settings),
+        )
         print(
             f"[worker] ok {job['id']} em {time.monotonic() - started:.1f}s "
             f"asset={result['asset_id']} duplicado={result['was_duplicate']}",
             flush=True,
         )
+    except LeaseLost as exc:
+        # Não marcamos nada: a linha agora pertence a outro worker, e escrever
+        # aqui sobrescreveria o resultado dele.
+        print(f"[worker] {exc}", flush=True)
     except PermanentFailure as exc:
         print(f"[worker] falha definitiva {job['id']}: {exc}", flush=True)
         _fail_job(supa, "ci_download_jobs", job, exc, permanent=True)

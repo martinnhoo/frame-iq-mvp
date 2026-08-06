@@ -39,6 +39,7 @@ from .storage import (
     stream_download,
 )
 from .supa import Supa, SupabaseError
+from .urlguard import BlockedUrl, UrlPolicy
 
 
 def _now() -> str:
@@ -98,8 +99,27 @@ def run_download_job(
                 "bytes_per_second": int(speed),
             }, match={"id": f"eq.{job_id}"})
 
+        policy = UrlPolicy(
+            allow_private=settings.allow_private_urls,
+            require_https=settings.require_https,
+            max_redirects=settings.max_redirects,
+        )
         try:
-            result = stream_download(url, tmp_path, settings, on_progress=on_progress)
+            result = stream_download(url, tmp_path, settings,
+                                     on_progress=on_progress, policy=policy)
+        except BlockedUrl as exc:
+            # Recusa de segurança, não falha de rede. Marcar como retentável
+            # faria o worker bater cinco vezes no mesmo endereço interno.
+            supa.update("ci_ad_media_sources",
+                        {"status": "invalid", "error": f"URL bloqueada: {exc}"[:500]},
+                        match={"id": f"eq.{media_source_id}"})
+            supa.log(
+                user_id=user_id, brand_id=brand_id, job_kind="download", job_id=job_id,
+                level="error", stage="url_blocked",
+                message=f"URL recusada pela política de segurança: {exc}",
+                payload={"media_source_id": media_source_id},
+            )
+            raise PermanentFailure(f"URL bloqueada: {exc}") from exc
         except (MediaTooLarge, InvalidMedia) as exc:
             # Erro do conteúdo, não do transporte: retentar não muda nada.
             supa.update("ci_ad_media_sources",
