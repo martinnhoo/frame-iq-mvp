@@ -296,6 +296,98 @@ def main() -> int:
             f"estranho vê {seen_by_stranger}, dono vê {seen_by_owner}",
         )
 
+        # ══ REGRESSÕES DE SEGURANÇA — revisão independente 01 ═══════════════
+        #
+        # ci_compute_scale_signal nasceu SECURITY DEFINER, com grant para
+        # `authenticated`, e sem checar dono do brand_id. Do navegador, com a
+        # anon key, dava para reprocessar e sobrescrever o Scale Signal da
+        # marca de outra pessoa. Mesma classe fechada em 20260804090000.
+        outra_brand = q(
+            "insert into public.ci_brands(user_id,slug,name) values(%s,'marca-alheia','Alheia') returning id",
+            (stranger,),
+        )[0][0]
+        q(
+            """insert into public.ci_concepts(brand_id,user_id,name,ad_count,longevity_days,last_seen_at)
+               values(%s,%s,'Conceito do estranho',9,50,now())""",
+            (outra_brand, stranger),
+        )
+
+        cur.execute("set role authenticated")
+        cur.execute("select set_config('request.jwt.claim.sub',%s,false)", (str(uid),))
+        try:
+            q("select public.ci_compute_scale_signal(%s)", (outra_brand,))
+            invadiu = True
+        except Exception:
+            conn.rollback()
+            invadiu = False
+        cur.execute("reset role")
+        check("ci_compute_scale_signal recusa marca de outro usuário", not invadiu)
+
+        # E continua funcionando para o dono legítimo.
+        cur.execute("set role authenticated")
+        cur.execute("select set_config('request.jwt.claim.sub',%s,false)", (str(stranger),))
+        try:
+            n_dono = q("select public.ci_compute_scale_signal(%s)", (outra_brand,))[0][0]
+            ok_dono = n_dono == 1
+        except Exception as exc:
+            conn.rollback()
+            ok_dono, n_dono = False, str(exc)[:60]
+        cur.execute("reset role")
+        check("ci_compute_scale_signal funciona para o dono", ok_dono, str(n_dono))
+
+        # RLS controla LINHA, nunca COLUNA. Sem grant por coluna, o dono podia
+        # dar UPDATE em scale_band da própria linha e forjar o sinal que o
+        # produto apresenta como observado.
+        cur.execute("set role authenticated")
+        cur.execute("select set_config('request.jwt.claim.sub',%s,false)", (str(uid),))
+        try:
+            q("update public.ci_concepts set scale_band='very_high' where id=%s", (strong_id,))
+            forjou = True
+        except Exception:
+            conn.rollback()
+            forjou = False
+        # O que ele PODE fazer é renomear e revisar.
+        try:
+            q("update public.ci_concepts set name='Renomeado', review_status='confirmed' where id=%s", (strong_id,))
+            revisou = True
+        except Exception as exc:
+            conn.rollback()
+            revisou = False
+        cur.execute("reset role")
+        check("usuário não consegue forjar scale_band", not forjou)
+        check("usuário ainda consegue renomear e revisar conceito", revisou)
+
+        # recency_window_days entra como divisor. Gravar 0 derrubava a função
+        # para a marca inteira com division_by_zero.
+        try:
+            q("update public.ci_scale_signal_config set recency_window_days=0 where brand_id=%s", (bid,))
+            zerou = True
+        except Exception:
+            conn.rollback()
+            zerou = False
+        check("config recusa janela de recência zero", not zerou)
+
+        # A migration 100400 citava ci_refresh_taxonomy_stats() no comentário,
+        # mas a função nunca foi escrita. Sem ela, ad_count dos termos fica em
+        # zero para sempre e a página Messages sai vazia sem erro visível.
+        term = q(
+            """insert into public.ci_taxonomy_terms(brand_id,user_id,kind,slug,label)
+               values(%s,%s,'hook','leggings-nao-enrolam','Leggings que não enrolam') returning id""",
+            (bid, uid),
+        )[0][0]
+        q(
+            """insert into public.ci_ad_taxonomy(ad_id,term_id,brand_id,user_id,confidence,source)
+               values(%s,%s,%s,%s,0.9,'gemini'),(%s,%s,%s,%s,0.8,'gemini')""",
+            (ads[0], term, bid, uid, ads[1], term, bid, uid),
+        )
+        atualizados = q("select public.ci_refresh_taxonomy_stats(%s)", (bid,))[0][0]
+        contagem = q("select ad_count from public.ci_taxonomy_terms where id=%s", (term,))[0][0]
+        check(
+            "ci_refresh_taxonomy_stats existe e conta os anúncios do termo",
+            atualizados >= 1 and contagem == 2,
+            f"linhas={atualizados} ad_count={contagem}",
+        )
+
         print()
         if check.failures:
             print(f"FALHAS ({len(check.failures)}): {check.failures}")

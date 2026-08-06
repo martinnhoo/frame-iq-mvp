@@ -52,6 +52,20 @@ import {
 // ── Orçamento ────────────────────────────────────────────────────────────────
 
 /**
+ * Handle de reserva. Existe para que `settle` e `release` não possam ser
+ * chamados duas vezes para a mesma reserva.
+ *
+ * A versão anterior passava só o número: `release(50)` chamado duas vezes
+ * devolvia 100 ao orçamento, comendo a reserva de uma chamada concorrente e
+ * deixando o teto abrir mais do que devia. O handle carrega o próprio estado,
+ * então a segunda chamada é um no-op.
+ */
+export interface CreditReservation {
+  readonly worstCase: number;
+  settled: boolean;
+}
+
+/**
  * Contador de créditos com teto rígido. Uma instância por import run.
  *
  * `reserve` é chamado antes da requisição com o custo de PIOR CASO; `settle`
@@ -62,6 +76,7 @@ import {
 export class CreditBudget {
   private spent = 0;
   private reserved = 0;
+  private overspend = 0;
 
   /**
    * `Infinity` é um limite válido e é o padrão do cliente: nem toda chamada
@@ -77,13 +92,24 @@ export class CreditBudget {
   }
 
   get used(): number { return this.spent; }
+
+  /**
+   * Quanto passou do teto. Deveria ser sempre 0, mas os endpoints de anúncio
+   * da SpreshApp não têm parâmetro de tamanho de página: quem decide quantos
+   * anúncios voltam — e portanto quantos créditos são cobrados — é o servidor.
+   * Se ele devolver mais do que a reserva previa, o crédito já foi gasto e não
+   * há como desfazer. O número existe para que isso apareça no relatório da
+   * importação em vez de sumir.
+   */
+  get overspent(): number { return this.overspend; }
+
   get available(): number {
     if (this.limit === Number.POSITIVE_INFINITY) return Number.POSITIVE_INFINITY;
     return Math.max(0, this.limit - this.spent - this.reserved);
   }
 
   /** Lança antes de qualquer I/O se o pior caso não couber. */
-  reserve(worstCase: number): void {
+  reserve(worstCase: number): CreditReservation {
     if (worstCase > this.available) {
       throw new SpreshError(
         "budget_exceeded",
@@ -92,16 +118,25 @@ export class CreditBudget {
       );
     }
     this.reserved += worstCase;
+    return { worstCase, settled: false };
   }
 
-  settle(worstCase: number, actual: number): void {
-    this.reserved = Math.max(0, this.reserved - worstCase);
+  /** Troca a reserva pelo custo real. Chamar duas vezes não faz nada. */
+  settle(reservation: CreditReservation, actual: number): void {
+    if (reservation.settled) return;
+    reservation.settled = true;
+    this.reserved = Math.max(0, this.reserved - reservation.worstCase);
     this.spent += actual;
+    if (this.limit !== Number.POSITIVE_INFINITY && this.spent > this.limit) {
+      this.overspend = this.spent - this.limit;
+    }
   }
 
-  /** Libera a reserva quando a chamada falhou sem retornar dado cobrável. */
-  release(worstCase: number): void {
-    this.reserved = Math.max(0, this.reserved - worstCase);
+  /** Devolve a reserva quando a chamada falhou sem retornar dado cobrável. */
+  release(reservation: CreditReservation): void {
+    if (reservation.settled) return;
+    reservation.settled = true;
+    this.reserved = Math.max(0, this.reserved - reservation.worstCase);
   }
 }
 
@@ -138,6 +173,12 @@ export interface SpreshClientOptions {
   timeoutMs?: number;
   maxRetries?: number;
   logger?: SpreshLogger;
+  /**
+   * Pior caso assumido de anúncios por página enquanto não observamos o real.
+   * Só suba isto se a API passar a devolver páginas maiores — quanto maior,
+   * mais cedo o orçamento bloqueia por precaução.
+   */
+  assumedPageSize?: number;
   /** injetável para teste */
   fetchImpl?: typeof fetch;
   sleepImpl?: (ms: number) => Promise<void>;
@@ -164,6 +205,7 @@ export class SpreshClient {
   private readonly sleepImpl: (ms: number) => Promise<void>;
 
   readonly budget: CreditBudget;
+  private readonly assumedPageSize: number;
   /** Maior página observada. Melhora a estimativa mostrada ao usuário. */
   maxAdsPerPageObserved = 0;
 
@@ -176,6 +218,7 @@ export class SpreshClient {
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxRetries = opts.maxRetries ?? DEFAULT_MAX_RETRIES;
     this.budget = opts.budget ?? new CreditBudget(Number.POSITIVE_INFINITY);
+    this.assumedPageSize = Math.max(1, opts.assumedPageSize ?? ASSUMED_PAGE_SIZE);
     this.logger = opts.logger ?? (() => {});
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.sleepImpl = opts.sleepImpl ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
@@ -325,7 +368,7 @@ export class SpreshClient {
     }
 
     const cost = CREDIT_COST.pageSearch;
-    this.budget.reserve(cost);
+    const reservation = this.budget.reserve(cost);
     try {
       const data = await this.request<SpreshPageSearchResponse>("GET", "/v1/brand/page-search", {
         query: { q: trimmed },
@@ -333,7 +376,7 @@ export class SpreshClient {
       if (!Array.isArray(data?.pages)) {
         throw new SpreshError("invalid_response", "Resposta de page-search sem o array `pages`.");
       }
-      this.budget.settle(cost, cost);
+      this.budget.settle(reservation, cost);
       this.logger({
         method: "GET", path: "/v1/brand/page-search", durationMs: 0, attempt: 1,
         creditsCharged: cost, adsReturned: 0,
@@ -341,7 +384,7 @@ export class SpreshClient {
       return { pages: data.pages, creditsSpent: cost };
     } catch (err) {
       // Falha antes de retornar dados não é cobrada — solta a reserva.
-      this.budget.release(cost);
+      this.budget.release(reservation);
       throw err;
     }
   }
@@ -350,8 +393,8 @@ export class SpreshClient {
   async getBrandAdsPage(
     params: BrandAdsParams,
   ): Promise<{ ads: SpreshAd[]; nextCursor: string | null; hasMore: boolean; creditsSpent: number }> {
-    const worstCase = Math.max(this.maxAdsPerPageObserved, ASSUMED_PAGE_SIZE) * CREDIT_COST.perAd;
-    this.budget.reserve(worstCase);
+    const worstCase = Math.max(this.maxAdsPerPageObserved, this.assumedPageSize) * CREDIT_COST.perAd;
+    const reservation = this.budget.reserve(worstCase);
     try {
       const data = await this.request<SpreshAdsResponse>("GET", `/v1/brand/${encodeURIComponent(params.page_id)}`, {
         query: {
@@ -361,9 +404,9 @@ export class SpreshClient {
           cursor: params.cursor,
         },
       });
-      return this.settleAdsPage(data, worstCase, `/v1/brand/${params.page_id}`);
+      return this.settleAdsPage(data, reservation, `/v1/brand/${params.page_id}`);
     } catch (err) {
-      this.budget.release(worstCase);
+      this.budget.release(reservation);
       throw err;
     }
   }
@@ -372,25 +415,25 @@ export class SpreshClient {
   async searchAdsPage(
     params: AdSearchParams,
   ): Promise<{ ads: SpreshAd[]; nextCursor: string | null; hasMore: boolean; creditsSpent: number }> {
-    const worstCase = Math.max(this.maxAdsPerPageObserved, ASSUMED_PAGE_SIZE) * CREDIT_COST.perAd;
-    this.budget.reserve(worstCase);
+    const worstCase = Math.max(this.maxAdsPerPageObserved, this.assumedPageSize) * CREDIT_COST.perAd;
+    const reservation = this.budget.reserve(worstCase);
     try {
       const data = await this.request<SpreshAdsResponse>("POST", "/v1/ad-search", { body: params });
-      return this.settleAdsPage(data, worstCase, "/v1/ad-search");
+      return this.settleAdsPage(data, reservation, "/v1/ad-search");
     } catch (err) {
-      this.budget.release(worstCase);
+      this.budget.release(reservation);
       throw err;
     }
   }
 
-  private settleAdsPage(data: SpreshAdsResponse, worstCase: number, path: string) {
+  private settleAdsPage(data: SpreshAdsResponse, reservation: CreditReservation, path: string) {
     if (!Array.isArray(data?.ads)) {
-      this.budget.release(worstCase);
+      this.budget.release(reservation);
       throw new SpreshError("invalid_response", `Resposta de ${path} sem o array \`ads\`.`);
     }
     const ads = data.ads;
     const actual = ads.length * CREDIT_COST.perAd;
-    this.budget.settle(worstCase, actual);
+    this.budget.settle(reservation, actual);
     this.maxAdsPerPageObserved = Math.max(this.maxAdsPerPageObserved, ads.length);
 
     const nextCursor = data.next_cursor ?? null;
@@ -405,7 +448,7 @@ export class SpreshClient {
   /** GET /v1/ad-details/:id — 1 crédito quando devolve dados, 0 quando não. */
   async getAdDetails(adArchiveId: string): Promise<{ details: SpreshAdDetailsResponse; creditsSpent: number }> {
     const worstCase = CREDIT_COST.adDetails;
-    this.budget.reserve(worstCase);
+    const reservation = this.budget.reserve(worstCase);
     try {
       const data = await this.request<SpreshAdDetailsResponse>(
         "GET", `/v1/ad-details/${encodeURIComponent(adArchiveId)}`,
@@ -414,10 +457,10 @@ export class SpreshClient {
       // não custa nada.
       const returned = data && typeof data === "object" && Object.keys(data).length > 0;
       const actual = returned ? CREDIT_COST.adDetails : 0;
-      this.budget.settle(worstCase, actual);
+      this.budget.settle(reservation, actual);
       return { details: data ?? {}, creditsSpent: actual };
     } catch (err) {
-      this.budget.release(worstCase);
+      this.budget.release(reservation);
       throw err;
     }
   }
@@ -436,18 +479,26 @@ export class SpreshClient {
     ads: SpreshAd[];
     pagesFetched: number;
     creditsSpent: number;
+    /** Cursor para retomar. Aponta para a página SEGUINTE à última lida. */
     nextCursor: string | null;
     stopReason: "max_ads" | "no_more_pages" | "budget" | "cursor_loop";
+    /** Quantos anúncios além de maxAds vieram — e foram pagos — na última página. */
+    overFetched: number;
+    /** Quanto o teto foi ultrapassado, se foi. Ver CreditBudget.overspent. */
+    overspentCredits: number;
   }> {
     const collected: SpreshAd[] = [];
     const seenCursors = new Set<string>();
     let cursor = params.cursor;
+    // Cursor de retomada: separado de `cursor`, que é o da requisição em curso.
+    // Usar um pelo outro fazia a retomada recomeçar do zero e repagar tudo.
+    let resumeCursor: string | null = null;
     let pagesFetched = 0;
     let creditsSpent = 0;
     let stopReason: "max_ads" | "no_more_pages" | "budget" | "cursor_loop" = "no_more_pages";
 
     while (collected.length < params.maxAds) {
-      const nextPageWorstCase = Math.max(this.maxAdsPerPageObserved, ASSUMED_PAGE_SIZE) * CREDIT_COST.perAd;
+      const nextPageWorstCase = Math.max(this.maxAdsPerPageObserved, this.assumedPageSize) * CREDIT_COST.perAd;
       if (nextPageWorstCase > this.budget.available) {
         stopReason = "budget";
         break;
@@ -457,9 +508,10 @@ export class SpreshClient {
       pagesFetched++;
       creditsSpent += page.creditsSpent;
       collected.push(...page.ads);
+      resumeCursor = page.hasMore ? (page.nextCursor ?? null) : null;
 
       if (collected.length >= params.maxAds) { stopReason = "max_ads"; break; }
-      if (!page.hasMore || !page.nextCursor) { stopReason = "no_more_pages"; cursor = page.nextCursor ?? undefined; break; }
+      if (!page.hasMore || !page.nextCursor) { stopReason = "no_more_pages"; break; }
       // Um cursor repetido significa que a API está em loop. Sem esta checagem
       // o laço rodaria indefinidamente cobrando 1 crédito por anúncio a cada volta.
       if (seenCursors.has(page.nextCursor)) { stopReason = "cursor_loop"; break; }
@@ -468,14 +520,19 @@ export class SpreshClient {
       cursor = page.nextCursor;
     }
 
-    // Cortar o excedente é só apresentação — os créditos já foram cobrados por
-    // tudo que a API devolveu. Guardamos todos, mas reportamos o corte.
+    // Antes isto fazia `collected.slice(0, maxAds)` e jogava fora o excedente.
+    // Mas o crédito já foi cobrado por TODO anúncio que a API devolveu — a
+    // última página não vem cortada no tamanho que pedimos. Descartar dado pago
+    // é a pior das opções: paga-se de novo para reimportar o mesmo anúncio.
+    // Devolvemos tudo e reportamos quanto passou, para o import run registrar.
     return {
-      ads: collected.slice(0, params.maxAds),
+      ads: collected,
       pagesFetched,
       creditsSpent,
-      nextCursor: cursor ?? null,
+      nextCursor: resumeCursor,
       stopReason,
+      overFetched: Math.max(0, collected.length - params.maxAds),
+      overspentCredits: this.budget.overspent,
     };
   }
 

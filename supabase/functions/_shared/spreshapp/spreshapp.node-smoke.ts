@@ -351,8 +351,12 @@ async function main() {
     });
     const r = await client.collectBrandAds({ page_id: "p", maxAds: 20 });
     assert.equal(r.stopReason, "max_ads");
-    assert.equal(r.ads.length, 20);
     assert.equal(calls.length, 3);
+    // 3 páginas de 8 = 24. Os 24 foram COBRADOS, então os 24 são devolvidos.
+    // Descartar os 4 excedentes faria pagar de novo para reimportá-los.
+    assert.equal(r.ads.length, 24);
+    assert.equal(r.overFetched, 4);
+    assert.equal(r.creditsSpent, 24);
   });
 
   await test("cursor repetido encerra o laço em vez de rodar para sempre", async () => {
@@ -379,16 +383,63 @@ async function main() {
     assert.ok(client.budget.used <= 50, `gastou ${client.budget.used}, teto 50`);
   });
 
-  await test("cursor de parada é devolvido para retomar sem repagar", async () => {
+  // REGRESSÃO — BUG-01. A versão anterior devolvia `null` aqui, porque usava a
+  // variável do cursor da requisição em curso em vez do cursor da resposta.
+  // Retomar a importação recomeçaria da primeira página e repagaria tudo.
+  // O teste que deveria pegar isso era `assert.equal(x, x)` e passava com
+  // qualquer valor — por isso o bug sobreviveu à suíte inteira.
+  await test("REGRESSÃO: cursor de retomada é o da resposta, não null", async () => {
     const { impl } = stubFetch([
-      { status: 200, body: { ads: Array.from({ length: 20 }, (_, i) => ({ ad_archive_id: `a${i}` })), next_cursor: "PROXIMO", has_more: true } },
+      { status: 200, body: { ads: Array.from({ length: 20 }, (_, i) => ({ ad_archive_id: `a${i}` })), next_cursor: "CURSOR_PAGINA_2", has_more: true } },
     ]);
     const client = new SpreshClient({
       apiKey: "sk_sprs_fake", budget: new CreditBudget(500), fetchImpl: impl, sleepImpl: noSleep,
     });
     const r = await client.collectBrandAds({ page_id: "p", maxAds: 20 });
     assert.equal(r.stopReason, "max_ads");
-    assert.equal(r.nextCursor, undefined ?? r.nextCursor);
+    assert.equal(r.nextCursor, "CURSOR_PAGINA_2");
+  });
+
+  await test("sem mais páginas, o cursor de retomada é null", async () => {
+    const { impl } = stubFetch([
+      { status: 200, body: { ads: [{ ad_archive_id: "a" }], next_cursor: "IGNORAR", has_more: false } },
+    ]);
+    const client = new SpreshClient({
+      apiKey: "sk_sprs_fake", budget: new CreditBudget(500), fetchImpl: impl, sleepImpl: noSleep,
+    });
+    const r = await client.collectBrandAds({ page_id: "p", maxAds: 20 });
+    assert.equal(r.stopReason, "no_more_pages");
+    assert.equal(r.nextCursor, null, "has_more:false significa fim, mesmo com cursor no corpo");
+  });
+
+  // REGRESSÃO — BUG-03. A API não tem parâmetro de tamanho de página, então o
+  // servidor pode devolver mais do que a reserva previu e o crédito já sai
+  // gasto. Não dá para impedir; dá para não esconder.
+  await test("REGRESSÃO: estouro de teto é contabilizado, não silencioso", async () => {
+    const { impl } = stubFetch([
+      { status: 200, body: { ads: Array.from({ length: 300 }, (_, i) => ({ ad_archive_id: `a${i}` })), has_more: false } },
+    ]);
+    const client = new SpreshClient({
+      apiKey: "sk_sprs_fake", budget: new CreditBudget(50), fetchImpl: impl, sleepImpl: noSleep,
+    });
+    const r = await client.collectBrandAds({ page_id: "p", maxAds: 20 });
+    assert.equal(r.creditsSpent, 300);
+    assert.equal(r.overspentCredits, 250, "300 gastos num teto de 50 = 250 de estouro");
+    assert.equal(client.budget.overspent, 250);
+    // E o orçamento fecha: nenhuma chamada nova passa depois disso.
+    assert.equal(client.budget.available, 0);
+  });
+
+  await test("release duplo não devolve crédito duas vezes", async () => {
+    const budget = new CreditBudget(100);
+    const reserva = budget.reserve(40);
+    assert.equal(budget.available, 60);
+    budget.release(reserva);
+    budget.release(reserva);
+    assert.equal(budget.available, 100, "a segunda liberação precisa ser no-op");
+    // E settle depois de release também não pode cobrar.
+    budget.settle(reserva, 40);
+    assert.equal(budget.used, 0);
   });
 
   // ══ Requisição bem formada ════════════════════════════════════════════════
