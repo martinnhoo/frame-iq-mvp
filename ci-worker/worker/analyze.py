@@ -149,8 +149,14 @@ def stage_download(ctx: Ctx) -> None:
     """
     rows = ctx.supa.select("ci_assets", params={
         "id": f"eq.{ctx.asset_id}",
+        # Precisa trazer TODAS as colunas que _probe_from_asset reconstrói.
+        # Sem width/height/fps/has_audio, um job RETOMADO monta um probe
+        # incompleto: has_audio vira False e o estágio de áudio é pulado com
+        # "vídeo sem trilha" — mesmo num vídeo com fala. Degradação silenciosa,
+        # e o resultado é um anúncio sem transcrição indistinguível de um mudo.
         "select": "id,sha256,storage_key,storage_bucket,media_type,file_ext,"
-                  "file_size_bytes,mime_type,duration_seconds,analysis_status",
+                  "file_size_bytes,mime_type,duration_seconds,analysis_status,"
+                  "width,height,fps,video_codec,audio_codec,has_audio,bitrate,aspect_ratio",
     })
     if not rows:
         raise AnalysisPermanentFailure("asset não existe mais")
