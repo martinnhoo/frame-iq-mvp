@@ -201,6 +201,31 @@ export default function CreativeOverview() {
   // por marca; falha aqui não derruba a tela — o selo passa a dizer "não
   // medido", que é a verdade.
   const { mapa: acuracia } = useAcuracia(marca?.id);
+
+  /**
+   * T6 · O que mais se repete agora — calculado no BANCO.
+   *
+   * A tabela abaixo era montada com fetchEverything().filter().reduce() no
+   * navegador. Com 40 anúncios funcionava; com 3.000 pesa e com 50.000 não
+   * roda. Além disso, a definição de "variou" passa a vir da mesma função que
+   * a tela de receitas usa — duas definições divergiriam com o tempo e as duas
+   * telas começariam a discordar sem ninguém entender por quê.
+   */
+  const [prioridade, setPrioridade] = useState<Row[] | null>(null);
+  const [erroPrioridade, setErroPrioridade] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!marca?.id) return;
+    let vivo = true;
+    (async () => {
+      const { data, error } = await supabase.rpc("ci_creative_priority", { p_brand_id: marca.id });
+      if (!vivo) return;
+      if (error) { setErroPrioridade(error.message); setPrioridade(null); return; }
+      setErroPrioridade(null);
+      setPrioridade((data ?? []) as Row[]);
+    })();
+    return () => { vivo = false; };
+  }, [marca?.id, d]);
   const en = idioma === "en";
   const selo = (campo: string) => <SeloConfianca campo={campo} mapa={acuracia} en={en} />;
 
@@ -642,49 +667,100 @@ export default function CreativeOverview() {
                       <tr style={{ color: T.label, fontSize: 11, textAlign: "left" }}>
                         <th style={{ padding: "0 8px 10px 0", fontWeight: 600 }}>#</th>
                         <th style={{ padding: "0 8px 10px 0", fontWeight: 600 }}>Receita criativa</th>
-                        <th style={{ padding: "0 8px 10px 0", fontWeight: 600 }}>Evidência (repetição)</th>
                         <th style={{ padding: "0 8px 10px 0", fontWeight: 600 }}>Assets</th>
+                        <th style={{ padding: "0 8px 10px 0", fontWeight: 600 }}
+                            title="Quantos valores distintos a marca testou nos eixos que ela variou">
+                          Variações
+                        </th>
                         <th style={{ padding: "0 8px 10px 0", fontWeight: 600 }}>Pessoas</th>
                         <th style={{ padding: "0 8px 10px 0", fontWeight: 600 }}>Duração</th>
-                        <th style={{ padding: "0 0 10px 0", fontWeight: 600 }}>Hook dominante</th>
+                        {/* Presença por ÚLTIMO, de propósito: um rótulo na
+                            primeira coluna é lido como nota de desempenho, e
+                            desempenho é o que não temos. Os números brutos vêm
+                            antes para ancorar a leitura. */}
+                        <th style={{ padding: "0 0 10px 0", fontWeight: 600 }}>Presença</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {ordenadas.slice(0, 6).map((c, i) => (
-                        <tr key={c.id} style={{ borderTop: `1px solid ${T.b1}` }}>
+                      {(prioridade ?? ordenadas).slice(0, 6).map((c: Row, i: number) => {
+                        const usandoRpc = prioridade != null;
+                        const nome = usandoRpc ? c.nome : c.name;
+                        const assets = usandoRpc ? c.assets_unicos : (c.unique_asset_count ?? 0);
+                        const dur = usandoRpc
+                          ? (c.duracao_min_s != null
+                              ? `${c.duracao_min_s}–${c.duracao_max_s}s` : "—")
+                          : c.duracao;
+                        return (
+                        <tr key={usandoRpc ? c.concept_id : c.id} style={{ borderTop: `1px solid ${T.b1}` }}>
                           <td style={{ padding: "11px 8px 11px 0" }}>
                             <div style={{
                               width: 22, height: 22, borderRadius: "50%", background: T.bg3,
                               display: "grid", placeItems: "center", fontSize: 11, color: T.violet, fontWeight: 700,
                             }}>{i + 1}</div>
                           </td>
-                          <td style={{ padding: "11px 8px 11px 0", color: T.t1, maxWidth: 190 }}>
-                            {c.baseline_ad_id
-                              ? <a href={`/ci/anuncio/${c.baseline_ad_id}`}
-                                   title="Abrir o anúncio mais antigo desta receita para inspecionar"
-                                   style={{ color: T.t1, textDecoration: "none", borderBottom: `1px dotted ${T.b2}` }}>
-                                  {c.name}
-                                </a>
-                              : c.name}
-                            <div title={c.motivos.join(" · ")} style={{ fontSize: 10.8, color: T.t3, marginTop: 3 }}>
-                              {c.motivos[0] ?? "—"}
-                            </div>
+                          <td style={{ padding: "11px 8px 11px 0", color: T.t1, maxWidth: 210 }}>
+                            {nome}
+                            {usandoRpc && c.hook_dominante && (
+                              <div title={`Hook mais frequente desta receita: ${c.hook_dominante}`}
+                                   style={{ fontSize: 10.8, color: T.t3, marginTop: 3,
+                                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                “{c.hook_dominante}”
+                              </div>
+                            )}
                           </td>
-                          <td style={{ padding: "11px 8px 11px 0" }}>
-                            <Repeticao n={c.ad_count ?? 0} max={maxReceita} cor={T.violet} />
+                          <td style={{ padding: "11px 8px 11px 0", color: T.t1, fontVariantNumeric: "tabular-nums" }}>
+                            {assets}
                           </td>
-                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>{c.unique_asset_count ?? 0}</td>
+                          <td style={{ padding: "11px 8px 11px 0", fontVariantNumeric: "tabular-nums" }}>
+                            {usandoRpc ? (
+                              c.variacoes > 0 ? (
+                                <span title={`${c.variacoes} valores distintos em ${c.eixos_variados} eixo(s); ${c.eixos_mantidos} eixo(s) mantido(s)`}
+                                      style={{ color: T.violet }}>
+                                  {c.variacoes}
+                                </span>
+                              ) : (
+                                <span title="Nenhum eixo variou: as execuções são muito próximas, ou a análise não capturou a diferença"
+                                      style={{ color: T.label }}>0</span>
+                              )
+                            ) : <span style={{ color: T.label }}>—</span>}
+                          </td>
                           <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>
-                            {pessoas.length ? "—" : <span style={{ color: T.label }} title="Agrupamento de pessoas ainda não construído">n/d</span>}
+                            <span style={{ color: T.label }}
+                                  title="Agrupamento de pessoas ainda não construído">n/d</span>
                           </td>
-                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>{c.duracao}</td>
-                          <td style={{ padding: "11px 0", color: T.t3, maxWidth: 170 }}>
-                            {c.hook ? `“${c.hook}”` : "—"}
+                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>{dur}</td>
+                          <td style={{ padding: "11px 0", maxWidth: 150 }}>
+                            {usandoRpc ? (
+                              <span title={`${c.presenca_motivo}. Presença é repetição observada, não desempenho.`}
+                                    style={{
+                                      fontSize: 11.4, fontWeight: 620,
+                                      color: c.presenca === "muito alta" ? T.violet
+                                           : c.presenca === "alta" ? T.blue
+                                           : c.presenca === "média" ? T.t2 : T.label,
+                                    }}>
+                                {c.presenca}
+                                <div style={{ fontSize: 10.2, color: T.label, fontWeight: 500, marginTop: 1 }}>
+                                  {c.share_pct}% dos assets
+                                </div>
+                              </span>
+                            ) : <Repeticao n={c.ad_count ?? 0} max={maxReceita} cor={T.violet} />}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
+                )}
+                {erroPrioridade && (
+                  <div style={{
+                    marginTop: 11, fontSize: 11.6, color: T.yellow,
+                    background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.26)",
+                    borderRadius: 8, padding: "7px 10px",
+                  }}>
+                    Colunas de variação e presença indisponíveis ({erroPrioridade}). A tabela
+                    caiu para o cálculo antigo, feito no navegador — os números de Assets e
+                    Duração continuam corretos, Variações aparece como “—”.
+                  </div>
                 )}
                 {conceitos.length > 0 && (
                   <div style={{ marginTop: 13, display: "flex", alignItems: "center", gap: 12 }}>
@@ -694,7 +770,7 @@ export default function CreativeOverview() {
                       cursor: reagrupando ? "wait" : "pointer",
                     }}>{reagrupando ? t("grouping") : t("regroup")}</button>
                     <span style={{ fontSize: 11.8, color: T.t3 }}>
-                      Agrupado por ângulo, mecanismo e prova. Hook fica de fora: é execução, não ideia.
+                      Agrupado por ângulo e mecanismo. Hook e prova ficam de fora: são execução, não ideia — e aparecem como eixos de variação.
                     </span>
                   </div>
                 )}
