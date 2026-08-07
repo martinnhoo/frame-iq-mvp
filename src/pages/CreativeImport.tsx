@@ -105,7 +105,16 @@ export default function CreativeImport() {
   const [report, setReport] = useState<Row | null>(null);
   const [fila, setFila] = useState<{ downloads: Row[]; analises: Row[] } | null>(null);
 
-  const [formato, setFormato] = useState<"VIDEO" | "IMAGE" | "ALL">("VIDEO");
+  // ALL e não VIDEO.
+  //
+  // Medido em 06/08 contra a página oficial da Shapermint: display_format=VIDEO
+  // devolve ZERO anúncios e cobra ZERO créditos, terminando com
+  // stop_reason "no_more_pages" — indistinguível de "essa marca não anuncia".
+  // O mesmo pedido com ALL devolveu 10 anúncios, todos com mídia de vídeo.
+  // O filtro de formato da SpreshApp não faz o que o nome promete; filtrar por
+  // vídeo é trabalho nosso, depois, olhando media_type do que veio.
+  const [formato, setFormato] = useState<"VIDEO" | "IMAGE" | "ALL">("ALL");
+  // 2 caracteres cortava "ALL", que é justamente o valor para não filtrar país.
   const [pais, setPais] = useState("US");
   const [maxAds, setMaxAds] = useState(20);
 
@@ -279,8 +288,8 @@ export default function CreativeImport() {
               </div>
               <div>
                 <div style={{ fontSize: 11, color: T.label, marginBottom: 6 }}>PAÍS</div>
-                <input value={pais} onChange={e => setPais(e.target.value.toUpperCase().slice(0, 2))} style={{
-                  width: 62, background: T.bg2, border: `1px solid ${T.b2}`, borderRadius: 8,
+                <input value={pais} onChange={e => setPais(e.target.value.toUpperCase().slice(0, 3))} style={{
+                  width: 72, background: T.bg2, border: `1px solid ${T.b2}`, borderRadius: 8,
                   padding: "9px 11px", color: T.t1, fontSize: 13.5, fontFamily: F, outline: "none",
                 }} />
               </div>
