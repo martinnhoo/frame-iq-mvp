@@ -31,6 +31,7 @@ const CreativeOverview = lazy(() => import("./pages/CreativeOverview"));
 const CreativeAd = lazy(() => import("./pages/CreativeAd"));
 const CreativeHealth = lazy(() => import("./pages/CreativeHealth"));
 const CreativeRecipes = lazy(() => import("./pages/CreativeRecipes"));
+const CreativeQuality = lazy(() => import("./pages/CreativeQuality"));
 
 // ── Dashboard (Brilliant Hub interno) ────────────────────────────────────────
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
@@ -145,6 +146,7 @@ const App = () => (
               <Route path="/ci/anuncio/:id" element={<CreativeAd />} />
               <Route path="/ci/saude" element={<CreativeHealth />} />
               <Route path="/ci/receitas" element={<CreativeRecipes />} />
+              <Route path="/ci/qualidade" element={<CreativeQuality />} />
 
               {/* Rotas que nunca existiram e para as quais dez lugares
                   apontavam — o banner de upgrade do plano Free, o botão

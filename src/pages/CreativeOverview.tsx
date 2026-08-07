@@ -465,6 +465,13 @@ export default function CreativeOverview() {
         </nav>
 
         <div style={{ marginTop: "auto", display: "grid", gap: 12 }}>
+          <a href="/ci/qualidade" style={{
+            display: "flex", alignItems: "center", gap: 9, padding: "8px 11px",
+            borderRadius: 8, fontSize: 12.6, color: T.t3, textDecoration: "none",
+            border: `1px solid ${T.b1}`, marginBottom: 6,
+          }}>
+            <Ic d={I.check} s={14} c={T.t3} /> Qualidade da extração
+          </a>
           <a href="/ci/saude" style={{
             display: "flex", alignItems: "center", gap: 9, padding: "8px 11px",
             borderRadius: 8, fontSize: 12.6, color: T.t3, textDecoration: "none",
