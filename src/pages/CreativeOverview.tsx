@@ -65,7 +65,7 @@ const NAV = [
   { id: "overview", label: "Visão Geral", icon: I.home, href: "/ci", pronto: true },
   { id: "marcas", label: "Marcas", icon: I.brand, href: "/importar", pronto: true },
   { id: "anuncios", label: "Anúncios", icon: I.ads, href: "/shapermint", pronto: true },
-  { id: "receitas", label: "Receitas", icon: I.recipe, href: null, pronto: false },
+  { id: "receitas", label: "Receitas", icon: I.recipe, href: "/ci/receitas", pronto: true },
   { id: "hooks", label: "Hooks", icon: I.hook, href: null, pronto: false },
   { id: "pessoas", label: "Pessoas", icon: I.person, href: null, pronto: false },
   { id: "produtos", label: "Produtos", icon: I.product, href: null, pronto: false },
