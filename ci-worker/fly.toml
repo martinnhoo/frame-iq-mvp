@@ -12,11 +12,15 @@ primary_region = "gru"
 
 [env]
   CI_WORKER_ID = "fly-ci-worker"
-  # 1, não 2. Whisper "small" sozinho ocupa ~1 GB; dois jobs simultâneos com
-  # ffmpeg + OCR + leitura de frames estouram os 2 GB. E o OOM não é isolado:
-  # o job morre, volta à fila, e morre de novo — em laço. Só subir depois de
-  # medir memória real com vídeos de 15s, 30s, 60s e 90s em 1080x1920.
-  CI_WORKER_CONCURRENCY = "1"
+  # 2, medido — não estimado. O comentário anterior dizia "só subir depois de
+  # medir memória real", e agora medimos: pico de 1337 MB num anúncio real de
+  # 1080x1920, com Whisper e ffmpeg no mesmo job. Dois jobs simultâneos usam
+  # ~2,7 GB dos 4 GB disponíveis, deixando 1,3 GB de margem.
+  #
+  # Se voltar a dar OOM, o sinal é o attempt subindo sempre no mesmo estágio, e
+  # o checkpoint garante que retomar não repague o Gemini. Voltar para 1 é uma
+  # linha.
+  CI_WORKER_CONCURRENCY = "2"
   CI_TMP_DIR = "/data/tmp"
   CI_TMP_MAX_MB = "4096"
   CI_STORAGE_BACKEND = "supabase"
