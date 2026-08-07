@@ -72,7 +72,7 @@ const NAV = [
   { id: "hooks", k: "nav_hooks", icon: I.hook, href: "/ci/hooks", pronto: true },
   { id: "pessoas", k: "nav_people", icon: I.person, href: null, pronto: false },
   { id: "produtos", k: "nav_products", icon: I.product, href: "/ci/produtos", pronto: true },
-  { id: "relatorios", k: "nav_reports", icon: I.report, href: null, pronto: false },
+  { id: "relatorios", k: "nav_reports", icon: I.report, href: "/ci/relatorio", pronto: true },
 ];
 
 // ── Peças ───────────────────────────────────────────────────────────────────
