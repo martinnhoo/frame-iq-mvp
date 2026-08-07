@@ -1759,6 +1759,7 @@ export type Database = {
           brand_id: string
           confidence: number
           created_at: string
+          dedup_key: string | null
           evidence: string | null
           evidence_kind: string | null
           id: string
@@ -1775,6 +1776,7 @@ export type Database = {
           brand_id: string
           confidence?: number
           created_at?: string
+          dedup_key?: string | null
           evidence?: string | null
           evidence_kind?: string | null
           id?: string
@@ -1791,6 +1793,7 @@ export type Database = {
           brand_id?: string
           confidence?: number
           created_at?: string
+          dedup_key?: string | null
           evidence?: string | null
           evidence_kind?: string | null
           id?: string
@@ -7676,6 +7679,14 @@ export type Database = {
         Returns: {
           kind: string
           reaped: number
+        }[]
+      }
+      ci_rebuild_concepts: {
+        Args: { p_brand_id: string }
+        Returns: {
+          anuncios_agrupados: number
+          anuncios_sem_sinal: number
+          conceitos_criados: number
         }[]
       }
       ci_refresh_taxonomy_stats: {

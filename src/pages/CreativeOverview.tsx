@@ -196,7 +196,8 @@ export default function CreativeOverview() {
 
   const carregar = useCallback(async (brandId: string) => {
     setCarregando(true); setErro(null);
-    const q = (t: string, sel: string) => supabase.from(t).select(sel).eq("brand_id", brandId);
+    const q = (t: string, sel: string) =>
+      ((supabase.from(t as any) as any).select(sel).eq("brand_id", brandId)) as Promise<{ data: Row[] | null }>;
     try {
       const [ads, assets, termos, vinculos, conceitos, pessoas, cenas, runs, membros] = await Promise.all([
         q("ci_ads", "id,media_type,display_format,is_active,running_days,is_demo,analysis_status"),
@@ -248,9 +249,9 @@ export default function CreativeOverview() {
   };
 
   // ── Agregações ────────────────────────────────────────────────────────────
-  const termosDe = (...kinds: string[]) => ((d?.termos ?? []) as Row[])
+  const termosDe = (...kinds: string[]): Row[] => ((d?.termos ?? []) as Row[])
     .filter(t => kinds.includes(t.kind))
-    .map(t => ({ ...t, usos: ((d?.vinculos ?? []) as Row[]).filter(v => v.term_id === t.id).length }))
+    .map((t): Row => ({ ...t, usos: ((d?.vinculos ?? []) as Row[]).filter(v => v.term_id === t.id).length }))
     .sort((a, b) => b.usos - a.usos);
 
   const ads: Row[] = d?.ads ?? [];
@@ -313,6 +314,46 @@ export default function CreativeOverview() {
     return [...contagem.values()].sort((a, b) => b.assets - a.assets);
   })();
 
+
+  // ── Receitas prontas para a tabela ────────────────────────────────────────
+  // Cada coluna do mapa sai de dado real ou é marcada como não disponível.
+  // Nenhuma é preenchida por estimativa.
+  const membros: Row[] = d?.membros ?? [];
+  const maxReceita = Math.max(1, ...conceitos.map(c => c.ad_count ?? 0));
+  const ordenadas = [...conceitos]
+    .sort((a, b) => (b.ad_count ?? 0) - (a.ad_count ?? 0))
+    .map((c): Row => {
+      const meus = membros.filter(m => m.concept_id === c.id);
+      const adIds = new Set(meus.map(m => m.ad_id));
+      const assetIds = new Set(
+        (d?.vinculos ?? []).filter((v: Row) => adIds.has(v.ad_id)).map((v: Row) => v.asset_id),
+      );
+      const duracoes = assets
+        .filter(a => assetIds.has(a.id) && a.duration_seconds)
+        .map(a => Number(a.duration_seconds));
+      // Hook dominante DA RECEITA: o hook mais usado entre os anúncios dela —
+      // e não o hook global, que diria a mesma coisa em toda linha.
+      const hooksDaReceita = hooks
+        .map(h => ({
+          label: h.label,
+          n: (d?.vinculos ?? []).filter((v: Row) => v.term_id === h.id && adIds.has(v.ad_id)).length,
+        }))
+        .filter(h => h.n > 0)
+        .sort((a, b) => b.n - a.n);
+      return {
+        ...c,
+        motivos: (meus[0]?.match_reasons as string[] | undefined) ?? [],
+        hook: hooksDaReceita[0]?.label ?? null,
+        duracao: duracoes.length
+          ? `${Math.round(Math.min(...duracoes))}–${Math.round(Math.max(...duracoes))}s`
+          : "—",
+      };
+    });
+  const totalEstilo = Math.max(1, estilos.reduce((s, e) => s + e.usos, 0));
+  const fatias = estilos.slice(0, 5).map((e, i) => ({
+    label: e.label, pct: Math.round((e.usos / totalEstilo) * 100), cor: PALETA[i],
+  }));
+
   // ── Briefing ──────────────────────────────────────────────────────────────
   //
   // Derivado, não gerado. Cada linha é uma leitura direta do que foi observado
@@ -356,45 +397,6 @@ export default function CreativeOverview() {
     setCopiado(true);
     window.setTimeout(() => setCopiado(false), 2200);
   };
-
-  // ── Receitas prontas para a tabela ────────────────────────────────────────
-  // Cada coluna do mapa sai de dado real ou é marcada como não disponível.
-  // Nenhuma é preenchida por estimativa.
-  const membros: Row[] = d?.membros ?? [];
-  const maxReceita = Math.max(1, ...conceitos.map(c => c.ad_count ?? 0));
-  const ordenadas = [...conceitos]
-    .sort((a, b) => (b.ad_count ?? 0) - (a.ad_count ?? 0))
-    .map(c => {
-      const meus = membros.filter(m => m.concept_id === c.id);
-      const adIds = new Set(meus.map(m => m.ad_id));
-      const assetIds = new Set(
-        (d?.vinculos ?? []).filter((v: Row) => adIds.has(v.ad_id)).map((v: Row) => v.asset_id),
-      );
-      const duracoes = assets
-        .filter(a => assetIds.has(a.id) && a.duration_seconds)
-        .map(a => Number(a.duration_seconds));
-      // Hook dominante DA RECEITA: o hook mais usado entre os anúncios dela —
-      // e não o hook global, que diria a mesma coisa em toda linha.
-      const hooksDaReceita = hooks
-        .map(h => ({
-          label: h.label,
-          n: (d?.vinculos ?? []).filter((v: Row) => v.term_id === h.id && adIds.has(v.ad_id)).length,
-        }))
-        .filter(h => h.n > 0)
-        .sort((a, b) => b.n - a.n);
-      return {
-        ...c,
-        motivos: (meus[0]?.match_reasons as string[] | undefined) ?? [],
-        hook: hooksDaReceita[0]?.label ?? null,
-        duracao: duracoes.length
-          ? `${Math.round(Math.min(...duracoes))}–${Math.round(Math.max(...duracoes))}s`
-          : "—",
-      };
-    });
-  const totalEstilo = Math.max(1, estilos.reduce((s, e) => s + e.usos, 0));
-  const fatias = estilos.slice(0, 5).map((e, i) => ({
-    label: e.label, pct: Math.round((e.usos / totalEstilo) * 100), cor: PALETA[i],
-  }));
 
   // ═══════════════════════════════════════════════════════════════════════════
 
