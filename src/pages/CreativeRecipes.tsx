@@ -40,10 +40,6 @@ const KIND_ROTULO: Record<string, string> = {
   visual_style: "Estilo visual", story_structure: "Estrutura", scenario: "Cenário",
 };
 
-/** Eixos que interessam ver variando dentro de uma receita. */
-const EIXOS_VARIACAO = ["hook", "hook_written", "hook_visual", "offer", "cta",
-                        "visual_style", "scenario"] as const;
-
 const Card = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <div style={{
     background: T.bg1, border: `1px solid ${T.b1}`, borderRadius: 13,
@@ -81,83 +77,54 @@ export default function CreativeRecipes() {
         return (data ?? []) as Row[];
       };
 
-      const [conceitos, membros, vinculos, termos, ads, assets] = await Promise.all([
+      const [conceitos, membros, ads] = await Promise.all([
         pega("ci_concepts",
           "id,name,description,confidence,ad_count,unique_asset_count,longevity_days,is_active,baseline_ad_id,review_status"),
         pega("ci_concept_members", "concept_id,ad_id,match_reasons,is_baseline"),
-        pega("ci_ad_taxonomy", "ad_id,term_id,asset_id,evidence,confidence"),
-        pega("ci_taxonomy_terms", "id,kind,label,slug"),
         pega("ci_ads", "id,ad_archive_id,headline,is_active,running_days,started_on,is_demo"),
-        pega("ci_assets", "id,duration_seconds"),
       ]);
 
-      setD({ conceitos, membros, vinculos, termos, ads, assets });
+      setD({ conceitos, membros, ads });
     } catch (e: any) { setErro(e.message); }
     finally { setCarregando(false); }
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
 
-  const termo = (id: string): Row | undefined =>
-    ((d?.termos ?? []) as Row[]).find(t => t.id === id);
-
   /**
    * O que se repete e o que varia dentro de uma receita.
    *
-   * Um eixo com UM valor em todos os anúncios é o que a marca manteve fixo.
-   * Com vários, é o que ela testou. A distinção é a leitura estratégica
-   * inteira: ninguém quer saber que existem 6 anúncios — quer saber que os 6
-   * mantêm o mesmo argumento e trocam a abertura.
+   * Vem de ci_concept_variation, no banco, e não de um reduce no navegador.
+   * Com 31 anúncios os dois dariam o mesmo resultado; com 3.000 só um deles
+   * roda. E o critério de "mantido" fica num lugar só, em vez de duplicado
+   * entre SQL e TypeScript, onde as duas versões divergem com o tempo.
    */
-  const analisar = (conceptId: string) => {
-    const meus = ((d?.membros ?? []) as Row[]).filter(m => m.concept_id === conceptId);
-    const adIds = new Set(meus.map(m => m.ad_id));
-    const ads = ((d?.ads ?? []) as Row[]).filter(a => adIds.has(a.id));
-    const vinc = ((d?.vinculos ?? []) as Row[]).filter(v => adIds.has(v.ad_id));
+  const [variacao, setVariacao] = useState<Record<string, Row[]>>({});
+  const [carregandoVar, setCarregandoVar] = useState<string | null>(null);
 
-    const porEixo = new Map<string, Map<string, Set<string>>>();  // kind → label → adIds
-    for (const v of vinc) {
-      const t = termo(v.term_id);
-      if (!t) continue;
-      const mapa = porEixo.get(t.kind) ?? new Map<string, Set<string>>();
-      const conj = mapa.get(t.label) ?? new Set<string>();
-      conj.add(v.ad_id);
-      mapa.set(t.label, conj);
-      porEixo.set(t.kind, mapa);
-    }
+  const abrir = async (conceptId: string) => {
+    if (aberta === conceptId) { setAberta(null); return; }
+    setAberta(conceptId);
+    if (variacao[conceptId]) return;          // já buscado
+    setCarregandoVar(conceptId);
+    const { data, error } = await supabase.rpc("ci_concept_variation", { p_concept_id: conceptId });
+    setCarregandoVar(null);
+    if (error) { setErro(`Variação: ${error.message}`); return; }
+    setVariacao(v => ({ ...v, [conceptId]: (data ?? []) as Row[] }));
+  };
 
-    const fixos: Array<{ kind: string; label: string }> = [];
-    const variados: Array<{ kind: string; valores: Array<{ label: string; n: number }> }> = [];
-    for (const [kind, mapa] of porEixo) {
-      const valores = [...mapa.entries()]
-        .map(([label, conj]) => ({ label, n: conj.size }))
-        .sort((a, b) => b.n - a.n);
-      // Fixo = um valor só, presente em TODOS os anúncios da receita. Um valor
-      // só presente em metade não é "mantido", é "só metade tinha".
-      if (valores.length === 1 && valores[0].n === ads.length && ads.length > 1) {
-        fixos.push({ kind, label: valores[0].label });
-      } else if (valores.length > 1) {
-        variados.push({ kind, valores });
-      }
-    }
+  /** Os anúncios da receita, para a lista do fim do card. */
+  const adsDa = (conceptId: string): Row[] => {
+    const ids = new Set(((d?.membros ?? []) as Row[])
+      .filter(m => m.concept_id === conceptId).map(m => m.ad_id));
+    return ((d?.ads ?? []) as Row[])
+      .filter(a => ids.has(a.id))
+      .sort((a, b) => (b.running_days ?? 0) - (a.running_days ?? 0));
+  };
 
-    const duracoes = ads.length
-      ? ((d?.assets ?? []) as Row[])
-          .filter(a => vinc.some(v => v.asset_id === a.id) && a.duration_seconds)
-          .map(a => Number(a.duration_seconds))
-      : [];
-
-    return {
-      ads: ads.sort((a, b) => (b.running_days ?? 0) - (a.running_days ?? 0)),
-      motivos: (meus[0]?.match_reasons as string[] | undefined) ?? [],
-      fixos,
-      // Só os eixos que interessam ver variando, e ordenados por quantas
-      // execuções diferentes tiveram.
-      variados: variados
-        .filter(v => (EIXOS_VARIACAO as readonly string[]).includes(v.kind))
-        .sort((a, b) => b.valores.length - a.valores.length),
-      duracoes,
-    };
+  const motivosDe = (conceptId: string): string[] => {
+    const m = ((d?.membros ?? []) as Row[]).find(x => x.concept_id === conceptId);
+    return (m?.match_reasons as string[] | undefined) ?? [];
   };
 
   const conceitos = ((d?.conceitos ?? []) as Row[])
@@ -195,17 +162,19 @@ export default function CreativeRecipes() {
         )}
 
         {conceitos.map(c => {
-          const a = analisar(c.id);
           const abertaAqui = aberta === c.id;
+          const eixos = variacao[c.id] ?? [];
+          const mantidos = eixos.filter(e => e.mantido);
+          const variados = eixos.filter(e => !e.mantido && e.n_valores > 1);
+          const motivos = motivosDe(c.id);
+          const ads = adsDa(c.id);
           return (
             <Card key={c.id} style={{ padding: 0, overflow: "hidden" }}>
-              <button
-                onClick={() => setAberta(abertaAqui ? null : c.id)}
-                style={{
-                  width: "100%", textAlign: "left", background: "transparent", border: "none",
-                  padding: "16px 18px", cursor: "pointer", fontFamily: F, color: T.t1,
-                  display: "flex", alignItems: "center", gap: 14,
-                }}>
+              <button onClick={() => abrir(c.id)} style={{
+                width: "100%", textAlign: "left", background: "transparent", border: "none",
+                padding: "16px 18px", cursor: "pointer", fontFamily: F, color: T.t1,
+                display: "flex", alignItems: "center", gap: 14,
+              }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 640, marginBottom: 5 }}>
                     {c.name}
@@ -215,11 +184,7 @@ export default function CreativeRecipes() {
                   </div>
                   <div style={{ fontSize: 12.2, color: T.t3, display: "flex", gap: 14, flexWrap: "wrap" }}>
                     <span>{c.ad_count} anúncio{c.ad_count === 1 ? "" : "s"}</span>
-                    {a.variados.length > 0 && (
-                      <span style={{ color: T.violet }}>
-                        {a.variados.length} eixo{a.variados.length === 1 ? "" : "s"} testado{a.variados.length === 1 ? "" : "s"}
-                      </span>
-                    )}
+                    {c.unique_asset_count > 0 && <span>{c.unique_asset_count} assets únicos</span>}
                     {c.longevity_days > 0 && <span>{c.longevity_days} dias no ar</span>}
                   </div>
                 </div>
@@ -228,14 +193,17 @@ export default function CreativeRecipes() {
 
               {abertaAqui && (
                 <div style={{ padding: "0 18px 18px", borderTop: `1px solid ${T.b1}` }}>
+                  {carregandoVar === c.id && (
+                    <div style={{ color: T.t3, fontSize: 12.6, marginTop: 14 }}>Lendo variações…</div>
+                  )}
 
-                  {a.motivos.length > 0 && (
+                  {motivos.length > 0 && (
                     <div style={{ marginTop: 14 }}>
                       <div style={{ fontSize: 11, letterSpacing: ".07em", color: T.label, fontWeight: 660, marginBottom: 7 }}>
                         POR QUE ESTÃO JUNTOS
                       </div>
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        {a.motivos.map((m, i) => (
+                        {motivos.map((m, i) => (
                           <span key={i} style={{
                             fontSize: 12, color: T.t2, background: "rgba(167,139,250,.08)",
                             border: "1px solid rgba(167,139,250,.28)", borderRadius: 7, padding: "5px 10px",
@@ -245,57 +213,78 @@ export default function CreativeRecipes() {
                     </div>
                   )}
 
-                  {a.fixos.length > 0 && (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ fontSize: 11, letterSpacing: ".07em", color: T.label, fontWeight: 660, marginBottom: 7 }}>
-                        MANTIVERAM IGUAL
-                      </div>
-                      <div style={{ display: "grid", gap: 5 }}>
-                        {a.fixos.map((f, i) => (
-                          <div key={i} style={{ fontSize: 12.8, display: "flex", gap: 9 }}>
-                            <span style={{ color: T.label, minWidth: 96 }}>{KIND_ROTULO[f.kind] ?? f.kind}</span>
-                            <span style={{ color: T.teal }}>{f.label}</span>
+                  {/* As duas colunas que fazem a leitura estratégica: o que a
+                      marca preservou e o que ela usou como variável de teste. */}
+                  {(mantidos.length > 0 || variados.length > 0) && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 20, marginTop: 18 }}>
+                      <div>
+                        <div style={{ fontSize: 11, letterSpacing: ".07em", color: T.teal, fontWeight: 660, marginBottom: 9 }}>
+                          MANTIVERAM
+                        </div>
+                        {mantidos.length === 0 ? (
+                          <div style={{ fontSize: 12.3, color: T.label }}>nada constante em todos</div>
+                        ) : (
+                          <div style={{ display: "grid", gap: 7 }}>
+                            {mantidos.map(e => (
+                              <div key={e.kind} style={{ fontSize: 12.7 }}>
+                                <div style={{ color: T.label, fontSize: 11 }}>{KIND_ROTULO[e.kind] ?? e.kind}</div>
+                                <div style={{ color: T.teal }}>{(e.valores?.[0]?.label) ?? "—"}</div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    </div>
-                  )}
 
-                  {a.variados.length > 0 ? (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ fontSize: 11, letterSpacing: ".07em", color: T.label, fontWeight: 660, marginBottom: 7 }}>
-                        TESTARAM
-                      </div>
-                      <div style={{ display: "grid", gap: 11 }}>
-                        {a.variados.map(v => (
-                          <div key={v.kind}>
-                            <div style={{ fontSize: 12.3, color: T.violet, marginBottom: 5 }}>
-                              {v.valores.length} {KIND_ROTULO[v.kind]?.toLowerCase() ?? v.kind} diferentes
-                            </div>
-                            <div style={{ display: "grid", gap: 4 }}>
-                              {v.valores.slice(0, 8).map(x => (
-                                <div key={x.label} style={{ display: "flex", gap: 10, fontSize: 12.6 }}>
-                                  <span style={{ flex: 1, color: T.t2 }}>{x.label}</span>
-                                  <span style={{ color: T.t3, fontVariantNumeric: "tabular-nums" }}>
-                                    {x.n} anúncio{x.n === 1 ? "" : "s"}
-                                  </span>
+                      <div>
+                        <div style={{ fontSize: 11, letterSpacing: ".07em", color: T.violet, fontWeight: 660, marginBottom: 9 }}>
+                          TESTARAM
+                        </div>
+                        {variados.length === 0 ? (
+                          <div style={{ fontSize: 12.3, color: T.label }}>
+                            {c.ad_count > 1
+                              ? "nenhum eixo variando — execuções muito próximas, ou a análise não capturou a diferença"
+                              : "receita de um anúncio só: não há o que comparar"}
+                          </div>
+                        ) : (
+                          <div style={{ display: "grid", gap: 12 }}>
+                            {variados.map(e => (
+                              <div key={e.kind}>
+                                <div style={{ fontSize: 12.3, color: T.violet, marginBottom: 5 }}>
+                                  {e.n_valores} {(KIND_ROTULO[e.kind] ?? e.kind).toLowerCase()} diferentes
                                 </div>
-                              ))}
-                            </div>
+                                <div style={{ display: "grid", gap: 4 }}>
+                                  {(e.valores ?? []).slice(0, 6).map((v: Row) => (
+                                    <div key={v.label} style={{ display: "flex", gap: 10, fontSize: 12.5 }}>
+                                      <span style={{ flex: 1, color: T.t2 }}>{v.label}</span>
+                                      <span style={{ color: T.t3, fontVariantNumeric: "tabular-nums" }}>
+                                        {v.ads} anúncio{v.ads === 1 ? "" : "s"}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    </div>
-                  ) : c.ad_count > 1 && (
-                    <div style={{ marginTop: 16, fontSize: 12.5, color: T.t3, lineHeight: 1.55 }}>
-                      Nenhum eixo variando entre os anúncios desta receita. Ou são execuções
-                      muito próximas, ou a análise não capturou a diferença.
                     </div>
                   )}
 
-                  {a.duracoes.length > 1 && (
-                    <div style={{ marginTop: 14, fontSize: 12.4, color: T.t3 }}>
-                      Duração de {Math.round(Math.min(...a.duracoes))}s a {Math.round(Math.max(...a.duracoes))}s
+                  {/* A frase que resume a receita numa linha — é o que alguém
+                      copiaria para um brief. */}
+                  {variados.length > 0 && (
+                    <div style={{
+                      marginTop: 18, padding: "12px 14px", background: T.bg2,
+                      borderRadius: 9, fontSize: 12.9, color: T.t2, lineHeight: 1.6,
+                    }}>
+                      A marca repete esta receita mantendo{" "}
+                      <span style={{ color: T.teal }}>
+                        {mantidos.map(m => (KIND_ROTULO[m.kind] ?? m.kind).toLowerCase()).join(", ") || "a estrutura"}
+                      </span>{" "}
+                      e variando principalmente{" "}
+                      <span style={{ color: T.violet }}>
+                        {variados.slice(0, 3).map(v => (KIND_ROTULO[v.kind] ?? v.kind).toLowerCase()).join(", ")}
+                      </span>.
                     </div>
                   )}
 
@@ -304,20 +293,17 @@ export default function CreativeRecipes() {
                       ANÚNCIOS
                     </div>
                     <div style={{ display: "grid", gap: 5 }}>
-                      {a.ads.map(ad => (
+                      {ads.map(ad => (
                         <a key={ad.id} href={`/ci/anuncio/${ad.id}`} style={{
                           display: "flex", gap: 11, alignItems: "center", textDecoration: "none",
-                          background: T.bg2, borderRadius: 8, padding: "9px 12px", fontSize: 12.7,
-                          color: T.t2,
+                          background: T.bg2, borderRadius: 8, padding: "9px 12px", fontSize: 12.7, color: T.t2,
                         }}>
                           <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {ad.headline || ad.ad_archive_id}
                           </span>
                           {ad.is_demo && <span style={{ fontSize: 10, color: T.yellow }}>DEMO</span>}
                           {ad.is_active && <span style={{ fontSize: 10.5, color: T.green }}>no ar</span>}
-                          {ad.running_days != null && (
-                            <span style={{ fontSize: 11, color: T.t3 }}>{ad.running_days}d</span>
-                          )}
+                          {ad.running_days != null && <span style={{ fontSize: 11, color: T.t3 }}>{ad.running_days}d</span>}
                           <span style={{ color: T.blue, fontSize: 12 }}>inspecionar →</span>
                         </a>
                       ))}
