@@ -465,6 +465,13 @@ export default function CreativeOverview() {
         </nav>
 
         <div style={{ marginTop: "auto", display: "grid", gap: 12 }}>
+          <a href="/ci/saude" style={{
+            display: "flex", alignItems: "center", gap: 9, padding: "8px 11px",
+            borderRadius: 8, fontSize: 12.6, color: T.t3, textDecoration: "none",
+            border: `1px solid ${T.b1}`,
+          }}>
+            <Ic d={I.shield} s={14} c={T.t3} /> Saúde do sistema
+          </a>
           <div style={{ display: "flex", gap: 11, alignItems: "flex-start", padding: "0 9px" }}>
             <Ic d={I.spark} s={17} c={T.violet} />
             <div style={{ fontSize: 12.2, color: T.t3, lineHeight: 1.45 }}>
