@@ -249,9 +249,26 @@ export default function CreativeOverview() {
   };
 
   // ── Agregações ────────────────────────────────────────────────────────────
+  // ── Por que os vínculos de demonstração são excluídos ────────────────────
+  // O anúncio semeado para provar o pipeline (Big Buck Bunny) tem is_demo
+  // marcado na LINHA DELE, mas os termos que a análise extraiu dele não têm
+  // marca nenhuma. Sem este filtro, "Coelho animado deitado na grama" aparecia
+  // na lista de hooks da Shapermint como se fosse um hook da marca — dado de
+  // demonstração misturado em silêncio com dado real, que é justamente o que
+  // não pode acontecer.
+  //
+  // Excluir e não etiquetar: um hook de teste no meio da lista, mesmo com selo,
+  // ainda desloca contagem e ordenação. Ele não pertence à análise da marca —
+  // pertence ao histórico de como o sistema foi testado.
+  const idsDemo = new Set(((d?.ads ?? []) as Row[]).filter(a => a.is_demo).map(a => a.id));
+  const vinculosReais = ((d?.vinculos ?? []) as Row[]).filter(v => !idsDemo.has(v.ad_id));
+
   const termosDe = (...kinds: string[]): Row[] => ((d?.termos ?? []) as Row[])
     .filter(t => kinds.includes(t.kind))
-    .map((t): Row => ({ ...t, usos: ((d?.vinculos ?? []) as Row[]).filter(v => v.term_id === t.id).length }))
+    .map((t): Row => ({ ...t, usos: vinculosReais.filter(v => v.term_id === t.id).length }))
+    // Termo que só existia por causa do anúncio de demonstração some da lista
+    // em vez de aparecer com zero — zero aqui seria ruído, não informação.
+    .filter(t => t.usos > 0)
     .sort((a, b) => b.usos - a.usos);
 
   const ads: Row[] = d?.ads ?? [];
@@ -292,9 +309,20 @@ export default function CreativeOverview() {
     testimonial: "Depoimento", cta: "CTA", close: "Fechamento",
   };
   const estruturas = (() => {
+    // Mesmo motivo dos termos: a estrutura de cena do vídeo de demonstração
+    // não é uma estrutura de roteiro da marca.
+    //
+    // Exclui o asset só quando ele NÃO tem nenhum vínculo real. A deduplicação
+    // é por SHA-256, então o mesmo vídeo pode estar num anúncio de demonstração
+    // e num anúncio de verdade; nesse caso ele é dado real e fica.
+    const assetsReais = new Set(vinculosReais.map(v => v.asset_id));
+    const assetsDemo = new Set(
+      ((d?.vinculos ?? []) as Row[])
+        .filter(v => idsDemo.has(v.ad_id) && !assetsReais.has(v.asset_id))
+        .map(v => v.asset_id));
     const porAd = new Map<string, { ordem: number; f: string }[]>();
     for (const c of (d?.cenas ?? []) as Row[]) {
-      if (!c.scene_function) continue;
+      if (!c.scene_function || assetsDemo.has(c.asset_id)) continue;
       const lista = porAd.get(c.asset_id) ?? [];
       lista.push({ ordem: Number(c.scene_index ?? 0), f: String(c.scene_function) });
       porAd.set(c.asset_id, lista);
@@ -326,7 +354,7 @@ export default function CreativeOverview() {
       const meus = membros.filter(m => m.concept_id === c.id);
       const adIds = new Set(meus.map(m => m.ad_id));
       const assetIds = new Set(
-        (d?.vinculos ?? []).filter((v: Row) => adIds.has(v.ad_id)).map((v: Row) => v.asset_id),
+        vinculosReais.filter((v: Row) => adIds.has(v.ad_id)).map((v: Row) => v.asset_id),
       );
       const duracoes = assets
         .filter(a => assetIds.has(a.id) && a.duration_seconds)
@@ -336,7 +364,7 @@ export default function CreativeOverview() {
       const hooksDaReceita = hooks
         .map(h => ({
           label: h.label,
-          n: (d?.vinculos ?? []).filter((v: Row) => v.term_id === h.id && adIds.has(v.ad_id)).length,
+          n: vinculosReais.filter((v: Row) => v.term_id === h.id && adIds.has(v.ad_id)).length,
         }))
         .filter(h => h.n > 0)
         .sort((a, b) => b.n - a.n);
