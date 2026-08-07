@@ -83,7 +83,7 @@ export default function CreativeHealth() {
     setCarregando(true); setErro(null);
     try {
       const conta = async (tabela: string, filtro?: [string, any]) => {
-        let q = supabase.from(tabela).select("id", { count: "exact", head: true });
+        let q: any = (supabase.from as any)(tabela).select("id", { count: "exact", head: true });
         if (filtro) q = q.eq(filtro[0], filtro[1]);
         const { count, error } = await q;
         if (error) throw new Error(`${tabela}: ${error.message}`);
@@ -112,7 +112,7 @@ export default function CreativeHealth() {
       for (const t of (porTipo ?? []) as Row[]) kinds[t.kind] = (kinds[t.kind] ?? 0) + 1;
 
       const filaDe = async (tabela: string) => {
-        const { data } = await supabase.from(tabela).select("status");
+        const { data } = await (supabase.from as any)(tabela).select("status");
         const m: Record<string, number> = {};
         for (const j of (data ?? []) as Row[]) m[j.status] = (m[j.status] ?? 0) + 1;
         return m;
