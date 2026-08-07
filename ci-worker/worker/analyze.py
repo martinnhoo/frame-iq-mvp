@@ -532,7 +532,8 @@ def stage_ocr(ctx: Ctx) -> None:
 def stage_semantic_analysis(ctx: Ctx) -> None:
     existing = ctx.supa.select("ci_analysis_results", params={
         "asset_id": f"eq.{ctx.asset_id}", "kind": "eq.semantic",
-        "select": "id,normalized_output,raw_output,provider,model,fidelity", "limit": "1",
+        "select": "id,normalized_output,raw_output,provider,model,fidelity,prompt_version",
+        "limit": "1",
     })
     if "semantic_analysis" in ctx.completed and existing:
         # Este é o reuso que mais importa: não repagar o Gemini.
@@ -541,7 +542,10 @@ def stage_semantic_analysis(ctx: Ctx) -> None:
         ctx.semantic = SemanticResult(
             normalized=row.get("normalized_output") or {}, raw=row.get("raw_output") or {},
             provider=row.get("provider") or "gemini", model=row.get("model") or "",
-            prompt_version="semantic/v1", fidelity=row.get("fidelity") or "full",
+            # A versão vem da linha, não cravada: um resultado gravado pelo
+            # prompt v1 e reusado não pode se apresentar como v2.
+            prompt_version=row.get("prompt_version") or "semantic/v1",
+            fidelity=row.get("fidelity") or "full",
         )
         ctx.log.emit("reused_from_db", stage="semantic_analysis", note="Gemini NÃO recobrado")
         return

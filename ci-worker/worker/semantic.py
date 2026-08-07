@@ -39,7 +39,11 @@ from typing import Any
 
 from .config import Settings
 
-PROMPT_VERSION = "semantic/v1"
+# v2: as regras 8 e 9 (label em inglês, curto e canônico) mudaram o que o
+# modelo devolve. Sem bumpar isto, um resultado do prompt velho e um do prompt
+# novo ficariam indistinguíveis no banco — e a pergunta "este anúncio já foi
+# reanalisado?" não teria resposta. A versão é o que torna a migração auditável.
+PROMPT_VERSION = "semantic/v2"
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
