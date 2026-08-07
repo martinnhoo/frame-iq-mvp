@@ -26,6 +26,7 @@ import Onboarding from "./pages/Onboarding";
 const Terms        = lazy(() => import("./pages/Terms"));
 const Privacy      = lazy(() => import("./pages/Privacy"));
 const Shapermint   = lazy(() => import("./pages/Shapermint"));
+const CreativeImport = lazy(() => import("./pages/CreativeImport"));
 
 // ── Dashboard (Brilliant Hub interno) ────────────────────────────────────────
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
@@ -135,6 +136,7 @@ const App = () => (
               {/* Creative Intelligence. Rota na raiz porque é o que o Martinho pediu;
                   a página exige sessão e a RLS faz o resto. */}
               <Route path="/shapermint" element={<Shapermint />} />
+              <Route path="/importar" element={<CreativeImport />} />
 
               {/* Rotas que nunca existiram e para as quais dez lugares
                   apontavam — o banner de upgrade do plano Free, o botão
