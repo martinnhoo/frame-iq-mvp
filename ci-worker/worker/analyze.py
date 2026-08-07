@@ -767,8 +767,13 @@ def run_analysis_job(job: dict[str, Any], supa: Supa, storage: StorageBackend,
             "locked_by": None, "lease_expires_at": None,
         }, match={"id": f"eq.{ctx.job_id}"})
 
+        # O pico por estágio é o número que decide se cabe concurrency=2. Vai no
+        # resumo do job para não ser preciso reler estágio por estágio depois.
+        from .logs import memoria_mb  # noqa: PLC0415
+        mem = memoria_mb()
         log.emit("job_completed", stage_timings=log.stage_timings,
-                 warnings=len(ctx.warnings))
+                 warnings=len(ctx.warnings),
+                 **({"mem_mb": mem["atual"], "mem_pico_mb": mem["pico"]} if mem else {}))
 
         return {
             "asset_id": ctx.asset_id,

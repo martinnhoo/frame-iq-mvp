@@ -63,6 +63,59 @@ def safe_url(url: str | None) -> str | None:
     return f"{base}?<query:{len(url) - len(base)}ch>" if "?" in url else base
 
 
+def memoria_mb() -> dict[str, int] | None:
+    """
+    Memória do CONTÊINER, não do processo Python.
+
+    Lê o cgroup e não /proc/self/status de propósito: ffmpeg, ffprobe e o
+    Whisper rodam em subprocesso, e o pico deles é justamente o que derruba a
+    máquina. O RSS do Python sozinho não veria nada disso e diria que está tudo
+    bem enquanto o contêiner morre.
+
+    cgroup v2 primeiro (é o do Fly), v1 como reserva. Fora de contêiner devolve
+    None — e quem chama simplesmente não registra o campo, em vez de inventar
+    um zero que pareceria medição.
+    """
+    def _ler(caminho: str) -> int | None:
+        try:
+            with open(caminho) as fh:  # noqa: PTH123
+                valor = fh.read().strip()
+            return int(valor) // (1024 * 1024) if valor.isdigit() else None
+        except (OSError, ValueError):
+            return None
+
+    atual = _ler("/sys/fs/cgroup/memory.current")
+    pico = _ler("/sys/fs/cgroup/memory.peak")
+    if atual is None:
+        atual = _ler("/sys/fs/cgroup/memory/memory.usage_in_bytes")
+        pico = _ler("/sys/fs/cgroup/memory/memory.max_usage_in_bytes")
+
+    # /proc/meminfo como reserva — e no Fly ele é até melhor que o cgroup: a
+    # máquina é uma VM Firecracker com kernel próprio, então MemTotal e
+    # MemAvailable descrevem exatamente o que o OOM killer enxerga.
+    if atual is None:
+        try:
+            info: dict[str, int] = {}
+            with open("/proc/meminfo") as fh:  # noqa: PTH123
+                for linha in fh:
+                    campo, _, resto = linha.partition(":")
+                    numero = resto.strip().split(" ")[0]
+                    if numero.isdigit():
+                        info[campo] = int(numero)  # kB
+            total = info.get("MemTotal")
+            disponivel = info.get("MemAvailable")
+            if total and disponivel is not None:
+                atual = (total - disponivel) // 1024
+                # /proc/meminfo não guarda histórico, então não há pico aqui.
+                pico = None
+        except (OSError, ValueError):
+            return None
+
+    if atual is None:
+        return None
+    return {"atual": atual, "pico": pico or atual}
+
+
 class JobLogger:
     """
     Emite uma linha JSON por evento, já com os campos do job preenchidos.
@@ -92,10 +145,19 @@ class JobLogger:
     def end_stage(self, stage: str, status: str = "completed", **fields: Any) -> int:
         elapsed = int((time.monotonic() - self._stage_started) * 1000)
         self.stage_timings[stage] = elapsed
+        # Memória junto do tempo, em todo estágio. Sem isto, dimensionar a
+        # máquina é chute: foi assim que 2 GB foram escolhidos contra um vídeo
+        # de teste de 10s e morreram no primeiro anúncio real de 1080x1920.
+        # O custo é ler dois arquivos — barato o bastante para ser sempre.
+        mem = memoria_mb()
+        if mem:
+            fields.setdefault("mem_mb", mem["atual"])
+            if mem.get("pico"):
+                fields.setdefault("mem_pico_mb", mem["pico"])
         self.emit(status, stage=stage, elapsed_ms=elapsed, **fields)
         return elapsed
 
-    def emit(self, status: str, **fields: Any) -> None:
+    def emit(self, status: str, **fields: Any) -> None:  # noqa: D102
         record: dict[str, Any] = {
             "ts": datetime.now(timezone.utc).isoformat(),
             **self.context,
