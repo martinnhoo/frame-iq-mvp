@@ -7693,6 +7693,7 @@ export type Database = {
         Args: { p_brand_id: string }
         Returns: number
       }
+      ci_wake_worker_tick: { Args: never; Returns: undefined }
       cleanup_old_error_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       cockpit_dl_by_user: { Args: { days?: number }; Returns: Json }
