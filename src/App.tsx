@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { IdiomaProvider } from "@/ci/idioma";
 import { lazy, Suspense } from "react";
 
 // AdBrief.pro hoje é só portal de cadastro/login (invite-only) +
@@ -113,6 +114,7 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <IdiomaProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -232,6 +234,7 @@ const App = () => (
             </Suspense>
           </BrowserRouter>
         </TooltipProvider>
+        </IdiomaProvider>
       </LanguageProvider>
     </QueryClientProvider>
   </HelmetProvider>

@@ -19,6 +19,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIdioma, SeletorIdioma } from "@/ci/idioma";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -62,14 +63,14 @@ const Ic = ({ d, s = 16, c = "currentColor", w = 1.6 }: { d: string; s?: number;
 );
 
 const NAV = [
-  { id: "overview", label: "Visão Geral", icon: I.home, href: "/ci", pronto: true },
-  { id: "marcas", label: "Marcas", icon: I.brand, href: "/importar", pronto: true },
-  { id: "anuncios", label: "Anúncios", icon: I.ads, href: "/shapermint", pronto: true },
-  { id: "receitas", label: "Receitas", icon: I.recipe, href: "/ci/receitas", pronto: true },
-  { id: "hooks", label: "Hooks", icon: I.hook, href: null, pronto: false },
-  { id: "pessoas", label: "Pessoas", icon: I.person, href: null, pronto: false },
-  { id: "produtos", label: "Produtos", icon: I.product, href: null, pronto: false },
-  { id: "relatorios", label: "Relatórios", icon: I.report, href: null, pronto: false },
+  { id: "overview", k: "nav_overview", icon: I.home, href: "/ci", pronto: true },
+  { id: "marcas", k: "nav_brands", icon: I.brand, href: "/importar", pronto: true },
+  { id: "anuncios", k: "nav_ads", icon: I.ads, href: "/shapermint", pronto: true },
+  { id: "receitas", k: "nav_recipes", icon: I.recipe, href: "/ci/receitas", pronto: true },
+  { id: "hooks", k: "nav_hooks", icon: I.hook, href: null, pronto: false },
+  { id: "pessoas", k: "nav_people", icon: I.person, href: null, pronto: false },
+  { id: "produtos", k: "nav_products", icon: I.product, href: null, pronto: false },
+  { id: "relatorios", k: "nav_reports", icon: I.report, href: null, pronto: false },
 ];
 
 // ── Peças ───────────────────────────────────────────────────────────────────
@@ -177,6 +178,7 @@ const PALETA = [T.purple, T.blue, T.teal, T.orange, "rgba(240,246,252,0.28)"];
 // ═══════════════════════════════════════════════════════════════════════════
 
 export default function CreativeOverview() {
+  const { t } = useIdioma();
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [marcas, setMarcas] = useState<Row[]>([]);
@@ -416,7 +418,7 @@ export default function CreativeOverview() {
       `Briefing — ${marca?.name ?? ""}`,
       `Receita: ${briefing.receita} (observada em ${briefing.ads} anúncio(s))`,
       "",
-      ...briefing.linhas.map(l => `${l.rotulo}: ${l.valor ?? "não observado"}`),
+      ...briefing.linhas.map(l => `${l.rotulo}: ${l.valor ?? t("not_observed")}`),
       "",
       "Baseado em sinais públicos de repetição de criativos.",
       "NÃO representa desempenho, ROAS, CPA nem resultado confirmado.",
@@ -454,8 +456,8 @@ export default function CreativeOverview() {
                 cursor: n.href ? "pointer" : "default",
               }}>
                 <Ic d={n.icon} s={16} c={ativo ? T.violet : "currentColor"} />
-                <span style={{ flex: 1 }}>{n.label}</span>
-                {!n.pronto && <span style={{ fontSize: 9, color: T.violet, opacity: .8 }}>em breve</span>}
+                <span style={{ flex: 1 }}>{t(n.k)}</span>
+                {!n.pronto && <span style={{ fontSize: 9, color: T.violet, opacity: .8 }}>{t("nav_soon")}</span>}
               </div>
             );
             return n.href
@@ -470,19 +472,19 @@ export default function CreativeOverview() {
             borderRadius: 8, fontSize: 12.6, color: T.t3, textDecoration: "none",
             border: `1px solid ${T.b1}`, marginBottom: 6,
           }}>
-            <Ic d={I.check} s={14} c={T.t3} /> Qualidade da extração
+            <Ic d={I.check} s={14} c={T.t3} /> {t("nav_quality")}
           </a>
           <a href="/ci/saude" style={{
             display: "flex", alignItems: "center", gap: 9, padding: "8px 11px",
             borderRadius: 8, fontSize: 12.6, color: T.t3, textDecoration: "none",
             border: `1px solid ${T.b1}`,
           }}>
-            <Ic d={I.shield} s={14} c={T.t3} /> Saúde do sistema
+            <Ic d={I.shield} s={14} c={T.t3} /> {t("nav_health")}
           </a>
           <div style={{ display: "flex", gap: 11, alignItems: "flex-start", padding: "0 9px" }}>
             <Ic d={I.spark} s={17} c={T.violet} />
             <div style={{ fontSize: 12.2, color: T.t3, lineHeight: 1.45 }}>
-              Descubra padrões.<br />Crie melhores criativos.
+              {t("tagline").split("\n")[0]}<br />{t("tagline").split("\n")[1]}
             </div>
           </div>
           <div style={{
@@ -529,6 +531,7 @@ export default function CreativeOverview() {
             </Pilula>
             <Pilula icon={I.globe}>{marca?.market ?? "—"}</Pilula>
             <Pilula icon={I.chat}>{marca?.language ?? "—"}</Pilula>
+            <SeletorIdioma />
             <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.3, color: T.t3 }}>
               <Ic d={I.refresh} s={14} c={T.t3} />
               {d?.run
@@ -576,15 +579,15 @@ export default function CreativeOverview() {
 
             {/* ── KPIs ──────────────────────────────────────────────────────── */}
             <div style={{ display: "flex", gap: 11, flexWrap: "wrap", marginBottom: 13 }}>
-              <Kpi icon={I.search} cor={T.violet} label="Anúncios ativos encontrados" valor={ativos}
+              <Kpi icon={I.search} cor={T.violet} label={t("kpi_active")} valor={ativos}
                    apagado={!ativos} hint="Criativos da biblioteca pública. Não é gasto nem impressão." />
-              <Kpi icon={I.layers} cor={T.blue} label="Assets únicos" valor={assets.length}
+              <Kpi icon={I.layers} cor={T.blue} label={t("kpi_assets")} valor={assets.length}
                    apagado={!assets.length} hint="Vídeos distintos por SHA-256. O mesmo vídeo em 5 anúncios conta 1." />
-              <Kpi icon={I.bulb} cor={T.green} label="Receitas criativas atuais" valor={conceitos.length}
+              <Kpi icon={I.bulb} cor={T.green} label={t("kpi_recipes")} valor={conceitos.length}
                    apagado={!conceitos.length} hint="Agrupamento de anúncios que contam a mesma ideia." />
-              <Kpi icon={I.person} cor={T.orange} label="Pessoas recorrentes" valor={pessoas.length}
+              <Kpi icon={I.person} cor={T.orange} label={t("kpi_people")} valor={pessoas.length}
                    apagado={!pessoas.length} hint="Grupos anônimos. Nunca identificamos quem é." />
-              <Kpi icon={I.shield} cor={T.teal} label="Cobertura válida" valor={cobertura} sufixo="%"
+              <Kpi icon={I.shield} cor={T.teal} label={t("kpi_coverage")} valor={cobertura} sufixo="%"
                    apagado={!cobertura} hint="Assets com análise concluída sobre o total." />
             </div>
 
@@ -593,7 +596,7 @@ export default function CreativeOverview() {
 
               <Card>
                 <Head hint="Anúncios diferentes que contam a mesma ideia. A barra mostra quanto cada receita se repete.">
-                  O que mais se repete agora
+                  {t("panel_repeats")}
                 </Head>
                 {conceitos.length === 0 ? (
                   <Falta motivo={
@@ -607,7 +610,7 @@ export default function CreativeOverview() {
                       border: "none", borderRadius: 9, padding: "10px 17px",
                       fontSize: 13, fontWeight: 640, fontFamily: F,
                       cursor: assets.length ? "pointer" : "not-allowed",
-                    }}>{reagrupando ? "Agrupando…" : "Montar receitas"}</button>
+                    }}>{reagrupando ? t("grouping") : t("build_recipes")}</button>
                   } />
                 ) : (
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.7 }}>
@@ -665,7 +668,7 @@ export default function CreativeOverview() {
                       background: "transparent", color: T.t2, border: `1px solid ${T.b2}`,
                       borderRadius: 8, padding: "7px 13px", fontSize: 12.3, fontFamily: F,
                       cursor: reagrupando ? "wait" : "pointer",
-                    }}>{reagrupando ? "Agrupando…" : "Reagrupar"}</button>
+                    }}>{reagrupando ? t("grouping") : t("regroup")}</button>
                     <span style={{ fontSize: 11.8, color: T.t3 }}>
                       Agrupado por ângulo, mecanismo e prova. Hook fica de fora: é execução, não ideia.
                     </span>
@@ -675,7 +678,7 @@ export default function CreativeOverview() {
 
               <Card>
                 <Head hint="Distribuição dos estilos visuais que o modelo identificou, com evidência.">
-                  Mix criativo atual
+                  {t("panel_mix")}
                 </Head>
                 {fatias.length === 0 ? (
                   <Falta motivo={semReal
@@ -703,7 +706,7 @@ export default function CreativeOverview() {
 
               <Card>
                 <Head hint="A sequência de funções de cena que mais se repete: problema → produto → demonstração → CTA.">
-                  Estruturas de roteiro mais usadas
+                  {t("panel_scripts")}
                 </Head>
                 {estruturas.length === 0 ? (
                   <Falta motivo={
@@ -743,7 +746,7 @@ export default function CreativeOverview() {
 
               <Card>
                 <Head hint="Cada hook carrega a evidência que o sustenta: a fala, o texto na tela ou o frame.">
-                  Hooks que mais aparecem
+                  {t("panel_hooks")}
                 </Head>
                 {hooks.length === 0 ? (
                   <Falta motivo={semReal
@@ -776,7 +779,7 @@ export default function CreativeOverview() {
 
               <Card>
                 <Head hint="Agrupamento anônimo por aparência recorrente. Nunca identificamos a pessoa.">
-                  Pessoas e delivery mais recorrentes
+                  {t("panel_people")}
                 </Head>
                 {pessoas.length === 0 ? (
                   <Falta pendente motivo={
@@ -802,7 +805,7 @@ export default function CreativeOverview() {
 
               <Card>
                 <Head hint="O que a marca diz que resolve, o que promete e com o que prova.">
-                  Mapa de mensagens atual
+                  {t("panel_messages")}
                 </Head>
                 {problemas.length + promessas.length + provas.length === 0 ? (
                   <Falta motivo={semReal
@@ -836,7 +839,7 @@ export default function CreativeOverview() {
 
               <Card>
                 <Head hint="A receita dominante convertida em instruções de roteiro.">
-                  Como transformar isso em script
+                  {t("panel_brief")}
                 </Head>
                 {!briefing ? (
                   <Falta motivo={
@@ -857,7 +860,7 @@ export default function CreativeOverview() {
                           <span style={{ color: T.label, minWidth: 62 }}>{l.rotulo}</span>
                           <span style={{ flex: 1, color: l.valor ? T.t2 : T.label }}>
                             {/* "não observado" e não um palpite: a lacuna é informação. */}
-                            {l.valor ?? "não observado"}
+                            {l.valor ?? t("not_observed")}
                           </span>
                         </div>
                       ))}
@@ -868,7 +871,7 @@ export default function CreativeOverview() {
                       cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
                     }}>
                       <Ic d={I.spark} s={14} c="#0B0713" />
-                      {copiado ? "Copiado" : "Copiar briefing"}
+                      {copiado ? t("copied") : t("copy_brief")}
                     </button>
                   </>
                 )}
