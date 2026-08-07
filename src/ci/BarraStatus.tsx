@@ -62,6 +62,11 @@ export function BarraStatus({ brandId, en = false }: { brandId?: string | null; 
   const [aRefazer, setARefazer] = useState<number | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  // Falha de leitura NÃO pode se parecer com fila vazia. Sem este estado, uma
+  // RPC ausente ou sem permissão renderiza exatamente a mesma barra de um
+  // sistema ocioso — que é a ambiguidade que /ci/saude existe para eliminar, e
+  // eu a reintroduzi aqui. Visto em produção antes de alguém reclamar.
+  const [erroLeitura, setErroLeitura] = useState<string | null>(null);
   const montado = useRef(true);
 
   useEffect(() => () => { montado.current = false; }, []);
@@ -73,8 +78,16 @@ export function BarraStatus({ brandId, en = false }: { brandId?: string | null; 
       });
       if (error) throw error;
       const linha = (Array.isArray(data) ? data[0] : data) as Estado | undefined;
-      if (montado.current && linha) setE(linha);
-    } catch { /* barra de status não derruba a tela em que está */ }
+      if (!linha) throw new Error("ci_queue_status devolveu vazio");
+      if (montado.current) { setE(linha); setErroLeitura(null); }
+    } catch (err: any) {
+      // A barra continua não derrubando a tela — mas passa a DIZER que não
+      // conseguiu ler, em vez de fingir que está tudo parado.
+      if (montado.current) {
+        setE(null);
+        setErroLeitura(err?.message ?? "não consegui ler a fila");
+      }
+    }
   }, [brandId]);
 
   // Quanto há para reanalisar. dry_run: pergunta sem mexer.
@@ -156,15 +169,34 @@ export function BarraStatus({ brandId, en = false }: { brandId?: string | null; 
       <style>{`@keyframes ci-pulso{0%,100%{opacity:1}50%{opacity:.35}}`}</style>
 
       <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-        <Ponto cor={trabalhando ? T.green : vivo ? T.blue : T.label} pulsando={trabalhando} />
-        <span style={{ fontSize: 12.6, fontWeight: 640, color: T.t1 }}>
-          {trabalhando
-            ? (en ? "Processing" : "Processando")
-            : esperando > 0
-              ? (en ? "Waiting" : "Aguardando")
-              : (en ? "Idle" : "Fila vazia")}
+        <Ponto
+          cor={erroLeitura ? T.red : trabalhando ? T.green : vivo ? T.blue : T.label}
+          pulsando={trabalhando && !erroLeitura}
+        />
+        <span style={{ fontSize: 12.6, fontWeight: 640, color: erroLeitura ? T.red : T.t1 }}>
+          {erroLeitura
+            ? (en ? "Queue unreadable" : "Fila ilegível")
+            : trabalhando
+              ? (en ? "Processing" : "Processando")
+              : esperando > 0
+                ? (en ? "Waiting" : "Aguardando")
+                : (en ? "Idle" : "Fila vazia")}
         </span>
       </div>
+
+      {erroLeitura && (
+        <span
+          title={erroLeitura}
+          style={{
+            fontSize: 11.6, color: T.t2, background: "rgba(248,113,113,0.09)",
+            border: "1px solid rgba(248,113,113,0.30)", borderRadius: 7, padding: "3px 8px",
+          }}
+        >
+          {en
+            ? "the queue state could not be read — this is NOT an empty queue"
+            : "não consegui ler o estado da fila — isto NÃO é fila vazia"}
+        </span>
+      )}
 
       {e && (
         <>
