@@ -25,6 +25,7 @@ import Onboarding from "./pages/Onboarding";
 // ── Legais (compliance Meta) ─────────────────────────────────────────────────
 const Terms        = lazy(() => import("./pages/Terms"));
 const Privacy      = lazy(() => import("./pages/Privacy"));
+const Shapermint   = lazy(() => import("./pages/Shapermint"));
 
 // ── Dashboard (Brilliant Hub interno) ────────────────────────────────────────
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
@@ -130,6 +131,10 @@ const App = () => (
               {/* ── Legais (Meta exige links) ──────────────────────── */}
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+
+              {/* Creative Intelligence. Rota na raiz porque é o que o Martinho pediu;
+                  a página exige sessão e a RLS faz o resto. */}
+              <Route path="/shapermint" element={<Shapermint />} />
 
               {/* Rotas que nunca existiram e para as quais dez lugares
                   apontavam — o banner de upgrade do plano Free, o botão
