@@ -310,39 +310,64 @@ def main() -> int:
     if devolvidos:
         boot.emit("own_jobs_requeued", jobs=devolvidos)
 
-    idle_since = time.monotonic()
     last_reap = 0.0
 
-    while not _stop:
-        # O reaper devolve à fila jobs cujo worker morreu. Rodar do worker
-        # evita depender de cron externo; a cada minuto é suficiente porque o
-        # lease é de 15.
-        now = time.monotonic()
-        if now - last_reap > 60:
-            last_reap = now
+    # ── Concorrência de verdade ─────────────────────────────────────────────
+    #
+    # `CI_WORKER_CONCURRENCY` existia, era lido, ia para o log de boot — e não
+    # fazia NADA. O laço era um só, e os jobs saíam estritamente em série.
+    # Medido em 07/08: setei o valor para 2, o boot registrou "concurrency: 2",
+    # e os jobs continuaram um de cada vez.
+    #
+    # Botão que não liga nada é pior que botão ausente: quem lê o log acredita
+    # que ligou, e vai procurar a lentidão em outro lugar.
+    #
+    # Cada thread roda seu próprio laço de tick. O ci_claim_job usa
+    # SELECT ... FOR UPDATE SKIP LOCKED, então duas threads nunca pegam o mesmo
+    # job — a exclusão é do Postgres, não de um lock em Python.
+    #
+    # O reaper roda em UMA thread só (a de índice 0). N threads chamando o
+    # mesmo RPC a cada minuto seria N vezes o trabalho para o mesmo efeito.
+    def laco(indice: int) -> None:
+        nonlocal last_reap
+        ocioso_desde = time.monotonic()
+        while not _stop:
+            if indice == 0:
+                agora = time.monotonic()
+                if agora - last_reap > 60:
+                    last_reap = agora
+                    try:
+                        supa.rpc("ci_reap_stale_jobs")
+                    except SupabaseError as exc:
+                        boot.error(f"reaper falhou: {exc}", error_code="reaper", retryable=True)
+                    cleanup_orphan_tmp(settings.tmp_dir, settings.tmp_max_age_min)
+
             try:
-                supa.rpc("ci_reap_stale_jobs")
+                pegou = tick(supa, storage, settings)
             except SupabaseError as exc:
-                boot.error(f"reaper falhou: {exc}", error_code="reaper", retryable=True)
-            # Varredura periódica: um job pode morrer sem derrubar o processo.
-            cleanup_orphan_tmp(settings.tmp_dir, settings.tmp_max_age_min)
+                print(f"[worker] banco indisponível: {exc}", flush=True)
+                time.sleep(min(settings.poll_interval_s * 4, 30))
+                continue
 
-        try:
-            worked = tick(supa, storage, settings)
-        except SupabaseError as exc:
-            # Banco fora do ar não é motivo para o container morrer: espera e
-            # tenta de novo. Morrer faria o Fly reiniciar em laço.
-            print(f"[worker] banco indisponível: {exc}", flush=True)
-            time.sleep(min(settings.poll_interval_s * 4, 30))
-            continue
+            if pegou:
+                ocioso_desde = time.monotonic()
+            else:
+                if indice == 0 and time.monotonic() - ocioso_desde > 300:
+                    print("[worker] fila vazia há 5 min", flush=True)
+                    ocioso_desde = time.monotonic()
+                # Espera escalonada por thread: sem isso, N threads acordam
+                # juntas e batem no banco no mesmo instante, em rajada.
+                time.sleep(settings.poll_interval_s + indice * 0.5)
 
-        if worked:
-            idle_since = time.monotonic()
-        else:
-            if time.monotonic() - idle_since > 300:
-                print("[worker] fila vazia há 5 min", flush=True)
-                idle_since = time.monotonic()
-            time.sleep(settings.poll_interval_s)
+    threads = [threading.Thread(target=laco, args=(i,), daemon=True, name=f"tick-{i}")
+               for i in range(settings.concurrency)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        # join com timeout num laço: join() puro ignora KeyboardInterrupt na
+        # thread principal, e o SIGTERM do Fly precisa chegar aqui.
+        while t.is_alive():
+            t.join(timeout=1)
 
     print("[worker] encerrado", flush=True)
     return 0
