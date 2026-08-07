@@ -383,6 +383,43 @@ async function main() {
     assert.ok(client.budget.used <= 50, `gastou ${client.budget.used}, teto 50`);
   });
 
+  // REGRESSÃO — BUG-03. Com o teto padrão de 50 créditos, a segunda página
+  // NUNCA era buscada, qualquer que fosse a marca.
+  //
+  // A causa era `Math.max(observado, assumido)`: a estimativa pessimista de 50
+  // sobrevivia à primeira resposta, então mesmo depois de a API dizer "minha
+  // página tem 12", o laço reservava 50 para a próxima — e 50 nunca cabia no
+  // que sobrava. A execução parava com stopReason "budget" e era reportada
+  // como concluída, então o usuário lia "essa marca tem 12 anúncios" quando o
+  // certo era "paramos no nosso próprio teto".
+  //
+  // O teste acima ("orçamento não cobre a próxima página") passava com o bug
+  // presente: ele usa páginas de 40, onde o pessimismo e a realidade quase
+  // coincidem. O caso que pega é o de página PEQUENA.
+  await test("REGRESSÃO: página pequena não é confundida com fim do orçamento", async () => {
+    const pagina = (n: number, cursor: string | null) => ({
+      status: 200,
+      body: {
+        ads: Array.from({ length: n }, (_, i) => ({ ad_archive_id: `${cursor}-${i}` })),
+        next_cursor: cursor, has_more: cursor !== null,
+      },
+    });
+    // Três páginas de 8 anúncios = 24 no total, 24 créditos. Cabe folgado nos
+    // 50 do teto. Com o bug, parava na primeira e devolvia 8.
+    const { impl } = stubFetch([pagina(8, "c2"), pagina(8, "c3"), pagina(8, null)]);
+    const client = new SpreshClient({
+      apiKey: "sk_sprs_fake", budget: new CreditBudget(50), fetchImpl: impl, sleepImpl: noSleep,
+    });
+    const r = await client.collectBrandAds({ page_id: "p", maxAds: 20 });
+
+    assert.ok(r.ads.length >= 16,
+      `paginou só ${r.ads.length} anúncio(s) — com páginas de 8 e teto de 50, ` +
+      `parar na primeira significa que a estimativa pessimista não foi corrigida`);
+    assert.notEqual(r.stopReason, "budget",
+      "parou por orçamento com 24 créditos usados de um teto de 50");
+    assert.ok(client.budget.used <= 50, `gastou ${client.budget.used}, teto 50`);
+  });
+
   // REGRESSÃO — BUG-01. A versão anterior devolvia `null` aqui, porque usava a
   // variável do cursor da requisição em curso em vez do cursor da resposta.
   // Retomar a importação recomeçaria da primeira página e repagaria tudo.

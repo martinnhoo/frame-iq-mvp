@@ -277,7 +277,16 @@ Deno.serve(async (req) => {
     else queued = count ?? pendingMedia.length;
   }
 
-  const status = dbErrors.length ? "partial" : "completed";
+  // "completed" com zero anúncios é indistinguível de "funcionou" para quem lê
+  // só o status — e foi assim que a primeira importação real passou
+  // despercebida: 200, concluída, nada no banco. Se a API não devolveu nada, a
+  // execução não foi concluída com sucesso; ela terminou vazia, e o status
+  // precisa dizer isso.
+  const status = dbErrors.length
+    ? "partial"
+    : collected.ads.length === 0
+      ? "empty"
+      : "completed";
   await finishRun({
     status,
     pages_fetched: collected.pagesFetched,

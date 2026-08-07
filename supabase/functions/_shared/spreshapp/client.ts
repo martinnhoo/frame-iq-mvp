@@ -390,10 +390,29 @@ export class SpreshClient {
   }
 
   /** GET /v1/brand/:page_id — 1 crédito por anúncio retornado. */
+  /**
+   * Pior caso de crédito para UMA página de anúncios.
+   *
+   * Enquanto não observamos nada, vale a estimativa pessimista. Depois da
+   * primeira resposta, o tamanho real observado é o melhor palpite que existe —
+   * e continua sendo só uma RESERVA: `settle()` acerta pelo que foi cobrado de
+   * verdade, e `maxAdsPerPageObserved` sobe se vier página maior.
+   *
+   * Manter o pessimismo para sempre (`Math.max(observado, assumido)`) fazia a
+   * segunda página nunca caber no teto padrão de 50 créditos, qualquer que
+   * fosse a marca.
+   */
+  private pageWorstCase(): number {
+    const tamanho = this.maxAdsPerPageObserved > 0
+      ? this.maxAdsPerPageObserved
+      : this.assumedPageSize;
+    return tamanho * CREDIT_COST.perAd;
+  }
+
   async getBrandAdsPage(
     params: BrandAdsParams,
   ): Promise<{ ads: SpreshAd[]; nextCursor: string | null; hasMore: boolean; creditsSpent: number }> {
-    const worstCase = Math.max(this.maxAdsPerPageObserved, this.assumedPageSize) * CREDIT_COST.perAd;
+    const worstCase = this.pageWorstCase();
     const reservation = this.budget.reserve(worstCase);
     try {
       const data = await this.request<SpreshAdsResponse>("GET", `/v1/brand/${encodeURIComponent(params.page_id)}`, {
@@ -415,7 +434,7 @@ export class SpreshClient {
   async searchAdsPage(
     params: AdSearchParams,
   ): Promise<{ ads: SpreshAd[]; nextCursor: string | null; hasMore: boolean; creditsSpent: number }> {
-    const worstCase = Math.max(this.maxAdsPerPageObserved, this.assumedPageSize) * CREDIT_COST.perAd;
+    const worstCase = this.pageWorstCase();
     const reservation = this.budget.reserve(worstCase);
     try {
       const data = await this.request<SpreshAdsResponse>("POST", "/v1/ad-search", { body: params });
@@ -498,8 +517,22 @@ export class SpreshClient {
     let stopReason: "max_ads" | "no_more_pages" | "budget" | "cursor_loop" = "no_more_pages";
 
     while (collected.length < params.maxAds) {
-      const nextPageWorstCase = Math.max(this.maxAdsPerPageObserved, this.assumedPageSize) * CREDIT_COST.perAd;
-      if (nextPageWorstCase > this.budget.available) {
+      // `pageWorstCase` e não `Math.max(observado, assumido)`.
+      //
+      // O max() mantinha a estimativa pessimista de 50 para sempre, mesmo
+      // depois de a API ter dito que a página tem 12. Com o teto padrão de 50
+      // créditos, isso significa que a segunda página NUNCA cabia: a primeira
+      // consumia parte do orçamento, e 50 > o que sobrou era sempre verdade.
+      // O laço parava com stopReason "budget" após exatamente uma página,
+      // qualquer que fosse a marca — e a execução era reportada como concluída,
+      // então o usuário lia "essa marca só tem 12 anúncios" quando na verdade
+      // era o nosso teto batendo.
+      //
+      // A estimativa pessimista só faz sentido enquanto não observamos nada.
+      // Depois da primeira resposta, o tamanho real é o melhor palpite que
+      // existe — e continua sendo uma RESERVA, então subestimar não gasta a
+      // mais: settle() acerta pelo valor cobrado de verdade.
+      if (this.pageWorstCase() > this.budget.available) {
         stopReason = "budget";
         break;
       }
