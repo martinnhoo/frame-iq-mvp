@@ -124,7 +124,7 @@ def load_settings() -> Settings:
         poll_interval_s=max(1.0, _float("CI_POLL_INTERVAL_S", 5.0)),
         # Precisa ser maior que o job mais longo esperado, senão o reaper
         # devolve à fila um job que ainda está rodando e ele roda duas vezes.
-        lease_seconds=max(60, _int("CI_LEASE_SECONDS", 900)),
+        lease_seconds=max(60, _int("CI_LEASE_SECONDS", 180)),
 
         storage_backend=os.getenv("CI_STORAGE_BACKEND", "supabase").lower(),
         storage_bucket=os.getenv("CI_STORAGE_BUCKET", "ci-media"),

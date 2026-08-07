@@ -27,6 +27,9 @@ primary_region = "gru"
   # visível, não em silêncio.
   CI_OCR = "true"
   CI_WHISPER_MODEL = "small"
+  # 180s e não 900s: o job leva 30–60s e o heartbeat renova a 1/3 do lease.
+  # Lease longo não protege mais; só aumenta a janela morta depois de uma queda.
+  CI_LEASE_SECONDS = "180"
 
 # Sem [http_service] de propósito: o worker não atende requisição. Ele só
 # consome a fila do Postgres. Não expor porta significa que nada da internet

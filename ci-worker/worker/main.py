@@ -260,6 +260,35 @@ def main() -> int:
     freed = cleanup_orphan_tmp(settings.tmp_dir, settings.tmp_max_age_min)
     boot.emit("orphans_cleaned", removed=freed["removed"], bytes=freed["bytes"])
 
+    # ── Jobs pendurados NO NOSSO PRÓPRIO nome ───────────────────────────────
+    #
+    # Quando a máquina morre no meio de um job, a linha fica `running` com
+    # locked_by preenchido e lease_expires_at lá na frente. Ninguém encosta nela
+    # até o lease vencer — inclusive o worker que acabou de reiniciar. Medido em
+    # 07/08: 15 minutos de fila parada depois de cada queda, com o worker de pé
+    # e ocioso do lado. Da tela, isso é indistinguível de travamento.
+    #
+    # Mas há um caso em que a espera não protege nada: o job está travado com o
+    # NOSSO worker_id e nós acabamos de subir. Se ainda estivéssemos executando
+    # aquele job, este código não estaria rodando. Não é um palpite sobre outro
+    # processo — é certeza sobre nós mesmos, e por isso é seguro devolver
+    # imediatamente à fila.
+    #
+    # Fica de fora, de propósito, qualquer job de outro worker_id: aí sim só o
+    # vencimento do lease pode decidir, porque o outro processo pode estar vivo.
+    devolvidos = 0
+    for tabela in ("ci_analysis_jobs", "ci_download_jobs"):
+        try:
+            linhas = supa.update(tabela, {
+                "status": "queued", "locked_by": None, "lease_expires_at": None,
+            }, match={"locked_by": f"eq.{settings.worker_id}", "status": "eq.running"})
+            devolvidos += len(linhas or [])
+        except Exception as exc:  # noqa: BLE001
+            # Não é motivo para não subir: o reaper ainda recupera pelo lease.
+            boot.emit("requeue_failed", table=tabela, message=str(exc)[:300])
+    if devolvidos:
+        boot.emit("own_jobs_requeued", jobs=devolvidos)
+
     idle_since = time.monotonic()
     last_reap = 0.0
 
