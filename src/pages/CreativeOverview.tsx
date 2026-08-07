@@ -322,7 +322,7 @@ export default function CreativeOverview() {
   const maxReceita = Math.max(1, ...conceitos.map(c => c.ad_count ?? 0));
   const ordenadas = [...conceitos]
     .sort((a, b) => (b.ad_count ?? 0) - (a.ad_count ?? 0))
-    .map(c => {
+    .map((c): Row => {
       const meus = membros.filter(m => m.concept_id === c.id);
       const adIds = new Set(meus.map(m => m.ad_id));
       const assetIds = new Set(
