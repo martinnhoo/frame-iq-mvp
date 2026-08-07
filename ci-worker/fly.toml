@@ -34,9 +34,20 @@ primary_region = "gru"
 
 [[vm]]
   size = "shared-cpu-2x"
-  memory = "2gb"
-  # 1 GB não sobrevive ao ffmpeg + whisper num vídeo de 60s. 2 GB é o menor
-  # tamanho em que o pipeline de análise roda sem OOM.
+  memory = "4gb"
+  # 2 GB não bastaram. Medido em 07/08 com anúncios REAIS da Shapermint: a
+  # máquina morria sempre no mesmo ponto, o job voltava para a fila em
+  # attempt 2, e morria de novo — o laço de OOM que o comentário anterior
+  # dizia estar evitado. A diferença entre a estimativa e a realidade foi o
+  # vídeo: os de teste tinham 10s e 320x176; anúncio de verdade tem 30s+ em
+  # 1080x1920, e o Whisper carrega o modelo inteiro na memória antes de olhar
+  # a duração.
+  #
+  # O OOM do Fly não escreve "out of memory" no log: a máquina simplesmente
+  # reinicia. O sinal é o attempt subindo sempre no mesmo estágio.
+  #
+  # Para não pagar 4 GB parado: `fly scale count 0` quando não estiver
+  # processando. O checkpoint no banco garante que retomar não repaga o Gemini.
 
 [[mounts]]
   source = "ci_worker_data"
