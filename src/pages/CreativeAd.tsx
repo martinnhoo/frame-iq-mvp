@@ -145,25 +145,43 @@ export default function CreativeAd() {
       });
 
       // ── Mídia assinada ──────────────────────────────────────────────────
-      // O bucket é privado, então cada objeto precisa de uma URL assinada. Uma
-      // hora de validade: tempo de sobra para inspecionar, curto o bastante
-      // para o link vazado não valer nada amanhã.
+      //
+      // Assinada pela edge function ci-sign-media, não pelo navegador.
+      //
+      // Assinar no cliente exige policy de leitura em storage.objects, e essa
+      // policy não funcionou: ela existe, é permissiva, o predicado avaliado à
+      // mão devolve TRUE, não há policy restritiva, o dono confere — e o
+      // usuário via 0 de 356 objetos. Em vez de seguir caçando, a autorização
+      // passou para o servidor, que já sabe fazê-la e onde dá para depurar.
+      const chaves: string[] = [];
       const asset = (assets.data ?? [])[0];
-      if (asset?.storage_key) {
-        const { data: sig, error: e2 } = await supabase.storage
-          .from("ci-media").createSignedUrl(asset.storage_key, 3600);
-        if (e2) setFalhaMidia(e2.message);
-        else setVideoUrl(sig?.signedUrl ?? null);
-      }
-      const kfs = (keyframes.data ?? []).filter((k: Row) => k.storage_key).slice(0, 24);
-      if (kfs.length) {
-        const { data: sigs } = await supabase.storage
-          .from("ci-media").createSignedUrls(kfs.map((k: Row) => k.storage_key), 3600);
-        const mapa: Record<string, string> = {};
-        (sigs ?? []).forEach((s: Row, i: number) => {
-          if (s?.signedUrl) mapa[kfs[i].id] = s.signedUrl;
-        });
-        setUrls(mapa);
+      if (asset?.storage_key) chaves.push(asset.storage_key);
+      const kfs = ((keyframes.data ?? []) as Row[]).filter(k => k.storage_key).slice(0, 24);
+      for (const k of kfs) chaves.push(k.storage_key);
+
+      if (chaves.length) {
+        const { data: sessao } = await supabase.auth.getSession();
+        const token = sessao?.session?.access_token;
+        const r = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ci-sign-media`,
+          { method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ keys: chaves, expires_in: 3600 }) });
+
+        if (!r.ok) {
+          const txt = await r.text();
+          setFalhaMidia(`assinatura falhou (${r.status}): ${txt.slice(0, 200)}`);
+        } else {
+          const { urls, falhas } = await r.json() as
+            { urls: Record<string, string>; falhas: Record<string, string> };
+          if (asset?.storage_key) {
+            if (urls[asset.storage_key]) setVideoUrl(urls[asset.storage_key]);
+            else setFalhaMidia(falhas?.[asset.storage_key] ?? "sem URL para o vídeo");
+          }
+          const mapa: Record<string, string> = {};
+          for (const k of kfs) if (urls[k.storage_key]) mapa[k.id] = urls[k.storage_key];
+          setUrls(mapa);
+        }
       }
     } catch (e: any) { setErro(e.message); }
     finally { setCarregando(false); }
