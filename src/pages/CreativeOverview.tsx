@@ -229,6 +229,7 @@ export default function CreativeOverview() {
   // máquina (preservando as revisadas), e isso é uma ação, não um efeito
   // colateral de abrir a página.
   const [reagrupando, setReagrupando] = useState(false);
+  const [copiado, setCopiado] = useState(false);
   const reagrupar = async () => {
     if (!marca?.id) return;
     setReagrupando(true); setErro(null);
@@ -311,6 +312,50 @@ export default function CreativeOverview() {
     }
     return [...contagem.values()].sort((a, b) => b.assets - a.assets);
   })();
+
+  // ── Briefing ──────────────────────────────────────────────────────────────
+  //
+  // Derivado, não gerado. Cada linha é uma leitura direta do que foi observado
+  // na receita dominante — o ângulo que ela usa, a estrutura que os anúncios
+  // dela repetem, o hook mais frequente, a faixa de duração.
+  //
+  // Não passa por LLM de propósito. Um modelo escreveria um briefing mais
+  // bonito, e ninguém conseguiria dizer de onde saiu cada frase. Aqui, toda
+  // linha aponta para um dado que está no banco — e "não observado" aparece
+  // como "não observado", em vez de virar recomendação plausível.
+  const briefing = (() => {
+    const r = ordenadas[0];
+    if (!r) return null;
+    const est = estruturas[0];
+    return {
+      receita: r.name,
+      ads: r.ad_count ?? 0,
+      linhas: [
+        { rotulo: "Formato",   valor: estilos[0]?.label ?? null },
+        { rotulo: "Duração",   valor: r.duracao !== "—" ? r.duracao : null },
+        { rotulo: "Abertura",  valor: r.hook ? `“${r.hook}”` : null },
+        { rotulo: "Estrutura", valor: est ? est.passos.map(p => ROTULO_CENA[p] ?? p).join(" → ") : null },
+        { rotulo: "Prova",     valor: provas[0]?.label ?? null },
+        { rotulo: "CTA",       valor: termosDe("cta")[0]?.label ?? null },
+      ],
+    };
+  })();
+
+  const copiarBriefing = () => {
+    if (!briefing) return;
+    const texto = [
+      `Briefing — ${marca?.name ?? ""}`,
+      `Receita: ${briefing.receita} (observada em ${briefing.ads} anúncio(s))`,
+      "",
+      ...briefing.linhas.map(l => `${l.rotulo}: ${l.valor ?? "não observado"}`),
+      "",
+      "Baseado em sinais públicos de repetição de criativos.",
+      "NÃO representa desempenho, ROAS, CPA nem resultado confirmado.",
+    ].join("\n");
+    navigator.clipboard?.writeText(texto);
+    setCopiado(true);
+    window.setTimeout(() => setCopiado(false), 2200);
+  };
 
   // ── Receitas prontas para a tabela ────────────────────────────────────────
   // Cada coluna do mapa sai de dado real ou é marcada como não disponível.
@@ -743,17 +788,40 @@ export default function CreativeOverview() {
                 <Head hint="A receita dominante convertida em instruções de roteiro.">
                   Como transformar isso em script
                 </Head>
-                <Falta pendente motivo={
-                  "Depende das receitas: o briefing é a receita dominante virada em instrução " +
-                  "(formato, abertura, prova, CTA). Sem o agrupamento, gerar isto seria inventar " +
-                  "um roteiro e chamar de análise."
-                } acao={
-                  <button disabled style={{
-                    background: T.bg3, color: T.t3, border: `1px solid ${T.b2}`, borderRadius: 9,
-                    padding: "10px 17px", fontSize: 13, fontWeight: 620, fontFamily: F, cursor: "not-allowed",
-                    display: "flex", alignItems: "center", gap: 8,
-                  }}><Ic d={I.spark} s={14} c={T.t3} /> Gerar briefing</button>
-                } />
+                {!briefing ? (
+                  <Falta motivo={
+                    "O briefing é a receita dominante virada em instrução. Sem receita montada não " +
+                    "há de onde tirar — e escrever um roteiro plausível aqui seria inventar e chamar " +
+                    "de análise."
+                  } />
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12.4, color: T.t3, marginBottom: 12, lineHeight: 1.5 }}>
+                      Da receita <span style={{ color: T.t1 }}>{briefing.receita}</span>, observada em{" "}
+                      {briefing.ads} anúncio{briefing.ads === 1 ? "" : "s"}.
+                    </div>
+                    <div style={{ display: "grid", gap: 8, marginBottom: 15 }}>
+                      {briefing.linhas.map(l => (
+                        <div key={l.rotulo} style={{ display: "flex", gap: 9, alignItems: "flex-start", fontSize: 12.8 }}>
+                          <Ic d={l.valor ? I.check : I.warn} s={13} c={l.valor ? T.green : T.label} />
+                          <span style={{ color: T.label, minWidth: 62 }}>{l.rotulo}</span>
+                          <span style={{ flex: 1, color: l.valor ? T.t2 : T.label }}>
+                            {/* "não observado" e não um palpite: a lacuna é informação. */}
+                            {l.valor ?? "não observado"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={copiarBriefing} style={{
+                      background: T.violet, color: "#0B0713", border: "none", borderRadius: 9,
+                      padding: "10px 17px", fontSize: 13, fontWeight: 640, fontFamily: F,
+                      cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+                    }}>
+                      <Ic d={I.spark} s={14} c="#0B0713" />
+                      {copiado ? "Copiado" : "Copiar briefing"}
+                    </button>
+                  </>
+                )}
               </Card>
             </div>
 
