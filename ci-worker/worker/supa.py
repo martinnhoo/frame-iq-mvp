@@ -150,6 +150,18 @@ class Supa:
 
     def insert(self, table: str, rows: dict | list[dict], *, upsert: bool = False,
                on_conflict: str | None = None, ignore_duplicates: bool = False) -> list[dict[str, Any]]:
+        # A edge function decide entre upsert e insert olhando SÓ para
+        # on_conflict. Em modo direto o PostgREST infere a constraint sozinho,
+        # então `upsert=True` sem on_conflict funciona — e em modo proxy o
+        # mesmo código vira INSERT puro e estoura na primeira duplicata.
+        # Silenciosamente, e só em produção. Recusar na chamada é a diferença
+        # entre um erro de programação óbvio e um job que morre depois de
+        # gastar Gemini.
+        if upsert and not on_conflict:
+            raise SupabaseError(
+                f"insert(upsert=True) em {table} exige on_conflict explícito: "
+                "sem ele o modo proxy degrada para INSERT puro"
+            )
         if self.mode == "proxy":
             return self._proxy({
                 "action": "insert", "table": table, "rows": rows,

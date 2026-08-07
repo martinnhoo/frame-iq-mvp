@@ -109,6 +109,15 @@ class JobLogger:
         line = json.dumps(record, ensure_ascii=False, default=str)
         print(redact(line), flush=True, file=sys.stdout)
 
-    def error(self, message: str, *, error_code: str, retryable: bool, **fields: Any) -> None:
+    def error(self, message: str, *, error_code: str, retryable: bool,
+              detail: str = "", **fields: Any) -> None:
+        # `detail` é o corpo da resposta que o servidor devolveu. Sem ele, um
+        # 400 do PostgREST vira "insert → 400" e não diz QUAL constraint
+        # estourou — foi exatamente assim que o erro de duplicata em
+        # ci_ad_taxonomy custou uma rodada inteira de diagnóstico. A redação
+        # roda sobre a linha serializada, então incluir o corpo aqui não abre
+        # caminho para vazar segredo.
+        if detail:
+            fields["detail"] = detail[:1000]
         self.emit("error", message=message[:2000], error_code=error_code,
                   retryable=retryable, **fields)

@@ -620,7 +620,12 @@ def stage_persistence(ctx: Ctx) -> None:
                 "evidence_kind": term.get("evidence_kind"),
                 "timestamp_s": term.get("timestamp_s"),
                 "source": term["source"], "model_version": term["model_version"],
-            }, upsert=True, ignore_duplicates=True)
+                # on_conflict é OBRIGATÓRIO aqui, não opcional: sem ele o modo
+                # proxy cai em INSERT puro e a primeira duplicata derruba o job
+                # depois de já ter gasto Gemini. dedup_key é coluna gerada —
+                # não se escreve nela, só se mira o índice por ela.
+            }, upsert=True, on_conflict="ad_id,term_id,dedup_key",
+               ignore_duplicates=True)
 
     # Recalcula as contagens dos termos. Sem isto, ad_count fica em zero e a
     # página Messages sai vazia sem erro visível.
@@ -685,7 +690,8 @@ def run_analysis_job(job: dict[str, Any], supa: Supa, storage: StorageBackend,
                 raise
             except Exception as exc:  # noqa: BLE001
                 log.error(f"estágio {stage} falhou: {exc}",
-                          error_code=type(exc).__name__.lower(), retryable=True, stage=stage)
+                          error_code=type(exc).__name__.lower(), retryable=True, stage=stage,
+                          detail=getattr(exc, "detail", "") or "")
                 raise
             log.end_stage(stage)
             ctx.mark(stage)

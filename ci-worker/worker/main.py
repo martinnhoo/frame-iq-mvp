@@ -225,7 +225,8 @@ def tick(supa: Supa, storage: Any, settings: Settings) -> bool:
             log.error(str(exc), error_code="permanent", retryable=False)
             _fail_job(supa, table, job, exc, permanent=True, settings=settings)
         except Exception as exc:  # noqa: BLE001
-            log.error(str(exc), error_code=type(exc).__name__.lower(), retryable=True)
+            log.error(str(exc), error_code=type(exc).__name__.lower(), retryable=True,
+                      detail=getattr(exc, "detail", "") or "")
             traceback.print_exc()
             _fail_job(supa, table, job, exc, permanent=False, settings=settings)
         return True
