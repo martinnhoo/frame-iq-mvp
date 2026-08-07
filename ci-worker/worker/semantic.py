@@ -39,11 +39,15 @@ from typing import Any
 
 from .config import Settings
 
-# v2: as regras 8 e 9 (label em inglês, curto e canônico) mudaram o que o
-# modelo devolve. Sem bumpar isto, um resultado do prompt velho e um do prompt
-# novo ficariam indistinguíveis no banco — e a pergunta "este anúncio já foi
-# reanalisado?" não teria resposta. A versão é o que torna a migração auditável.
-PROMPT_VERSION = "semantic/v2"
+# v2: regras 8 e 9 — label em inglês, curto e canônico.
+# v3: `mechanisms`. O banco aceitava kind='mechanism', a tela de saúde contava,
+#     e ci_rebuild_concepts passou a usar mecanismo como METADE da assinatura da
+#     receita — mas o prompt nunca pediu o campo. Três camadas apoiadas num dado
+#     que ninguém produzia; o contador ficou em 0 com 516 vínculos ao lado.
+#
+# Sem bumpar a versão, resultado de prompt velho e novo ficam indistinguíveis no
+# banco, e "este anúncio já foi reanalisado?" não tem resposta.
+PROMPT_VERSION = "semantic/v3"
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
@@ -90,6 +94,7 @@ _SCHEMA_HINT = """{
              "evidence": "", "evidence_kind": "speech|onscreen|copy|visual",
              "confidence": 0.0}],
   "angles": [{"label": "", "evidence": "", "confidence": 0.0}],
+  "mechanisms": [{"label": "", "evidence": "", "confidence": 0.0}],
   "promises": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
   "proofs": [{"label": "", "proof_type": "demonstration|testimonial|before_after|statistic|authority|social_proof",
               "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
@@ -148,6 +153,24 @@ REGRAS OBRIGATÓRIAS
    Se dois anúncios defendem a mesma ideia com palavras diferentes, o label tem
    que ser IGUAL nos dois. Prefira reusar um rótulo óbvio a inventar um novo
    mais preciso.
+
+10. ÂNGULO e MECANISMO são coisas diferentes, e confundir os dois é o erro mais
+    caro desta análise.
+
+    ÂNGULO    = POR QUE a pessoa deveria se importar. O benefício, a promessa,
+                a razão de compra.
+    MECANISMO = COMO o produto entrega aquilo. A característica física, o
+                material, a construção, a tecnologia.
+
+    Exemplo:  "não sai do lugar" é ÂNGULO.
+              "faixas de silicone" é o MECANISMO que faz não sair do lugar.
+
+    Um anúncio pode ter ângulo sem mecanismo explícito — nesse caso devolva
+    `mechanisms` vazio. NÃO invente um mecanismo para preencher, e NÃO repita
+    o ângulo com outras palavras: mecanismo repetido do ângulo destrói o
+    agrupamento, porque cria distinção onde não há.
+
+    Mecanismo também precisa de `evidence`, como todo o resto.
 
 METADADOS
   duração: {metadata.get('duration_s')}s · {metadata.get('width')}x{metadata.get('height')} · {metadata.get('aspect_ratio')}
@@ -317,6 +340,7 @@ def _slug(label: str) -> str:
 
 TERM_KINDS = {
     "products": "product", "hooks": "hook", "angles": "angle",
+    "mechanisms": "mechanism",
     "promises": "promise", "proofs": "proof", "objections": "objection",
     "offers": "offer", "ctas": "cta",
 }

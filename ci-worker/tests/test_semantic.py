@@ -102,6 +102,11 @@ def main() -> int:
         # de propósito: o novo vira termo, o antigo é descartado pela mesma
         # regra de todo mundo. Não abro exceção para o legado só para a tela
         # encher.
+        "mechanisms": [
+            {"label": "silicone strips", "evidence": "faixas de silicone na barra",
+             "confidence": 0.8},
+            {"label": "sem evidencia", "evidence": "", "confidence": 0.9},
+        ],
         "creative_analysis": {
             "visual_style": {"label": "UGC vertical", "evidence": "câmera na mão, 9:16, sem trilha"},
             "story_structure": "problema-solução",
@@ -117,8 +122,20 @@ def main() -> int:
           "Close no cós" not in labels, f"{len(n['terms'])} termos")
     # 2 dos itens com rótulo sem evidência + 2 do creative_analysis em formato
     # antigo (string solta, sem como sustentar).
-    check("descarte é contado e reportado", n["dropped_without_evidence"] == 4,
+    check("descarte é contado e reportado", n["dropped_without_evidence"] == 5,
           str(n["dropped_without_evidence"]))
+
+    # REGRESSÃO — o mecanismo era o buraco mais caro do pipeline. O banco aceitava
+    # kind='mechanism', a tela de saúde contava, e ci_rebuild_concepts passou a
+    # usar mecanismo como METADE da assinatura da receita. Só que o prompt nunca
+    # pediu o campo: contador em 0 com 516 vínculos ao lado. Três camadas
+    # apoiadas num dado que ninguém produzia.
+    mecanismo = next((t for t in n["terms"] if t["kind"] == "mechanism"), None)
+    check("mecanismo COM evidência vira termo de taxonomia",
+          mecanismo is not None and mecanismo["label"] == "silicone strips",
+          str(mecanismo))
+    check("mecanismo SEM evidência é descartado como qualquer outro",
+          "sem evidencia" not in {t["label"] for t in n["terms"]})
 
     # REGRESSÃO — o estilo visual era extraído e guardado só dentro do JSON de
     # ci_analysis_results. A UI lê ci_taxonomy_terms, então o card "Mix criativo"
@@ -169,6 +186,13 @@ def main() -> int:
     check("prompt exige evidência", "evidence" in prompt and "Sem evidência" in prompt)
     check("prompt inclui a transcrição com tempo", "[0.0–1.0] olá" in prompt)
     check("prompt inclui o texto na tela", "NA TELA" in prompt)
+    # Sem esta asserção o campo pode sumir do schema de novo e nada acusa: foi
+    # exatamente assim que mecanismo ficou zerado por semanas.
+    check("prompt PEDE mechanisms no schema", '"mechanisms"' in prompt)
+    check("prompt explica a diferença entre ângulo e mecanismo",
+          "MECANISMO = COMO" in prompt and "ÂNGULO    = POR QUE" in prompt)
+    check("prompt proíbe inventar mecanismo para preencher",
+          "NÃO invente um mecanismo" in prompt)
 
     # ══ Fallback local ═══════════════════════════════════════════════════════
     local = analyze_locally(
