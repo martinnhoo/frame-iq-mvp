@@ -21,6 +21,10 @@ primary_region = "gru"
   CI_TMP_MAX_MB = "4096"
   CI_STORAGE_BACKEND = "supabase"
   CI_STORAGE_BUCKET = "ci-media"
+  # OCR fora da imagem padrão (torch pesa 2 GB). Degrada visível, não em
+  # silêncio: o estágio entra em skipped_stages e a UI mostra em amarelo.
+  CI_OCR = "false"
+  CI_WHISPER_MODEL = "small"
 
 # Sem [http_service] de propósito: o worker não atende requisição. Ele só
 # consome a fila do Postgres. Não expor porta significa que nada da internet
