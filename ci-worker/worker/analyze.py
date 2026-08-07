@@ -395,6 +395,75 @@ def stage_transcription(ctx: Ctx) -> None:
                  language=getattr(info, "language", None))
 
 
+def _pick_ocr_engine() -> tuple[str | None, Callable[[Path], list[tuple[str, float]]]]:
+    """
+    Escolhe o motor de OCR disponível e devolve (nome, função de leitura).
+
+    Prefere easyocr quando instalado — lê texto estilizado de anúncio melhor —
+    e cai para tesseract, que é o que vem na imagem padrão. O nome do motor é
+    gravado em cada registro, então dá para saber depois com o que cada texto
+    foi lido em vez de comparar resultados de motores diferentes achando que
+    são a mesma medida.
+
+    Sem nenhum dos dois, devolve (None, ...) e o estágio é PULADO de forma
+    visível — nunca silenciosamente dado como feito.
+    """
+    try:
+        import easyocr  # type: ignore
+
+        reader = easyocr.Reader(["en", "pt"], gpu=False, verbose=False)
+
+        def ler_easyocr(path: Path) -> list[tuple[str, float]]:
+            saida = []
+            for _box, text, confidence in reader.readtext(str(path)):
+                cleaned = (text or "").strip()
+                if len(cleaned) >= 2 and confidence >= 0.4:
+                    saida.append((cleaned, float(confidence)))
+            return saida
+
+        return "easyocr", ler_easyocr
+    except ImportError:
+        pass
+
+    try:
+        import pytesseract  # type: ignore
+        from PIL import Image  # type: ignore
+    except ImportError:
+        return None, lambda _p: []
+
+    def ler_tesseract(path: Path) -> list[tuple[str, float]]:
+        # image_to_data e não image_to_string: precisamos da confiança por
+        # palavra para descartar ruído. image_to_string devolve tudo junto,
+        # inclusive lixo que o motor sabe que é lixo.
+        dados = pytesseract.image_to_data(
+            Image.open(path), lang="eng+por",
+            output_type=pytesseract.Output.DICT,
+        )
+        # Agrupa palavras da mesma linha: "SHOP NOW" é uma mensagem, não duas.
+        linhas: dict[tuple, list[tuple[str, float]]] = {}
+        for i, palavra in enumerate(dados.get("text", [])):
+            limpa = (palavra or "").strip()
+            try:
+                conf = float(dados["conf"][i])
+            except (ValueError, KeyError, IndexError):
+                continue
+            if not limpa or conf < 55:
+                continue
+            chave = (dados["block_num"][i], dados["par_num"][i], dados["line_num"][i])
+            linhas.setdefault(chave, []).append((limpa, conf))
+
+        saida = []
+        for palavras in linhas.values():
+            texto = " ".join(p for p, _ in palavras).strip()
+            if len(texto) < 2:
+                continue
+            media = sum(c for _, c in palavras) / len(palavras)
+            saida.append((texto, media / 100.0))  # tesseract dá 0–100
+        return saida
+
+    return "tesseract", ler_tesseract
+
+
 def stage_ocr(ctx: Ctx) -> None:
     existing = ctx.supa.select("ci_onscreen_text", params={
         "asset_id": f"eq.{ctx.asset_id}",
@@ -409,21 +478,17 @@ def stage_ocr(ctx: Ctx) -> None:
         ctx.mark("ocr", skipped=True, warning="OCR desligado ou sem keyframes")
         return
 
-    try:
-        import easyocr  # type: ignore
-    except ImportError:
-        ctx.mark("ocr", skipped=True, warning="easyocr não instalado — sem texto na tela")
+    engine, read_frame = _pick_ocr_engine()
+    if engine is None:
+        ctx.mark("ocr", skipped=True,
+                 warning="nenhum motor de OCR instalado (pytesseract ou easyocr) — sem texto na tela")
         return
 
-    reader = easyocr.Reader(["en", "pt"], gpu=False, verbose=False)
     observations: list[dict[str, Any]] = []
     for path, meta in zip(ctx.keyframe_paths, ctx.keyframes):
         timestamp = float(meta.get("timestamp_s", 0))
         try:
-            for box, text, confidence in reader.readtext(str(path)):
-                cleaned = (text or "").strip()
-                if len(cleaned) < 2 or confidence < 0.4:
-                    continue
+            for cleaned, confidence in read_frame(path):
                 observations.append({
                     "timestamp_s": timestamp, "text": cleaned,
                     "confidence": round(float(confidence), 4),
@@ -433,7 +498,7 @@ def stage_ocr(ctx: Ctx) -> None:
 
     if observations:
         ctx.supa.insert("ci_ocr_tracks", [{
-            "asset_id": ctx.asset_id, "user_id": ctx.user_id, "engine": "easyocr", **o,
+            "asset_id": ctx.asset_id, "user_id": ctx.user_id, "engine": engine, **o,
         } for o in observations])
 
     # Funde observações do mesmo texto em keyframes consecutivos numa faixa
@@ -455,7 +520,7 @@ def stage_ocr(ctx: Ctx) -> None:
         "track_index": index, "start_seconds": m["start_seconds"],
         "end_seconds": max(m["end_seconds"], m["start_seconds"] + 0.3),
         "text": m["text"], "normalized_text": m["_norm"],
-        "confidence": m["confidence"], "source": "ocr", "model_version": "easyocr",
+        "confidence": m["confidence"], "source": "ocr", "model_version": engine,
     } for index, m in enumerate(merged)]
 
     if rows:

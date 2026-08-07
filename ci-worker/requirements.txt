@@ -15,13 +15,15 @@ Pillow>=11,<12
 
 # OCR temporal do texto na tela.
 #
-# FORA do build padrão de propósito: easyocr arrasta o torch (~2 GB), o que
-# leva o build de 3 para 15+ minutos e a imagem de 800 MB para mais de 3 GB.
-# Sem ele o estágio de OCR é PULADO e registrado em skipped_stages — degrada
-# de forma visível, não silenciosa.
+# pytesseract é um wrapper de ~15 KB sobre o binário tesseract, que vem do apt
+# no Dockerfile. O par pesa ~30 MB.
 #
-# Para ligar o OCR:  pip install easyocr  +  CI_OCR=true
-# easyocr>=1.7,<2
+# easyocr daria leitura melhor em texto estilizado, mas arrasta o torch (~2 GB):
+# o build vai de 3 para 15+ minutos, a imagem passa de 3 GB, e o processo passa
+# a disputar RAM com o Whisper numa máquina de 2 GB. O worker aceita os dois e
+# prefere easyocr quando encontra — quem quiser trocar instala e redeploya, sem
+# mudar código.
+pytesseract>=0.3.10,<0.4
 
 # Só quando CI_STORAGE_BACKEND=s3 (Cloudflare R2 ou Backblaze B2). Com o
 # backend supabase, que é o padrão, nada disto é usado.

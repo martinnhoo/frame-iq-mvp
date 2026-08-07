@@ -21,9 +21,11 @@ primary_region = "gru"
   CI_TMP_MAX_MB = "4096"
   CI_STORAGE_BACKEND = "supabase"
   CI_STORAGE_BUCKET = "ci-media"
-  # OCR fora da imagem padrão (torch pesa 2 GB). Degrada visível, não em
-  # silêncio: o estágio entra em skipped_stages e a UI mostra em amarelo.
-  CI_OCR = "false"
+  # OCR ligado, via tesseract (vem no Dockerfile, ~30 MB). easyocr leria melhor
+  # texto estilizado, mas arrasta o torch e disputaria os 2 GB com o Whisper.
+  # Sem motor instalado o estágio é PULADO e aparece em amarelo na UI — degrada
+  # visível, não em silêncio.
+  CI_OCR = "true"
   CI_WHISPER_MODEL = "small"
 
 # Sem [http_service] de propósito: o worker não atende requisição. Ele só
