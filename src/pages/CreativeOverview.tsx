@@ -196,7 +196,8 @@ export default function CreativeOverview() {
 
   const carregar = useCallback(async (brandId: string) => {
     setCarregando(true); setErro(null);
-    const q = (t: string, sel: string) => supabase.from(t).select(sel).eq("brand_id", brandId);
+    const q = (t: string, sel: string) =>
+      ((supabase.from(t as any) as any).select(sel).eq("brand_id", brandId)) as Promise<{ data: Row[] | null }>;
     try {
       const [ads, assets, termos, vinculos, conceitos, pessoas, cenas, runs, membros] = await Promise.all([
         q("ci_ads", "id,media_type,display_format,is_active,running_days,is_demo,analysis_status"),
@@ -248,9 +249,9 @@ export default function CreativeOverview() {
   };
 
   // ── Agregações ────────────────────────────────────────────────────────────
-  const termosDe = (...kinds: string[]) => ((d?.termos ?? []) as Row[])
+  const termosDe = (...kinds: string[]): Row[] => ((d?.termos ?? []) as Row[])
     .filter(t => kinds.includes(t.kind))
-    .map(t => ({ ...t, usos: ((d?.vinculos ?? []) as Row[]).filter(v => v.term_id === t.id).length }))
+    .map((t): Row => ({ ...t, usos: ((d?.vinculos ?? []) as Row[]).filter(v => v.term_id === t.id).length }))
     .sort((a, b) => b.usos - a.usos);
 
   const ads: Row[] = d?.ads ?? [];
