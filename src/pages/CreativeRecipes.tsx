@@ -21,6 +21,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcuracia, SeloConfianca, AvisoConfianca } from "@/ci/confianca";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -130,6 +131,11 @@ export default function CreativeRecipes() {
   const conceitos = ((d?.conceitos ?? []) as Row[])
     .sort((a, b) => (b.ad_count ?? 0) - (a.ad_count ?? 0));
 
+  // Esta tela é a que mais vira briefing, então é a que mais precisa dizer o
+  // quanto o agrupamento foi conferido. "receita" é o campo revisável que
+  // pergunta exatamente isto: este anúncio pertence ao grupo em que caiu?
+  const { mapa: acuracia } = useAcuracia(marca?.id);
+
   return (
     <div style={{ minHeight: "100vh", background: T.bg0, color: T.t1, fontFamily: F, padding: "24px 22px 40px" }}>
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
@@ -138,6 +144,9 @@ export default function CreativeRecipes() {
         <div style={{ margin: "14px 0 20px" }}>
           <h1 style={{ fontSize: 21, fontWeight: 670, margin: 0, letterSpacing: "-.02em" }}>
             Receitas criativas{marca ? ` · ${marca.name}` : ""}
+            <span style={{ marginLeft: 9, verticalAlign: "middle" }}>
+              <SeloConfianca campo="receita" mapa={acuracia} en={false} />
+            </span>
           </h1>
           <p style={{ color: T.t3, fontSize: 13, marginTop: 7, lineHeight: 1.6, maxWidth: 680 }}>
             Cada receita é um conjunto de anúncios que contam a mesma ideia. Abrir uma
@@ -145,6 +154,8 @@ export default function CreativeRecipes() {
             que interessa.
           </p>
         </div>
+
+        <AvisoConfianca campo="receita" mapa={acuracia} en={false} />
 
         {erro && <Card style={{ borderColor: "rgba(248,113,113,.4)" }}>
           <div style={{ color: T.red, fontSize: 13.3 }}>{erro}</div></Card>}

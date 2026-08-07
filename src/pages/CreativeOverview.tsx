@@ -20,6 +20,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIdioma, SeletorIdioma } from "@/ci/idioma";
+import { useAcuracia, SeloConfianca, AvisoConfianca } from "@/ci/confianca";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -81,13 +82,23 @@ const Card = ({ children, style }: { children: React.ReactNode; style?: React.CS
   }}>{children}</div>
 );
 
-const Head = ({ children, hint, link }: { children: React.ReactNode; hint?: string; link?: string }) => (
+/**
+ * `selo` recebe o selo de confiança do campo que o painel apresenta.
+ *
+ * Fica no cabeçalho e não junto de cada item: a acurácia é do CAMPO, não da
+ * linha. Repetir "63%" em cada prova daria a impressão de que aquela prova
+ * específica foi medida, o que seria uma precisão inventada.
+ */
+const Head = ({ children, hint, link, selo }: {
+  children: React.ReactNode; hint?: string; link?: string; selo?: React.ReactNode;
+}) => (
   <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 15 }}>
     <span style={{ fontSize: 15, fontWeight: 640 }}>{children}</span>
     {hint && <span title={hint} style={{
       fontSize: 9.5, color: T.label, border: `1px solid ${T.b2}`, borderRadius: "50%",
       width: 14, height: 14, display: "grid", placeItems: "center", cursor: "help",
     }}>i</span>}
+    {selo}
     {link && <a href={link} style={{ marginLeft: "auto", fontSize: 12.5, color: T.blue, textDecoration: "none" }}>›</a>}
   </div>
 );
@@ -178,12 +189,19 @@ const PALETA = [T.purple, T.blue, T.teal, T.orange, "rgba(240,246,252,0.28)"];
 // ═══════════════════════════════════════════════════════════════════════════
 
 export default function CreativeOverview() {
-  const { t } = useIdioma();
+  const { t, idioma } = useIdioma();
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [marcas, setMarcas] = useState<Row[]>([]);
   const [marca, setMarca] = useState<Row | null>(null);
   const [d, setD] = useState<Row | null>(null);
+
+  // A acurácia medida em /ci/qualidade, para colar em cada painel. Uma chamada
+  // por marca; falha aqui não derruba a tela — o selo passa a dizer "não
+  // medido", que é a verdade.
+  const { mapa: acuracia } = useAcuracia(marca?.id);
+  const en = idioma === "en";
+  const selo = (campo: string) => <SeloConfianca campo={campo} mapa={acuracia} en={en} />;
 
   useEffect(() => {
     (async () => {
@@ -595,7 +613,7 @@ export default function CreativeOverview() {
             <div style={{ display: "grid", gridTemplateColumns: "1.62fr 1fr", gap: 12, marginBottom: 12 }}>
 
               <Card>
-                <Head hint="Anúncios diferentes que contam a mesma ideia. A barra mostra quanto cada receita se repete.">
+                <Head hint="Anúncios diferentes que contam a mesma ideia. A barra mostra quanto cada receita se repete." selo={selo("receita")}>
                   {t("panel_repeats")}
                 </Head>
                 {conceitos.length === 0 ? (
@@ -677,7 +695,7 @@ export default function CreativeOverview() {
               </Card>
 
               <Card>
-                <Head hint="Distribuição dos estilos visuais que o modelo identificou, com evidência.">
+                <Head hint="Distribuição dos estilos visuais que o modelo identificou, com evidência." selo={selo("formato")}>
                   {t("panel_mix")}
                 </Head>
                 {fatias.length === 0 ? (
@@ -705,7 +723,7 @@ export default function CreativeOverview() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 12 }}>
 
               <Card>
-                <Head hint="A sequência de funções de cena que mais se repete: problema → produto → demonstração → CTA.">
+                <Head hint="A sequência de funções de cena que mais se repete: problema → produto → demonstração → CTA." selo={selo("estrutura")}>
                   {t("panel_scripts")}
                 </Head>
                 {estruturas.length === 0 ? (
@@ -745,7 +763,7 @@ export default function CreativeOverview() {
               </Card>
 
               <Card>
-                <Head hint="Cada hook carrega a evidência que o sustenta: a fala, o texto na tela ou o frame.">
+                <Head hint="Cada hook carrega a evidência que o sustenta: a fala, o texto na tela ou o frame." selo={selo("hook")}>
                   {t("panel_hooks")}
                 </Head>
                 {hooks.length === 0 ? (
@@ -804,9 +822,13 @@ export default function CreativeOverview() {
             <div style={{ display: "grid", gridTemplateColumns: "1.35fr 1fr", gap: 12 }}>
 
               <Card>
-                <Head hint="O que a marca diz que resolve, o que promete e com o que prova.">
+                <Head hint="O que a marca diz que resolve, o que promete e com o que prova." selo={selo("proof")}>
                   {t("panel_messages")}
                 </Head>
+                {/* Aviso de bloco, e não só selo: este painel é o que mais vira
+                    briefing, e prova é o campo que o modelo mais erra. Só
+                    aparece quando a acurácia medida está abaixo de 70%. */}
+                <AvisoConfianca campo="proof" mapa={acuracia} en={en} />
                 {problemas.length + promessas.length + provas.length === 0 ? (
                   <Falta motivo={semReal
                     ? "Sem anúncio real analisado. Este mapa vem das objeções, promessas e provas que o modelo extrai de cada vídeo — sempre com a evidência junto."
@@ -838,7 +860,7 @@ export default function CreativeOverview() {
               </Card>
 
               <Card>
-                <Head hint="A receita dominante convertida em instruções de roteiro.">
+                <Head hint="A receita dominante convertida em instruções de roteiro." selo={selo("receita")}>
                   {t("panel_brief")}
                 </Head>
                 {!briefing ? (

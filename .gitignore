@@ -40,3 +40,4 @@ deno.lock
 # Bytecode do worker Python
 __pycache__/
 *.py[cod]
+.build-confianca/
