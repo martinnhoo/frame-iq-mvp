@@ -28,6 +28,7 @@ const Privacy      = lazy(() => import("./pages/Privacy"));
 const Shapermint   = lazy(() => import("./pages/Shapermint"));
 const CreativeImport = lazy(() => import("./pages/CreativeImport"));
 const CreativeOverview = lazy(() => import("./pages/CreativeOverview"));
+const CreativeAd = lazy(() => import("./pages/CreativeAd"));
 
 // ── Dashboard (Brilliant Hub interno) ────────────────────────────────────────
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
@@ -139,6 +140,7 @@ const App = () => (
               <Route path="/shapermint" element={<Shapermint />} />
               <Route path="/importar" element={<CreativeImport />} />
               <Route path="/ci" element={<CreativeOverview />} />
+              <Route path="/ci/anuncio/:id" element={<CreativeAd />} />
 
               {/* Rotas que nunca existiram e para as quais dez lugares
                   apontavam — o banner de upgrade do plano Free, o botão

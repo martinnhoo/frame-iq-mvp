@@ -618,7 +618,13 @@ export default function CreativeOverview() {
                             }}>{i + 1}</div>
                           </td>
                           <td style={{ padding: "11px 8px 11px 0", color: T.t1, maxWidth: 190 }}>
-                            {c.name}
+                            {c.baseline_ad_id
+                              ? <a href={`/ci/anuncio/${c.baseline_ad_id}`}
+                                   title="Abrir o anúncio mais antigo desta receita para inspecionar"
+                                   style={{ color: T.t1, textDecoration: "none", borderBottom: `1px dotted ${T.b2}` }}>
+                                  {c.name}
+                                </a>
+                              : c.name}
                             <div title={c.motivos.join(" · ")} style={{ fontSize: 10.8, color: T.t3, marginTop: 3 }}>
                               {c.motivos[0] ?? "—"}
                             </div>
