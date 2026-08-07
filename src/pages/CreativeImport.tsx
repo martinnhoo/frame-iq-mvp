@@ -19,6 +19,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LayoutCI } from "@/ci/Layout";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -205,8 +206,7 @@ export default function CreativeImport() {
   // ═════════════════════════════════════════════════════════════════════════
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg0, color: T.t1, fontFamily: F, padding: "40px 20px" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
+    <LayoutCI ativo="marcas" brandId={brand?.id} larguraMax={860}>
 
         <div style={{ marginBottom: 30 }}>
           <h1 style={{ fontSize: 27, fontWeight: 680, margin: 0, letterSpacing: "-.02em" }}>
@@ -484,7 +484,6 @@ export default function CreativeImport() {
           </Card>
         )}
 
-      </div>
-    </div>
+    </LayoutCI>
   );
 }

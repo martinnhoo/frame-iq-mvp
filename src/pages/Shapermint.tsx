@@ -16,6 +16,7 @@
  */
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LayoutCI } from "@/ci/Layout";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -384,12 +385,14 @@ const small = { fontSize: 12, color: T.t3, margin: 0, lineHeight: 1.55 };
 const empty = { display: "flex", alignItems: "center", justifyContent: "center", background: T.bg2, border: `1px dashed ${T.b1}`, borderRadius: 8, color: T.label, fontSize: 11 };
 const btn = { background: T.blue, color: "#fff", border: "none", padding: "9px 18px", borderRadius: 9, fontWeight: 600, fontSize: 13, cursor: "pointer", textDecoration: "none", display: "inline-block" };
 
+/**
+ * Esta tela é candidata a ser aposentada (T5 do FALTA.md) — ela e /ci mostram
+ * a mesma coisa, e manter duas significa que uma delas envelhece. Enquanto
+ * existe, compartilha a mesma navegação: uma tela órfã dentro do produto é
+ * pior que uma tela redundante.
+ */
 function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ minHeight: "100vh", background: T.bg0, fontFamily: F, padding: "32px 20px" }}>
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>{children}</div>
-    </div>
-  );
+  return <LayoutCI ativo="anuncios" larguraMax={1000}>{children}</LayoutCI>;
 }
 
 function Msg({ title, body, tone, action }: { title: string; body: string; tone?: string; action?: React.ReactNode }) {

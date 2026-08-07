@@ -19,6 +19,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { LayoutCI } from "@/ci/Layout";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -227,10 +228,7 @@ export default function CreativeAd() {
   const semAnalise = (d.taxo as Row[]).length === 0;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg0, color: T.t1, fontFamily: F, padding: "24px 22px 40px" }}>
-      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-
-        <a href="/ci" style={{ color: T.blue, fontSize: 13.3, textDecoration: "none" }}>← Visão geral</a>
+    <LayoutCI ativo="anuncios" brandId={ad?.brand_id} larguraMax={1180}>
 
         <div style={{ margin: "14px 0 20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -495,7 +493,6 @@ export default function CreativeAd() {
           Tudo nesta página foi observado no criativo público. Nada aqui é desempenho,
           ROAS ou CPA, e nada vem da conta de anúncios da marca.
         </div>
-      </div>
-    </div>
+    </LayoutCI>
   );
 }

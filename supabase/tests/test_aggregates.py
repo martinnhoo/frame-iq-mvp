@@ -139,12 +139,15 @@ def main() -> int:
         f" order by ad_count desc limit 1;"))
     if cid:
         var = linhas(db.psql(
-            f"select kind, mantido, n_valores from public.ci_concept_variation('{cid[0][0]}');"))
+            # v2: a coluna booleana `mantido` virou `papel`, com três valores.
+            # O terceiro — nao_extraido — é o que impede a tela de apresentar
+            # ausência de extração como se fosse variação da marca.
+            f"select kind, papel, n_valores from public.ci_concept_variation('{cid[0][0]}');"))
         v = {l[0]: (l[1], int(l[2])) for l in var if len(l) >= 3}
         check("ângulo igual nos 3 é marcado como MANTIDO",
-              v.get("angle", ("", 0))[0] == "t", str(v))
+              v.get("angle", ("", 0))[0] == "mantido", str(v))
         check("hook diferente em cada um é marcado como VARIADO",
-              v.get("hook", ("", 0))[0] == "f" and v.get("hook", ("", 0))[1] == 3, str(v))
+              v.get("hook", ("", 0))[0] == "variado" and v.get("hook", ("", 0))[1] == 3, str(v))
     else:
         check("receita foi montada para testar variação", False)
 

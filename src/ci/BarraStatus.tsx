@@ -30,20 +30,22 @@ const T = {
   blue: "#0ea5e9", green: "#4ADE80", red: "#F87171", yellow: "#FBBF24", violet: "#A78BFA",
 };
 
-type Contagem = Record<string, number>;
-
+/**
+ * Uma linha, vinda pronta do banco.
+ *
+ * A primeira versão lia a coluna `status` de ci_analysis_jobs e
+ * ci_download_jobs INTEIRAS e contava aqui no navegador. Com 40 jobs dava na
+ * mesma; com 50.000, a barra — que existe para ser barata e estar sempre
+ * visível — viraria a consulta mais cara do produto, batendo no banco oito
+ * vezes por minuto por aba, exatamente quando o worker está competindo por ele.
+ */
 type Estado = {
-  analise: Contagem;
-  download: Contagem;
-  ultimoEvento: string | null;
-  segundosDesdeEvento: number | null;
+  analise_rodando: number;  analise_fila: number;
+  analise_falhou: number;   analise_total: number;
+  download_rodando: number; download_fila: number;
+  download_falhou: number;  download_total: number;
+  ultimo_evento_seg: number | null;
 };
-
-const RODANDO = ["running"];
-const ESPERANDO = ["queued", "retrying"];
-
-const soma = (c: Contagem, chaves: string[]) =>
-  chaves.reduce((t, k) => t + (c[k] ?? 0), 0);
 
 function Ponto({ cor, pulsando }: { cor: string; pulsando?: boolean }) {
   return (
@@ -66,27 +68,12 @@ export function BarraStatus({ brandId, en = false }: { brandId?: string | null; 
 
   const ler = useCallback(async () => {
     try {
-      const contar = async (tabela: string): Promise<Contagem> => {
-        const q = (supabase.from as any)(tabela).select("status");
-        const { data } = brandId ? await q.eq("brand_id", brandId) : await q;
-        const m: Contagem = {};
-        for (const j of (data ?? []) as { status: string }[]) m[j.status] = (m[j.status] ?? 0) + 1;
-        return m;
-      };
-      const [analise, download, ev] = await Promise.all([
-        contar("ci_analysis_jobs"),
-        contar("ci_download_jobs"),
-        supabase.from("ci_job_events").select("created_at")
-          .order("created_at", { ascending: false }).limit(1),
-      ]);
-      const ultimo = (ev.data ?? [])[0]?.created_at ?? null;
-      if (!montado.current) return;
-      setE({
-        analise, download, ultimoEvento: ultimo,
-        segundosDesdeEvento: ultimo
-          ? Math.round((Date.now() - new Date(ultimo).getTime()) / 1000)
-          : null,
+      const { data, error } = await supabase.rpc("ci_queue_status", {
+        p_brand_id: brandId ?? null,
       });
+      if (error) throw error;
+      const linha = (Array.isArray(data) ? data[0] : data) as Estado | undefined;
+      if (montado.current && linha) setE(linha);
     } catch { /* barra de status não derruba a tela em que está */ }
   }, [brandId]);
 
@@ -137,14 +124,14 @@ export function BarraStatus({ brandId, en = false }: { brandId?: string | null; 
     }
   }, [brandId, ocupado, en, ler]);
 
-  const rodando = e ? soma(e.analise, RODANDO) + soma(e.download, RODANDO) : 0;
-  const esperando = e ? soma(e.analise, ESPERANDO) + soma(e.download, ESPERANDO) : 0;
-  const falhos = e ? (e.analise.failed ?? 0) + (e.download.failed ?? 0) : 0;
+  const rodando = e ? e.analise_rodando + e.download_rodando : 0;
+  const esperando = e ? e.analise_fila + e.download_fila : 0;
+  const falhos = e ? e.analise_falhou + e.download_falhou : 0;
   const trabalhando = rodando > 0;
 
   // Vivo = deu sinal nos últimos 2 minutos. O cron religa a máquina nesse
   // intervalo, então silêncio maior que isso já é sintoma, não espera normal.
-  const vivo = e?.segundosDesdeEvento != null && e.segundosDesdeEvento < 120;
+  const vivo = e?.ultimo_evento_seg != null && e.ultimo_evento_seg < 120;
   const paradoComFila = !trabalhando && esperando > 0 && !vivo;
 
   const Item = ({ cor, rotulo, valor, pulsando }: {

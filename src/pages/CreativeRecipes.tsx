@@ -174,8 +174,12 @@ export default function CreativeRecipes() {
         {conceitos.map(c => {
           const abertaAqui = aberta === c.id;
           const eixos = variacao[c.id] ?? [];
-          const mantidos = eixos.filter(e => e.mantido);
-          const variados = eixos.filter(e => !e.mantido && e.n_valores > 1);
+          // O papel vem do banco. A v1 derivava aqui no navegador com
+          // `!mantido && n_valores > 1`, e essa regra jogava no balde de
+          // "variou" tudo o que o modelo simplesmente não extraiu.
+          const mantidos = eixos.filter(e => e.papel === "mantido");
+          const variados = eixos.filter(e => e.papel === "variado");
+          const semBase  = eixos.filter(e => e.papel === "nao_extraido");
           const motivos = motivosDe(c.id);
           const ads = adsDa(c.id);
           return (
@@ -238,7 +242,16 @@ export default function CreativeRecipes() {
                             {mantidos.map(e => (
                               <div key={e.kind} style={{ fontSize: 12.7 }}>
                                 <div style={{ color: T.label, fontSize: 11 }}>{KIND_ROTULO[e.kind] ?? e.kind}</div>
-                                <div style={{ color: T.teal }}>{(e.valores?.[0]?.label) ?? "—"}</div>
+                                <div style={{ color: T.teal }}>{e.dominante ?? "—"}</div>
+                                {/* "Mantido" aqui não significa unânime: 80% já
+                                    é mantido. Quando não é 100%, o número
+                                    aparece — senão a tela afirma mais do que
+                                    o dado sustenta. */}
+                                {e.dominancia_pct < 100 && (
+                                  <div style={{ color: T.label, fontSize: 10.8, marginTop: 1 }}>
+                                    em {e.dominancia_pct}% dos anúncios
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -276,6 +289,32 @@ export default function CreativeRecipes() {
                             ))}
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* O terceiro balde, que a versão anterior não tinha: eixos
+                      em que o modelo extraiu pouco. Ficavam misturados em
+                      TESTARAM, e "a marca varia o mecanismo" ia parar num
+                      briefing quando a verdade era que não sabíamos.
+                      Apresentar ignorância como achado é o pior defeito
+                      possível aqui. */}
+                  {semBase.length > 0 && (
+                    <div style={{
+                      marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.b1}`,
+                      fontSize: 11.9, color: T.t3, lineHeight: 1.6,
+                    }}>
+                      <span style={{ color: T.yellow, fontWeight: 620 }}>Sem base para afirmar:</span>{" "}
+                      {semBase.map(e => (
+                        <span key={e.kind}>
+                          {(KIND_ROTULO[e.kind] ?? e.kind).toLowerCase()}
+                          {" "}({e.cobertura_pct}% dos anúncios)
+                          {e === semBase[semBase.length - 1] ? "" : " · "}
+                        </span>
+                      ))}
+                      <div style={{ marginTop: 4, color: T.label, fontSize: 11.3 }}>
+                        A análise identificou esses campos em poucos anúncios da receita.
+                        Não dá para dizer se a marca manteve ou variou.
                       </div>
                     </div>
                   )}
