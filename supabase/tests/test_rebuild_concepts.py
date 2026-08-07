@@ -19,7 +19,7 @@ confere o resultado.
 ── O cenário ────────────────────────────────────────────────────────────────
 Seis anúncios com desfecho previsto:
 
-  A, B, C   mesmo ângulo (conforto) e mesma prova (antes-depois) → UMA receita
+  A, B, C   mesmo ângulo (conforto) → UMA receita (prova não entra na assinatura)
   D         ângulo diferente (preço), mesma prova               → receita própria
   E         só mecanismo                                        → receita própria
   F         nenhum eixo                                         → órfão, fora
@@ -69,7 +69,18 @@ def main() -> int:
       create extension if not exists pgcrypto;
     """)
 
-    for arquivo in sorted(glob.glob(str(RAIZ / "supabase/migrations/20260806*.sql"))):
+    # TODAS as migrations do módulo CI, não um recorte por data: o filtro
+    # "20260806*" fazia o teste validar a versão ANTIGA de ci_rebuild_concepts
+    # e passar enquanto a versão publicada estava quebrada. Teste que não roda
+    # o código publicado é pior que teste nenhum — dá confiança falsa.
+    #
+    # As ~140 migrations do app legado ficam de fora de propósito: carregar
+    # tudo traz triggers e seeds que não têm nada a ver com o que se testa aqui
+    # e que quebram a inserção do cenário. O módulo CI é autocontido.
+    arquivos = [a for a in sorted(glob.glob(str(RAIZ / "supabase/migrations/*.sql")))
+                if "_ci_" in Path(a).name]
+    assert arquivos, "nenhuma migration do CI encontrada — glob errado?"
+    for arquivo in arquivos:
         # Os GRANT para authenticated/anon falham num Postgres sem esses papéis.
         # Não é o que estamos testando, e criar os papéis mascararia a RLS real.
         db.psql(Path(arquivo).read_text(encoding="utf-8"))
@@ -126,10 +137,13 @@ def main() -> int:
         if nome:
             receitas[nome] = (int(ads), int(membros))
 
-    check("a receita dominante junta os 3 de mesmo ângulo e prova",
-          receitas.get("conforto + antes-depois", (0, 0))[0] == 3, str(receitas))
+    # v2: a assinatura é ÂNGULO + MECANISMO. A prova saiu — ela é execução da
+    # mesma ideia, e mantê-la na assinatura quebrava um ângulo em várias
+    # receitas. Por isso o nome agora é "conforto", não "conforto + antes-depois".
+    check("a receita dominante junta os 3 de mesmo ângulo",
+          receitas.get("conforto", (0, 0))[0] == 3, str(receitas))
     check("ângulo diferente NÃO é agrupado junto",
-          receitas.get("preco + antes-depois", (0, 0))[0] == 1)
+          receitas.get("preco", (0, 0))[0] == 1, str(receitas))
     check("mecanismo sozinho vira receita própria",
           receitas.get("tecido", (0, 0))[0] == 1)
     check("ad_count bate com o número de membros em toda receita",

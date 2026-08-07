@@ -128,6 +128,23 @@ REGRAS OBRIGATÓRIAS
 6. Descreva o que ESTÁ no anúncio. Não avalie se é bom, não sugira melhorias, não estime desempenho.
 7. Se o vídeo não tiver fala, trabalhe com o visual e o texto na tela. Não invente diálogo.
 
+8. TODO `label` em INGLÊS, sempre — independente do idioma do anúncio. O rótulo
+   é chave de agrupamento: se o mesmo ângulo sair "Conforto" num anúncio e
+   "Comfort" noutro, viram dois grupos diferentes e o painel mostra fragmentação
+   onde há repetição. `evidence` é CITAÇÃO e fica no idioma original — traduzir
+   evidência seria falsear o que a marca disse.
+
+9. `label` CURTO e CANÔNICO: 2 a 4 palavras, minúsculas, sem adjetivo de
+   intensidade. Descreva a CATEGORIA, não a execução daquele anúncio.
+
+   Sim:  "stays in place"  ·  "wire-free comfort"  ·  "social proof"
+   Não:  "Superior comfort with no wire and jelly strips" (execução, não categoria)
+   Não:  "Comfort"  (vago demais para distinguir de qualquer outro)
+
+   Se dois anúncios defendem a mesma ideia com palavras diferentes, o label tem
+   que ser IGUAL nos dois. Prefira reusar um rótulo óbvio a inventar um novo
+   mais preciso.
+
 METADADOS
   duração: {metadata.get('duration_s')}s · {metadata.get('width')}x{metadata.get('height')} · {metadata.get('aspect_ratio')}
   cortes detectados: {metadata.get('cut_count')}
