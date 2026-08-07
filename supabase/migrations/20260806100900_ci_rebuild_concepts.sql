@@ -96,21 +96,21 @@ begin
   )
   select
     ad_id,
-    max(term_id) filter (where kind = 'angle'        and pos = 1) as angle_id,
+    (array_agg(term_id) filter (where kind = 'angle'        and pos = 1))[1] as angle_id,
     max(label)   filter (where kind = 'angle'        and pos = 1) as angle_label,
-    max(term_id) filter (where kind = 'mechanism'    and pos = 1) as mechanism_id,
+    (array_agg(term_id) filter (where kind = 'mechanism'    and pos = 1))[1] as mechanism_id,
     max(label)   filter (where kind = 'mechanism'    and pos = 1) as mechanism_label,
     -- 'demonstration' conta como prova quando não há 'proof': mostrar o produto
     -- funcionando É a prova, e separar os dois fragmentaria receitas idênticas.
     coalesce(
-      max(term_id) filter (where kind = 'proof'         and pos = 1),
-      max(term_id) filter (where kind = 'demonstration' and pos = 1)
+      (array_agg(term_id) filter (where kind = 'proof'         and pos = 1))[1],
+      (array_agg(term_id) filter (where kind = 'demonstration' and pos = 1))[1]
     ) as proof_id,
     coalesce(
       max(label) filter (where kind = 'proof'         and pos = 1),
       max(label) filter (where kind = 'demonstration' and pos = 1)
     ) as proof_label,
-    max(term_id) filter (where kind = 'product_type' and pos = 1) as product_id
+    (array_agg(term_id) filter (where kind = 'product_type' and pos = 1))[1] as product_id
   from ranqueado
   group by ad_id;
 
@@ -143,10 +143,10 @@ begin
   with agrupado as (
     select
       s.signature,
-      max(s.angle_id)       as angle_id,
-      max(s.mechanism_id)   as mechanism_id,
-      max(s.proof_id)       as proof_id,
-      max(s.product_id)     as product_id,
+      (array_agg(s.angle_id))[1]       as angle_id,
+      (array_agg(s.mechanism_id))[1]   as mechanism_id,
+      (array_agg(s.proof_id))[1]       as proof_id,
+      (array_agg(s.product_id))[1]     as product_id,
       -- Nome legível a partir dos rótulos que formaram a chave. Sem eles o
       -- painel mostraria uma lista de UUIDs.
       coalesce(
@@ -229,7 +229,10 @@ begin
       min(a.started_on)                                         as primeiro,
       max(a.last_seen_at)                                       as ultimo,
       max(a.running_days)                                       as dias,
-      bool_or(a.is_active)                                      as algum_ativo,
+      -- coalesce obrigatório: bool_or devolve NULL quando TODOS os valores são
+      -- NULL, e ci_concepts.is_active é NOT NULL. Acontece de verdade — anúncio
+      -- importado antes de sabermos se está no ar tem is_active nulo.
+      coalesce(bool_or(a.is_active), false)                     as algum_ativo,
       (array_agg(a.id order by a.started_on nulls last))[1]     as mais_antigo
     from public.ci_concept_members cm
     join public.ci_ads a on a.id = cm.ad_id
