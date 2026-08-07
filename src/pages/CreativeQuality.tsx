@@ -69,6 +69,7 @@ export default function CreativeQuality() {
   const [revisoes, setRevisoes] = useState<Record<string, Row>>({});
   const [resumo, setResumo] = useState<Row[]>([]);
   const [correcao, setCorrecao] = useState<Record<string, string>>({});
+  const [contexto, setContexto] = useState<Row | null>(null);
 
   const carregar = useCallback(async () => {
     setCarregando(true); setErro(null);
@@ -79,13 +80,35 @@ export default function CreativeQuality() {
       if (!b) return;
       setMarca(b);
 
-      // Só anúncios REAIS e já analisados: revisar o que o worker não tocou
-      // mediria a fila, não a qualidade da extração.
+      // Só anúncios REAIS e JÁ ANALISADOS.
+      //
+      // O comentário aqui dizia isso desde o começo e o código não fazia:
+      // faltava o filtro de analysis_status, e a fila abria num anúncio de
+      // IMAGEM sem asset nenhum. Revisar o que o worker não tocou mede a fila,
+      // não a extração — e pior, faz a ferramenta parecer quebrada logo no
+      // primeiro item.
+      //
+      // Anúncio de IMAGEM nunca entra: só vídeo vai para a fila de análise
+      // (imagem não tem transcrição nem cena, e mandá-la ao LLM gastaria por
+      // nada). Ele existe na base, aparece na contagem de anúncios, e não tem
+      // o que revisar.
       const { data: lista } = await supabase.from("ci_ads")
-        .select("id,ad_archive_id,headline,analysis_status,is_demo")
+        .select("id,ad_archive_id,headline,analysis_status,is_demo,media_type")
         .eq("brand_id", b.id).eq("is_demo", false)
+        .eq("analysis_status", "completed")
         .order("started_on", { ascending: false });
       setAds((lista ?? []) as Row[]);
+
+      // Quantos ficaram de fora, e por quê. Sem isto, "80 anúncios na base e 3
+      // para revisar" pareceria bug em vez de consequência.
+      const { count: totalReais } = await supabase.from("ci_ads")
+        .select("id", { count: "exact", head: true })
+        .eq("brand_id", b.id).eq("is_demo", false);
+      const { count: imagens } = await supabase.from("ci_ads")
+        .select("id", { count: "exact", head: true })
+        .eq("brand_id", b.id).eq("is_demo", false).neq("media_type", "video");
+      setContexto({ total: totalReais ?? 0, imagens: imagens ?? 0,
+                    revisaveis: (lista ?? []).length });
 
       const { data: revs } = await supabase.from("ci_quality_reviews")
         .select("ad_id,campo,veredito,valor_correto").eq("brand_id", b.id);
@@ -195,8 +218,14 @@ export default function CreativeQuality() {
         {carregando ? (
           <div style={{ color: T.t3, fontSize: 13.5 }}>Carregando…</div>
         ) : ads.length === 0 ? (
-          <Card><div style={{ fontSize: 12.9, color: T.t2 }}>
-            Nenhum anúncio real para revisar ainda.
+          <Card><div style={{ fontSize: 12.9, color: T.t2, lineHeight: 1.6 }}>
+            Nenhum anúncio <strong>analisado</strong> para revisar ainda.
+            {contexto && (
+              <> A base tem {contexto.total} anúncio(s) real(is)
+                {contexto.imagens > 0 && <>, dos quais {contexto.imagens} são de IMAGEM e
+                  nunca entram na análise — imagem não tem fala nem cena</>}.
+                O resto ainda está na fila do worker.</>
+            )}
           </div></Card>
         ) : (
           <Card>
@@ -212,7 +241,12 @@ export default function CreativeQuality() {
                   {ad?.headline || ad?.ad_archive_id}
                 </div>
                 <div style={{ fontSize: 11.8, color: T.t3, marginTop: 3 }}>
-                  {indice + 1} de {ads.length} · {revisadosDoAd(ad?.id)} de {CAMPOS.length} campos revisados
+                  {indice + 1} de {ads.length} analisado{ads.length === 1 ? "" : "s"}
+                  {contexto && contexto.total > ads.length && (
+                    <span title={`${contexto.imagens} de imagem + os que ainda estão na fila`}>
+                      {" "}(de {contexto.total} na base)
+                    </span>
+                  )} · {revisadosDoAd(ad?.id)} de {CAMPOS.length} campos revisados
                   {ad?.analysis_status !== "completed" && (
                     <span style={{ color: T.yellow, marginLeft: 8 }}>
                       análise {ad?.analysis_status ?? "pendente"}
