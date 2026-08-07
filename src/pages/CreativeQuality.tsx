@@ -19,6 +19,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LayoutCI } from "@/ci/Layout";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -154,9 +155,7 @@ export default function CreativeQuality() {
     CAMPOS.filter(c => revisoes[`${adId}|${c.id}`]).length;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg0, color: T.t1, fontFamily: F, padding: "24px 22px 40px" }}>
-      <div style={{ maxWidth: 1050, margin: "0 auto" }}>
-        <a href="/ci" style={{ color: T.blue, fontSize: 13.3, textDecoration: "none" }}>← Visão geral</a>
+    <LayoutCI ativo="qualidade" brandId={marca?.id} larguraMax={1050}>
 
         <div style={{ margin: "14px 0 20px" }}>
           <h1 style={{ fontSize: 21, fontWeight: 670, margin: 0, letterSpacing: "-.02em" }}>
@@ -331,7 +330,6 @@ export default function CreativeQuality() {
           avaliação de modelo — é o mínimo para não apresentar um campo de 60%
           com a mesma cara de um de 100%.
         </div>
-      </div>
-    </div>
+    </LayoutCI>
   );
 }

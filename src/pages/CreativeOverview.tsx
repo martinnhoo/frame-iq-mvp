@@ -21,6 +21,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIdioma, SeletorIdioma } from "@/ci/idioma";
 import { useAcuracia, SeloConfianca, AvisoConfianca } from "@/ci/confianca";
+import { BarraStatus } from "@/ci/BarraStatus";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -522,7 +523,12 @@ export default function CreativeOverview() {
       </aside>
 
       {/* ══ Conteúdo ═════════════════════════════════════════════════════════ */}
-      <main style={{ flex: 1, padding: "18px 22px 34px", minWidth: 0 }}>
+      <main style={{ flex: 1, minWidth: 0 }}>
+        {/* A barra fica FORA do padding e grudada no topo: rolar a página não
+            pode esconder o estado da fila, que é a informação que responde
+            "posso confiar no que estou vendo agora?". */}
+        <BarraStatus brandId={marca?.id} en={en} />
+        <div style={{ padding: "12px 22px 34px" }}>
 
         {/* ── Topo ─────────────────────────────────────────────────────────── */}
         <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 18, flexWrap: "wrap" }}>
@@ -916,6 +922,7 @@ export default function CreativeOverview() {
             </div>
           </>
         )}
+        </div>
       </main>
     </div>
   );

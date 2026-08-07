@@ -21,6 +21,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LayoutCI } from "@/ci/Layout";
 import { useAcuracia, SeloConfianca, AvisoConfianca } from "@/ci/confianca";
 
 const T = {
@@ -137,9 +138,7 @@ export default function CreativeRecipes() {
   const { mapa: acuracia } = useAcuracia(marca?.id);
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg0, color: T.t1, fontFamily: F, padding: "24px 22px 40px" }}>
-      <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        <a href="/ci" style={{ color: T.blue, fontSize: 13.3, textDecoration: "none" }}>← Visão geral</a>
+    <LayoutCI ativo="receitas" brandId={marca?.id} larguraMax={980}>
 
         <div style={{ margin: "14px 0 20px" }}>
           <h1 style={{ fontSize: 21, fontWeight: 670, margin: 0, letterSpacing: "-.02em" }}>
@@ -336,7 +335,6 @@ export default function CreativeRecipes() {
             chute — anúncio antigo pode estar no ar por inércia.
           </div>
         )}
-      </div>
-    </div>
+    </LayoutCI>
   );
 }
