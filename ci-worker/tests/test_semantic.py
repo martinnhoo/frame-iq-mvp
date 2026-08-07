@@ -98,7 +98,15 @@ def main() -> int:
              "scene_function": "hook", "product_visible": True, "confidence": 0.8},
             {"start": 5, "end": 2, "setting": "invertida"},  # fim < início: descartar
         ],
-        "creative_analysis": {"story_structure": "problema-solução", "emotional_tone": "confiante"},
+        # Formato NOVO (com evidência) e formato ANTIGO (string solta) juntos,
+        # de propósito: o novo vira termo, o antigo é descartado pela mesma
+        # regra de todo mundo. Não abro exceção para o legado só para a tela
+        # encher.
+        "creative_analysis": {
+            "visual_style": {"label": "UGC vertical", "evidence": "câmera na mão, 9:16, sem trilha"},
+            "story_structure": "problema-solução",
+            "emotional_tone": "confiante",
+        },
         "timing": {"time_to_product_s": 1.5, "time_to_cta_s": 8.0, "time_to_offer_s": "nao-numero"},
         "flags": {"has_before_after": True, "has_urgency": "sim"},
     }
@@ -107,8 +115,20 @@ def main() -> int:
     labels = {t["label"] for t in n["terms"]}
     check("item SEM evidência é descartado, não corrigido",
           "Close no cós" not in labels, f"{len(n['terms'])} termos")
-    check("descarte é contado e reportado", n["dropped_without_evidence"] == 2,
+    # 2 dos itens com rótulo sem evidência + 2 do creative_analysis em formato
+    # antigo (string solta, sem como sustentar).
+    check("descarte é contado e reportado", n["dropped_without_evidence"] == 4,
           str(n["dropped_without_evidence"]))
+
+    # REGRESSÃO — o estilo visual era extraído e guardado só dentro do JSON de
+    # ci_analysis_results. A UI lê ci_taxonomy_terms, então o card "Mix criativo"
+    # ficava eternamente vazio: o dado existia e não chegava a lugar nenhum.
+    estilo = next((t for t in n["terms"] if t["kind"] == "visual_style"), None)
+    check("estilo visual COM evidência vira termo de taxonomia",
+          estilo is not None and estilo["label"] == "UGC vertical",
+          str(estilo))
+    check("creative_analysis em formato antigo NÃO vira termo",
+          not any(t["kind"] in ("story_structure", "emotional_tone") for t in n["terms"]))
     check("item com rótulo vazio também é descartado", "" not in labels)
 
     kinds = {t["kind"] for t in n["terms"]}

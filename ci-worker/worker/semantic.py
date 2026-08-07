@@ -92,8 +92,11 @@ _SCHEMA_HINT = """{
   "objections": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
   "offers": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
   "ctas": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
-  "creative_analysis": {"story_structure": "", "emotional_tone": "",
-                        "visual_style": "", "editing_rhythm": ""},
+  "creative_analysis": {
+    "story_structure":  {"label": "", "evidence": ""},
+    "emotional_tone":   {"label": "", "evidence": ""},
+    "visual_style":     {"label": "", "evidence": ""},
+    "editing_rhythm":   {"label": "", "evidence": ""}},
   "timing": {"time_to_product_s": null, "time_to_offer_s": null,
              "time_to_cta_s": null, "hook_duration_s": null},
   "flags": {"has_before_after": false, "has_testimonial": false,
@@ -340,6 +343,45 @@ def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dic
                 "source": provider,
                 "model_version": model,
             })
+
+    # ── creative_analysis também vira termo ─────────────────────────────────
+    #
+    # Estilo visual, estrutura de história, tom e ritmo eram extraídos e
+    # guardados SÓ dentro do JSON de ci_analysis_results. A UI lê
+    # ci_taxonomy_terms, então o card "Mix criativo atual" ficava eternamente
+    # vazio — o dado existia e não chegava a lugar nenhum.
+    #
+    # Aceita as duas formas: {"visual_style": {"label","evidence"}} do schema
+    # novo, e a string solta que o modelo devolvia antes. A string vira termo
+    # sem evidência e é DESCARTADA pela mesma regra dos outros — não abro
+    # exceção para o formato antigo só para a tela encher.
+    for campo, kind in (("story_structure", "story_structure"),
+                        ("emotional_tone", "emotional_tone"),
+                        ("visual_style", "visual_style"),
+                        ("editing_rhythm", "editing_rhythm")):
+        valor = (raw.get("creative_analysis") or {}).get(campo)
+        if isinstance(valor, dict):
+            label = str(valor.get("label") or "").strip()
+            evidence = str(valor.get("evidence") or "").strip()
+        else:
+            label, evidence = str(valor or "").strip(), ""
+        if not label or not evidence:
+            if label:
+                dropped += 1
+            continue
+        terms.append({
+            "kind": kind,
+            "slug": _slug(label),
+            "label": label[:200],
+            # O modelo não dá confiança para estes campos. 0.6 é um valor fixo
+            # e declarado, não uma estimativa disfarçada de medição.
+            "confidence": 0.6,
+            "evidence": evidence[:1000],
+            "evidence_kind": "visual",
+            "timestamp_s": None,
+            "source": provider,
+            "model_version": model,
+        })
 
     scenes = []
     for index, item in enumerate(raw.get("scenes") or []):

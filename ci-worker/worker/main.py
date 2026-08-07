@@ -183,6 +183,9 @@ def run_with_heartbeat(
     return result.get("value")
 
 
+_alterna: int = 0
+
+
 def tick(supa: Supa, storage: Any, settings: Settings) -> bool:
     """Executa no máximo um job. Devolve True se pegou algo."""
 
@@ -194,12 +197,30 @@ def tick(supa: Supa, storage: Any, settings: Settings) -> bool:
         print(f"[worker] temporário em {usage:.0f} MB (teto {settings.tmp_max_mb}) — pausando", flush=True)
         return False
 
-    # Download antes de análise: análise sem asset baixado não tem o que fazer,
-    # e manter a fila de download curta é o que faz o progresso aparecer na UI.
-    for kind, table, runner in (
+    # ── Por que alternar em vez de priorizar download ───────────────────────
+    #
+    # A ordem fixa (download, análise) fazia sentido no papel: análise sem asset
+    # não tem o que fazer. Mas com 30 anúncios na fila ela produz o pior
+    # comportamento possível — o worker baixa os 30 primeiro, e só então começa
+    # a analisar. São ~75 minutos até o PRIMEIRO resultado aparecer na tela,
+    # com a base cheia de vídeos e nenhuma análise. Medido em 07/08.
+    #
+    # Alternando, o primeiro anúncio fica pronto de ponta a ponta em ~5 minutos
+    # e a tela começa a encher enquanto o resto baixa. O tempo total é o mesmo;
+    # o tempo até a primeira informação útil cai de 75 minutos para 5.
+    #
+    # `_alterna` é módulo e não instância: dois workers no mesmo processo não
+    # existem hoje, e um contador global mantém a alternância previsível.
+    global _alterna
+    _alterna += 1
+    ordem = (
         ("download", "ci_download_jobs", run_download_job),
         ("analysis", "ci_analysis_jobs", run_analysis_job),
-    ):
+    )
+    if _alterna % 2 == 0:
+        ordem = tuple(reversed(ordem))
+
+    for kind, table, runner in ordem:
         job = supa.claim_job(kind, settings.worker_id, settings.lease_seconds)
         if not job:
             continue
