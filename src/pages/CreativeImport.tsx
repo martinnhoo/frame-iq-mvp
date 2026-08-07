@@ -295,8 +295,8 @@ export default function CreativeImport() {
               </div>
               <div>
                 <div style={{ fontSize: 11, color: T.label, marginBottom: 6 }}>MÁXIMO DE ANÚNCIOS</div>
-                <input type="number" min={1} max={20} value={maxAds}
-                  onChange={e => setMaxAds(Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                <input type="number" min={1} max={200} value={maxAds}
+                  onChange={e => setMaxAds(Math.min(200, Math.max(1, Number(e.target.value) || 1)))}
                   style={{
                     width: 72, background: T.bg2, border: `1px solid ${T.b2}`, borderRadius: 8,
                     padding: "9px 11px", color: T.t1, fontSize: 13.5, fontFamily: F, outline: "none",
@@ -307,7 +307,7 @@ export default function CreativeImport() {
               </Btn>
             </div>
             <div style={{ color: T.label, fontSize: 12, marginTop: 11, lineHeight: 1.5 }}>
-              O teto de 20 anúncios e 50 créditos por execução é do servidor. Pedir mais aqui não
+              O teto real é do servidor (SPRESHAPP_MAX_ADS_PER_RUN e _MAX_CREDITS_PER_RUN). Pedir mais aqui não
               aumenta o gasto — a função corta.
             </div>
           </Card>

@@ -269,6 +269,49 @@ export default function CreativeOverview() {
   const semReal = ads.length - demo === 0;
   const maxHook = Math.max(1, ...hooks.map(h => h.usos));
 
+  // ── Estruturas de roteiro ─────────────────────────────────────────────────
+  //
+  // A sequência de FUNÇÕES de cena de cada anúncio — problema → produto →
+  // demonstração → CTA — e quantos anúncios repetem cada sequência.
+  //
+  // Calculado aqui e não em SQL de propósito: os dados já vieram na carga da
+  // página, então uma função no banco seria uma ida a mais à rede e mais uma
+  // migration para o usuário colar. Se um dia isto precisar rodar sobre
+  // milhares de anúncios, vira SQL; com dezenas, não paga o custo.
+  //
+  // Cenas consecutivas com a MESMA função viram uma só: um anúncio com três
+  // cenas seguidas de demonstração conta "demonstração" uma vez. Sem isso,
+  // dois anúncios com a mesma estrutura e cortes diferentes seriam estruturas
+  // diferentes — e o painel mostraria variação onde não há.
+  const ROTULO_CENA: Record<string, string> = {
+    hook: "Hook", problem: "Problema", product: "Produto",
+    demonstration: "Demonstração", proof: "Prova", benefit: "Benefício",
+    offer: "Oferta", objection: "Objeção", solution: "Solução",
+    testimonial: "Depoimento", cta: "CTA", close: "Fechamento",
+  };
+  const estruturas = (() => {
+    const porAd = new Map<string, { ordem: number; f: string }[]>();
+    for (const c of (d?.cenas ?? []) as Row[]) {
+      if (!c.scene_function) continue;
+      const lista = porAd.get(c.asset_id) ?? [];
+      lista.push({ ordem: Number(c.scene_index ?? 0), f: String(c.scene_function) });
+      porAd.set(c.asset_id, lista);
+    }
+    const contagem = new Map<string, { passos: string[]; assets: number }>();
+    for (const [, cenas] of porAd) {
+      const passos: string[] = [];
+      for (const c of cenas.sort((a, b) => a.ordem - b.ordem)) {
+        if (passos[passos.length - 1] !== c.f) passos.push(c.f);
+      }
+      if (passos.length < 2) continue;  // um passo só não é estrutura
+      const chave = passos.join(">");
+      const atual = contagem.get(chave);
+      if (atual) atual.assets++;
+      else contagem.set(chave, { passos, assets: 1 });
+    }
+    return [...contagem.values()].sort((a, b) => b.assets - a.assets);
+  })();
+
   // ── Receitas prontas para a tabela ────────────────────────────────────────
   // Cada coluna do mapa sai de dado real ou é marcada como não disponível.
   // Nenhuma é preenchida por estimativa.
@@ -567,11 +610,40 @@ export default function CreativeOverview() {
                 <Head hint="A sequência de funções de cena que mais se repete: problema → produto → demonstração → CTA.">
                   Estruturas de roteiro mais usadas
                 </Head>
-                <Falta pendente motivo={
-                  "Cada cena já sai da análise com uma função (hook, problema, demonstração, prova, CTA) " +
-                  "gravada em ci_scenes. Falta o passo que lê a sequência de cada anúncio e conta quais " +
-                  "sequências se repetem entre eles."
-                } />
+                {estruturas.length === 0 ? (
+                  <Falta motivo={
+                    (d?.cenas ?? []).length === 0
+                      ? "Nenhum anúncio analisado ainda. A estrutura sai da função de cada cena, que o modelo identifica no vídeo."
+                      : "As cenas analisadas não receberam função (hook, problema, demonstração, CTA). Sem função não há sequência para comparar."
+                  } />
+                ) : (
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {estruturas.slice(0, 4).map((e, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                          {e.passos.map((p, j) => (
+                            <span key={j} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                              <span style={{
+                                fontSize: 11.3, color: T.t2, background: T.bg2,
+                                border: `1px solid ${T.b1}`, borderRadius: 7, padding: "5px 9px",
+                                whiteSpace: "nowrap",
+                              }}>{ROTULO_CENA[p] ?? p}</span>
+                              {j < e.passos.length - 1 && <Ic d={I.arrow} s={11} c={T.label} />}
+                            </span>
+                          ))}
+                        </div>
+                        <div style={{ textAlign: "right", minWidth: 46 }}>
+                          <div style={{ fontSize: 13, fontWeight: 640, fontVariantNumeric: "tabular-nums" }}>{e.assets}</div>
+                          <div style={{ fontSize: 9.5, color: T.label }}>assets</div>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ fontSize: 11.3, color: T.t3, lineHeight: 1.5 }}>
+                      Cenas seguidas com a mesma função contam uma vez — senão o mesmo roteiro
+                      com cortes diferentes viraria duas estruturas.
+                    </div>
+                  </div>
+                )}
               </Card>
 
               <Card>
