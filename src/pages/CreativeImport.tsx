@@ -156,12 +156,23 @@ export default function CreativeImport() {
   };
 
   // ── 3. Importar de verdade ────────────────────────────────────────────────
-  const importar = async () => {
+  //
+  // `continuar` decide entre começar do zero e retomar do cursor da execução
+  // anterior. Sem esse parâmetro, TODA execução recomeça da primeira página —
+  // e como a API cobra por anúncio devolvido, rodar de novo repaga tudo o que
+  // já veio. Medido em 07/08: 20 créditos gastos para trazer 20 anúncios que
+  // já estavam no banco, com "Criados: 0" no relatório.
+  //
+  // A tela dizia "rodar de novo continua de onde parou" antes de isto existir.
+  // O texto estava certo sobre a intenção e errado sobre o código, que é a
+  // pior combinação possível: promete e cobra.
+  const importar = async (continuar = false) => {
     if (!brand) return;
     setErro(null); setBusy("importacao");
     try {
       const { ok, data } = await callFn("ci-import-run", {
         brand_id: brand.id, max_ads: maxAds,
+        ...(continuar && report?.run_id ? { resume_run_id: report.run_id } : {}),
         filters: { display_format: formato, country: pais, sort: "longest_running" },
       });
       if (!ok) throw new Error(data?.message || data?.error || "falha na importação");
@@ -337,9 +348,16 @@ export default function CreativeImport() {
                 border: `1px solid ${T.b1}`, borderRadius: 9, padding: "11px 13px", marginBottom: 16,
               }}>{estimate.caveat}</div>
             )}
-            <Btn onClick={importar} disabled={busy === "importacao"} tone={T.green}>
+            <Btn onClick={() => importar(false)} disabled={busy === "importacao"} tone={T.green}>
               {busy === "importacao" ? "Importando…" : "Importar agora"}
             </Btn>
+            {report?.can_resume && (
+              <div style={{ marginTop: 11, fontSize: 12.3, color: T.yellow, lineHeight: 1.5 }}>
+                Atenção: este botão começa da PRIMEIRA página e a API cobra por anúncio
+                devolvido — o que já veio seria pago de novo. Para seguir de onde parou,
+                use “Continuar de onde parou” no relatório abaixo.
+              </div>
+            )}
           </Card>
         )}
 
@@ -412,9 +430,14 @@ export default function CreativeImport() {
               )}
 
               {report.can_resume && (
-                <div style={{ fontSize: 13, color: T.t2, marginTop: 14 }}>
-                  Há mais anúncios além deste lote. Rodar de novo continua de onde parou, sem
-                  repagar o que já veio.
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: 13, color: T.t2, marginBottom: 10, lineHeight: 1.55 }}>
+                    Há mais anúncios além deste lote. Este botão retoma do cursor gravado —
+                    a API não devolve de novo o que já veio, então não há cobrança repetida.
+                  </div>
+                  <Btn onClick={() => importar(true)} disabled={busy === "importacao"} tone={T.blue}>
+                    {busy === "importacao" ? "Continuando…" : "Continuar de onde parou"}
+                  </Btn>
                 </div>
               )}
             </Card>
