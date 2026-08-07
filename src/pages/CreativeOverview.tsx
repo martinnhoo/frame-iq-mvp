@@ -198,28 +198,53 @@ export default function CreativeOverview() {
     setCarregando(true); setErro(null);
     const q = (t: string, sel: string) => supabase.from(t).select(sel).eq("brand_id", brandId);
     try {
-      const [ads, assets, termos, vinculos, conceitos, pessoas, cenas, runs] = await Promise.all([
+      const [ads, assets, termos, vinculos, conceitos, pessoas, cenas, runs, membros] = await Promise.all([
         q("ci_ads", "id,media_type,display_format,is_active,running_days,is_demo,analysis_status"),
         q("ci_assets", "id,media_type,duration_seconds,analysis_status"),
         q("ci_taxonomy_terms", "id,kind,slug,label"),
         q("ci_ad_taxonomy", "term_id,ad_id,asset_id,evidence,evidence_kind"),
-        q("ci_concepts", "id,name,description,review_status"),
+        q("ci_concepts", "id,name,description,review_status,confidence,ad_count," +
+          "unique_asset_count,longevity_days,is_active,angle_term_id,proof_term_id,baseline_ad_id"),
         q("ci_person_clusters", "id,label,asset_count"),
         q("ci_scenes", "asset_id,scene_index,scene_function"),
         supabase.from("ci_import_runs")
           .select("created_at,ads_created,credits_spent").eq("brand_id", brandId)
           .order("created_at", { ascending: false }).limit(1),
+        q("ci_concept_members", "concept_id,ad_id,match_reasons,is_baseline"),
       ]);
       setD({
         ads: ads.data ?? [], assets: assets.data ?? [], termos: termos.data ?? [],
         vinculos: vinculos.data ?? [], conceitos: conceitos.data ?? [],
         pessoas: pessoas.data ?? [], cenas: cenas.data ?? [], run: (runs.data ?? [])[0] ?? null,
+        membros: membros.data ?? [],
       });
     } catch (e: any) { setErro(e.message); }
     finally { setCarregando(false); }
   }, []);
 
   useEffect(() => { if (marca?.id) carregar(marca.id); }, [marca?.id, carregar]);
+
+  // ── Reagrupar ─────────────────────────────────────────────────────────────
+  // Botão explícito e não automático: reconstruir apaga as receitas geradas por
+  // máquina (preservando as revisadas), e isso é uma ação, não um efeito
+  // colateral de abrir a página.
+  const [reagrupando, setReagrupando] = useState(false);
+  const reagrupar = async () => {
+    if (!marca?.id) return;
+    setReagrupando(true); setErro(null);
+    const { data, error } = await supabase.rpc("ci_rebuild_concepts", { p_brand_id: marca.id });
+    setReagrupando(false);
+    if (error) { setErro(`Reagrupamento falhou: ${error.message}`); return; }
+    const r = Array.isArray(data) ? data[0] : data;
+    if (r?.anuncios_sem_sinal > 0) {
+      // Não é erro, mas o usuário precisa saber que parte da base ficou fora —
+      // senão a soma das receitas não bate com o total de anúncios e parece bug.
+      setErro(`${r.anuncios_sem_sinal} anúncio(s) ficaram fora: a análise não ` +
+              `extraiu ângulo, mecanismo nem prova deles. Sem nenhum dos três não ` +
+              `há assinatura para agrupar.`);
+    }
+    await carregar(marca.id);
+  };
 
   // ── Agregações ────────────────────────────────────────────────────────────
   const termosDe = (...kinds: string[]) => ((d?.termos ?? []) as Row[])
@@ -243,6 +268,41 @@ export default function CreativeOverview() {
   const demo = ads.filter(a => a.is_demo).length;
   const semReal = ads.length - demo === 0;
   const maxHook = Math.max(1, ...hooks.map(h => h.usos));
+
+  // ── Receitas prontas para a tabela ────────────────────────────────────────
+  // Cada coluna do mapa sai de dado real ou é marcada como não disponível.
+  // Nenhuma é preenchida por estimativa.
+  const membros: Row[] = d?.membros ?? [];
+  const maxReceita = Math.max(1, ...conceitos.map(c => c.ad_count ?? 0));
+  const ordenadas = [...conceitos]
+    .sort((a, b) => (b.ad_count ?? 0) - (a.ad_count ?? 0))
+    .map(c => {
+      const meus = membros.filter(m => m.concept_id === c.id);
+      const adIds = new Set(meus.map(m => m.ad_id));
+      const assetIds = new Set(
+        (d?.vinculos ?? []).filter((v: Row) => adIds.has(v.ad_id)).map((v: Row) => v.asset_id),
+      );
+      const duracoes = assets
+        .filter(a => assetIds.has(a.id) && a.duration_seconds)
+        .map(a => Number(a.duration_seconds));
+      // Hook dominante DA RECEITA: o hook mais usado entre os anúncios dela —
+      // e não o hook global, que diria a mesma coisa em toda linha.
+      const hooksDaReceita = hooks
+        .map(h => ({
+          label: h.label,
+          n: (d?.vinculos ?? []).filter((v: Row) => v.term_id === h.id && adIds.has(v.ad_id)).length,
+        }))
+        .filter(h => h.n > 0)
+        .sort((a, b) => b.n - a.n);
+      return {
+        ...c,
+        motivos: (meus[0]?.match_reasons as string[] | undefined) ?? [],
+        hook: hooksDaReceita[0]?.label ?? null,
+        duracao: duracoes.length
+          ? `${Math.round(Math.min(...duracoes))}–${Math.round(Math.max(...duracoes))}s`
+          : "—",
+      };
+    });
   const totalEstilo = Math.max(1, estilos.reduce((s, e) => s + e.usos, 0));
   const fatias = estilos.slice(0, 5).map((e, i) => ({
     label: e.label, pct: Math.round((e.usos / totalEstilo) * 100), cor: PALETA[i],
@@ -404,11 +464,18 @@ export default function CreativeOverview() {
                   O que mais se repete agora
                 </Head>
                 {conceitos.length === 0 ? (
-                  <Falta pendente motivo={
-                    "O agrupamento em receitas ainda não foi escrito. As tabelas existem (ci_concepts, " +
-                    "ci_concept_members) e cada anúncio já sai da análise com hook, ângulo, promessa e " +
-                    "prova etiquetados com evidência — falta o passo que junta anúncios parecidos numa " +
-                    "receita só. É o próximo item, e é o que faz esta tela virar produto."
+                  <Falta motivo={
+                    assets.length === 0
+                      ? "Nenhum anúncio analisado ainda. As receitas saem do agrupamento dos anúncios por ângulo, mecanismo e prova."
+                      : "Nenhuma receita montada ainda para estes anúncios. Reagrupe para construir."
+                  } acao={
+                    <button onClick={reagrupar} disabled={reagrupando || !assets.length} style={{
+                      background: assets.length ? T.violet : T.bg3,
+                      color: assets.length ? "#0B0713" : T.t3,
+                      border: "none", borderRadius: 9, padding: "10px 17px",
+                      fontSize: 13, fontWeight: 640, fontFamily: F,
+                      cursor: assets.length ? "pointer" : "not-allowed",
+                    }}>{reagrupando ? "Agrupando…" : "Montar receitas"}</button>
                   } />
                 ) : (
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.7 }}>
@@ -424,7 +491,7 @@ export default function CreativeOverview() {
                       </tr>
                     </thead>
                     <tbody>
-                      {conceitos.slice(0, 6).map((c, i) => (
+                      {ordenadas.slice(0, 6).map((c, i) => (
                         <tr key={c.id} style={{ borderTop: `1px solid ${T.b1}` }}>
                           <td style={{ padding: "11px 8px 11px 0" }}>
                             <div style={{
@@ -432,16 +499,39 @@ export default function CreativeOverview() {
                               display: "grid", placeItems: "center", fontSize: 11, color: T.violet, fontWeight: 700,
                             }}>{i + 1}</div>
                           </td>
-                          <td style={{ padding: "11px 8px 11px 0", color: T.t1 }}>{c.name}</td>
-                          <td style={{ padding: "11px 8px 11px 0" }}><Repeticao n={1} max={1} cor={T.violet} /></td>
-                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>—</td>
-                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>—</td>
-                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>—</td>
-                          <td style={{ padding: "11px 0", color: T.t3 }}>{c.description ?? "—"}</td>
+                          <td style={{ padding: "11px 8px 11px 0", color: T.t1, maxWidth: 190 }}>
+                            {c.name}
+                            <div title={c.motivos.join(" · ")} style={{ fontSize: 10.8, color: T.t3, marginTop: 3 }}>
+                              {c.motivos[0] ?? "—"}
+                            </div>
+                          </td>
+                          <td style={{ padding: "11px 8px 11px 0" }}>
+                            <Repeticao n={c.ad_count ?? 0} max={maxReceita} cor={T.violet} />
+                          </td>
+                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>{c.unique_asset_count ?? 0}</td>
+                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>
+                            {pessoas.length ? "—" : <span style={{ color: T.label }} title="Agrupamento de pessoas ainda não construído">n/d</span>}
+                          </td>
+                          <td style={{ padding: "11px 8px 11px 0", color: T.t2 }}>{c.duracao}</td>
+                          <td style={{ padding: "11px 0", color: T.t3, maxWidth: 170 }}>
+                            {c.hook ? `“${c.hook}”` : "—"}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                )}
+                {conceitos.length > 0 && (
+                  <div style={{ marginTop: 13, display: "flex", alignItems: "center", gap: 12 }}>
+                    <button onClick={reagrupar} disabled={reagrupando} style={{
+                      background: "transparent", color: T.t2, border: `1px solid ${T.b2}`,
+                      borderRadius: 8, padding: "7px 13px", fontSize: 12.3, fontFamily: F,
+                      cursor: reagrupando ? "wait" : "pointer",
+                    }}>{reagrupando ? "Agrupando…" : "Reagrupar"}</button>
+                    <span style={{ fontSize: 11.8, color: T.t3 }}>
+                      Agrupado por ângulo, mecanismo e prova. Hook fica de fora: é execução, não ideia.
+                    </span>
+                  </div>
                 )}
               </Card>
 
