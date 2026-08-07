@@ -7749,6 +7749,7 @@ export type Database = {
           termos: number
         }[]
       }
+      ci_canonical_label: { Args: { p_label: string }; Returns: string }
       ci_claim_job: {
         Args: { p_kind: string; p_lease_secs?: number; p_worker_id: string }
         Returns: Json[]
