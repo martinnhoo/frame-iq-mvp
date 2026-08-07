@@ -4000,6 +4000,73 @@ export type Database = {
           },
         ]
       }
+      ci_quality_reviews: {
+        Row: {
+          ad_id: string
+          asset_id: string | null
+          brand_id: string
+          campo: string
+          created_at: string
+          id: string
+          observacao: string | null
+          revisado_por: string
+          user_id: string
+          valor_correto: string | null
+          valor_sistema: string | null
+          veredito: string
+        }
+        Insert: {
+          ad_id: string
+          asset_id?: string | null
+          brand_id: string
+          campo: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          revisado_por?: string
+          user_id: string
+          valor_correto?: string | null
+          valor_sistema?: string | null
+          veredito: string
+        }
+        Update: {
+          ad_id?: string
+          asset_id?: string | null
+          brand_id?: string
+          campo?: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          revisado_por?: string
+          user_id?: string
+          valor_correto?: string | null
+          valor_sistema?: string | null
+          veredito?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_quality_reviews_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_quality_reviews_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ci_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_quality_reviews_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ci_scale_signal_config: {
         Row: {
           band_high: number
@@ -7668,12 +7735,46 @@ export type Database = {
         Args: { p_plan?: string; p_user_id: string }
         Returns: Json
       }
+      ci_brand_overview: {
+        Args: { p_brand_id: string }
+        Returns: {
+          ads_ativos: number
+          ads_reais: number
+          ads_total: number
+          assets_analisados: number
+          assets_unicos: number
+          cobertura_pct: number
+          pessoas: number
+          receitas: number
+          termos: number
+        }[]
+      }
       ci_claim_job: {
         Args: { p_kind: string; p_lease_secs?: number; p_worker_id: string }
         Returns: Json[]
       }
       ci_compute_scale_signal: { Args: { p_brand_id: string }; Returns: number }
+      ci_concept_variation: {
+        Args: { p_concept_id: string }
+        Returns: {
+          kind: string
+          mantido: boolean
+          n_valores: number
+          valores: Json
+        }[]
+      }
       ci_owns_brand: { Args: { p_brand_id: string }; Returns: boolean }
+      ci_quality_summary: {
+        Args: { p_brand_id: string }
+        Returns: {
+          acuracia_pct: number
+          campo: string
+          corretos: number
+          errados: number
+          parciais: number
+          revisados: number
+        }[]
+      }
       ci_reap_stale_jobs: {
         Args: never
         Returns: {
@@ -7692,6 +7793,26 @@ export type Database = {
       ci_refresh_taxonomy_stats: {
         Args: { p_brand_id: string }
         Returns: number
+      }
+      ci_script_structures: {
+        Args: { p_brand_id: string; p_limit?: number }
+        Returns: {
+          assets: number
+          passos: string[]
+        }[]
+      }
+      ci_terms_ranked: {
+        Args: { p_brand_id: string; p_kinds: string[]; p_limit?: number }
+        Returns: {
+          ads: number
+          assets: number
+          confianca: number
+          evidencia: string
+          kind: string
+          label: string
+          slug: string
+          term_id: string
+        }[]
       }
       ci_wake_worker_tick: { Args: never; Returns: undefined }
       cleanup_old_error_logs: { Args: never; Returns: undefined }
