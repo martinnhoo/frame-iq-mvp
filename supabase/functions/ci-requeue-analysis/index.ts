@@ -42,7 +42,7 @@ const json = (body: unknown, status = 200) =>
  * um teste resolve. Existe um teste que lê os dois arquivos e falha se
  * divergirem, então a duplicação é verificada, não confiada.
  */
-const PROMPT_VERSION_ATUAL = "semantic/v3";
+const PROMPT_VERSION_ATUAL = "semantic/v4";
 
 /** Os estágios refeitos. O resto é pulado pelo checkpoint do worker. */
 const ESTAGIOS_A_REFAZER = ["semantic_analysis", "normalization", "persistence"];

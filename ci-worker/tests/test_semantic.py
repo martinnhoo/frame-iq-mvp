@@ -193,6 +193,37 @@ def main() -> int:
           "MECANISMO = COMO" in prompt and "ÂNGULO    = POR QUE" in prompt)
     check("prompt proíbe inventar mecanismo para preencher",
           "NÃO invente um mecanismo" in prompt)
+    check("prompt exige UM valor em scene_function",
+          "aceita UM valor da lista, nunca vários" in prompt)
+
+    # ── scene_function: o enum voltando como resposta ───────────────────────
+    # Visto em produção. Uma estrutura de roteiro saiu como
+    #   hook|problem → Problema → solution|proof → solution|demo
+    # porque o modelo copiou de volta a lista de opções do schema. A estrutura
+    # é chave de agrupamento: cada combinação vira uma estrutura diferente, e o
+    # padrão que existia se dissolve.
+    from worker.semantic import _funcao_de_cena as _fc  # noqa: PLC0415
+    check("enum copiado de volta vira o primeiro valor válido",
+          _fc("hook|problem") == "hook", str(_fc("hook|problem")))
+    check("enum inteiro do schema também é resolvido",
+          _fc("hook|problem|solution|demo|proof|offer|cta") == "hook")
+    check("sinônimo comum é mapeado, não descartado",
+          _fc("objection handling") == "objection", str(_fc("objection handling")))
+    check("demonstration vira demo, para não virar duas funções",
+          _fc("demonstration") == "demo", str(_fc("demonstration")))
+    check("maiúscula e espaço não atrapalham", _fc("  PROOF ") == "proof")
+    check("valor inventado vira None, não texto livre",
+          _fc("cena de abertura bonita") is None, str(_fc("cena de abertura bonita")))
+    check("vazio vira None", _fc("") is None and _fc(None) is None)
+    check("só barras vira None", _fc("|||") is None, str(_fc("|||")))
+    # A cena entra na lista mesmo sem função: descartá-la perderia a duração e
+    # o enquadramento, que são observações válidas.
+    n_cena = normalize_semantic(
+        {"scenes": [{"start": 0, "end": 2, "scene_function": "coisa inventada"}]},
+        provider="gemini", model="m")
+    check("cena com função inválida é mantida, com função nula",
+          len(n_cena["scenes"]) == 1 and n_cena["scenes"][0]["scene_function"] is None,
+          str(n_cena["scenes"]))
 
     # ══ Fallback local ═══════════════════════════════════════════════════════
     local = analyze_locally(

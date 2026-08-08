@@ -40,6 +40,10 @@ from typing import Any
 from .config import Settings
 
 # v2: regras 8 e 9 — label em inglês, curto e canônico.
+# v4: regra 11 — `scene_function` com UM valor. O modelo devolvia o enum
+#     inteiro do schema ("hook|problem") e inventava valores fora da lista.
+#     A estrutura de roteiro é chave de agrupamento: cada combinação virava uma
+#     estrutura diferente e o padrão se dissolvia.
 # v3: `mechanisms`. O banco aceitava kind='mechanism', a tela de saúde contava,
 #     e ci_rebuild_concepts passou a usar mecanismo como METADE da assinatura da
 #     receita — mas o prompt nunca pediu o campo. Três camadas apoiadas num dado
@@ -47,7 +51,7 @@ from .config import Settings
 #
 # Sem bumpar a versão, resultado de prompt velho e novo ficam indistinguíveis no
 # banco, e "este anúncio já foi reanalisado?" não tem resposta.
-PROMPT_VERSION = "semantic/v3"
+PROMPT_VERSION = "semantic/v4"
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
@@ -171,6 +175,16 @@ REGRAS OBRIGATÓRIAS
     agrupamento, porque cria distinção onde não há.
 
     Mecanismo também precisa de `evidence`, como todo o resto.
+
+11. `scene_function` aceita UM valor da lista, nunca vários. A barra vertical no
+    schema significa "escolha uma destas", não faz parte da resposta.
+
+    Sim:  "hook"   ·  "demo"   ·  "proof"
+    Não:  "hook|problem"        (o enum copiado de volta)
+    Não:  "objection handling"  (fora da lista)
+
+    Se a cena não se encaixar em nenhuma, use null. Cena sem função é resposta
+    honesta; função inventada quebra o agrupamento de estruturas.
 
 METADADOS
   duração: {metadata.get('duration_s')}s · {metadata.get('width')}x{metadata.get('height')} · {metadata.get('aspect_ratio')}
@@ -346,6 +360,68 @@ TERM_KINDS = {
 }
 
 
+# ── Funções de cena ─────────────────────────────────────────────────────────
+#
+# Lista FECHADA. O schema do prompt escreve as opções separadas por "|", e o
+# modelo às vezes devolve o enum inteiro de volta — "hook|problem" em vez de
+# escolher um. Visto em produção: uma estrutura de roteiro saiu como
+#
+#   hook|problem → Problema → solution|proof → solution|demo → demo|proof
+#
+# O estrago não é cosmético. A estrutura é chave de agrupamento: cada
+# combinação vira uma estrutura diferente, e o padrão que existia se dissolve
+# em variantes que ninguém consegue ler.
+#
+# Ele também inventa valores fora da lista ("objection handling"). Aceitar
+# texto livre aqui é o mesmo erro dos rótulos, num campo onde o vocabulário
+# fechado é o ponto todo.
+FUNCOES_DE_CENA = {
+    "hook", "problem", "solution", "product", "demo", "demonstration",
+    "proof", "benefit", "objection", "offer", "cta",
+}
+
+# Sinônimos que o modelo produz com frequência e que têm equivalente óbvio.
+# Mapear é melhor que descartar: "objection handling" é claramente `objection`,
+# e jogar fora perderia uma cena classificada corretamente por um detalhe de
+# redação.
+SINONIMOS_DE_CENA = {
+    "demonstration": "demo",
+    "objection handling": "objection",
+    "objection_handling": "objection",
+    "call to action": "cta",
+    "call_to_action": "cta",
+    "solution reveal": "solution",
+    "product reveal": "product",
+    "social proof": "proof",
+    "testimonial": "proof",
+}
+
+
+def _funcao_de_cena(bruto: Any) -> str | None:
+    """
+    Devolve UMA função válida, ou None.
+
+    None é resposta legítima e aparece na interface como "cena sem função" —
+    melhor que um rótulo inventado, porque a tela de estruturas já sabe dizer
+    "sem função não há sequência para comparar".
+    """
+    if not bruto:
+        return None
+    texto = str(bruto).strip().lower()
+    if not texto:
+        return None
+
+    # "hook|problem" → tenta cada parte, na ordem, e fica com a primeira válida.
+    for parte in texto.split("|"):
+        parte = parte.strip()
+        if not parte:
+            continue
+        parte = SINONIMOS_DE_CENA.get(parte, parte)
+        if parte in FUNCOES_DE_CENA:
+            return "demo" if parte == "demonstration" else parte
+    return None
+
+
 def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dict[str, Any]:
     """
     Converte a saída do modelo no formato que o banco espera, descartando o que
@@ -445,7 +521,7 @@ def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dic
             "camera_style": (item.get("camera_style") or None),
             "framing": (item.get("framing") or None),
             "action": (item.get("action") or None),
-            "scene_function": (item.get("scene_function") or None),
+            "scene_function": _funcao_de_cena(item.get("scene_function")),
             "product_visible": bool(item.get("product_visible")),
             "confidence": _clamp(item.get("confidence")),
         })
