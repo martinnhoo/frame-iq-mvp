@@ -18,14 +18,8 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LayoutCI } from "@/ci/Layout";
 import { useAcuracia, SeloConfianca, AvisoConfianca } from "@/ci/confianca";
+import { T, Card } from "@/ci/tema";
 
-const T = {
-  bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
-  b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  blue: "#0ea5e9", green: "#4ADE80", violet: "#A78BFA", teal: "#2DD4BF", yellow: "#FBBF24",
-};
 type Row = Record<string, any>;
 
 const TIPO_ROTULO: Record<string, string> = {
@@ -43,12 +37,6 @@ const FUNCAO_ROTULO: Record<string, string> = {
 const traduzEstrutura = (seq: string | null) =>
   !seq ? null : seq.split(" → ").map(f => FUNCAO_ROTULO[f] ?? f).join(" → ");
 
-const Card = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{
-    background: T.bg1, border: `1px solid ${T.b1}`, borderRadius: 13,
-    padding: 18, marginBottom: 13, ...style,
-  }}>{children}</div>
-);
 
 const Metrica = ({ valor, rotulo, cor }: { valor: React.ReactNode; rotulo: string; cor?: string }) => (
   <div>

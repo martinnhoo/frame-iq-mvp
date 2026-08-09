@@ -30,15 +30,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { LayoutCI } from "@/ci/Layout";
 import { useAcuracia, SeloConfianca, nivelDe } from "@/ci/confianca";
 import { gerarCsv, baixarCsv, nomeArquivo } from "@/ci/csv";
+import { T, Card } from "@/ci/tema";
 
-const T = {
-  bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
-  b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  blue: "#0ea5e9", green: "#4ADE80", red: "#F87171", violet: "#A78BFA",
-  teal: "#2DD4BF", yellow: "#FBBF24",
-};
 type Row = Record<string, any>;
 
 const KIND_ROTULO: Record<string, string> = {
@@ -51,12 +44,6 @@ const KIND_ROTULO: Record<string, string> = {
 };
 const rot = (k: string) => KIND_ROTULO[k] ?? k;
 
-const Card = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{
-    background: T.bg1, border: `1px solid ${T.b1}`, borderRadius: 13,
-    padding: 18, marginBottom: 14, ...style,
-  }}>{children}</div>
-);
 
 const Botao = ({ onClick, children, primario }: {
   onClick: () => void; children: React.ReactNode; primario?: boolean;

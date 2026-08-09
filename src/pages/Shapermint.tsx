@@ -17,15 +17,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LayoutCI } from "@/ci/Layout";
+import { T } from "@/ci/tema";
 
-const T = {
-  bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
-  b0: "rgba(240,246,252,0.04)", b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  blue: "#0ea5e9", green: "#4ADE80", red: "#F87171", yellow: "#FBBF24", purple: "#A78BFA",
-};
-const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
 type Row = Record<string, any>;
 
@@ -166,7 +159,7 @@ export default function Shapermint() {
         <Stat n={data.keyframes.length} l="Keyframes" />
         <Stat n={data.terms.length} l="Termos" />
         <Stat n={(bytes / 1048576).toFixed(1) + " MB"} l="Storage" />
-        <Stat n={"US$ " + cost.toFixed(4)} l="Custo de IA" tone={T.purple} />
+        <Stat n={"US$ " + cost.toFixed(4)} l="Custo de IA" tone={T.violet} />
       </Grid>
 
       {/* ── Pipeline ── */}
@@ -271,7 +264,7 @@ export default function Shapermint() {
                 <span style={{ fontFamily: "monospace", fontSize: 12, color: T.blue }}>
                   {Number(s.start_seconds).toFixed(1)}s → {Number(s.end_seconds).toFixed(1)}s
                 </span>
-                {s.scene_function && <Badge tone={T.purple}>{s.scene_function}</Badge>}
+                {s.scene_function && <Badge tone={T.violet}>{s.scene_function}</Badge>}
                 {s.setting && <span style={{ fontSize: 12, color: T.t2 }}>{s.setting}</span>}
               </div>
               {s.description && <p style={{ ...small, marginTop: 5 }}>{s.description}</p>}

@@ -20,23 +20,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LayoutCI } from "@/ci/Layout";
+import { T, Card } from "@/ci/tema";
 
-const T = {
-  bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
-  b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  blue: "#0ea5e9", green: "#4ADE80", red: "#F87171", yellow: "#FBBF24", violet: "#A78BFA",
-};
-const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 type Row = Record<string, any>;
 
-const Card = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{
-    background: T.bg1, border: `1px solid ${T.b1}`, borderRadius: 13,
-    padding: 18, marginBottom: 14, ...style,
-  }}>{children}</div>
-);
 
 /**
  * Uma etapa do encanamento.
@@ -221,8 +208,13 @@ export default function CreativeHealth() {
               <Etapa nome="Receitas" n={d.conceitos} prereq={d.vinculos}
                      nota="Precisa do botão Montar receitas — não é automático." />
               <Etapa nome="Anúncios dentro de receitas" n={d.membros} prereq={d.conceitos} />
+              {/* Sem `prereq`: pessoas não é etapa de pipeline, é trabalho manual.
+                  Marcar de vermelho porque keyframes existem e grupos não seria
+                  acusar o sistema de um zero que só depende de alguém abrir a tela. */}
               <Etapa nome="Grupos de pessoas" n={d.pessoas}
-                     nota="Ainda não construído — zero é o esperado." />
+                     nota={d.pessoas === 0
+                       ? "Agrupamento é manual, em /ci/pessoas. Zero significa que ninguém foi classificado ainda — não é falha."
+                       : "Agrupados à mão em /ci/pessoas. Conta grupos distintos, não aparições."} />
             </Card>
 
             <Card>

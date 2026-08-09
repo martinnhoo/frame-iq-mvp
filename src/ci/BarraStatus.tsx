@@ -21,14 +21,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { T } from "@/ci/tema";
 
-const T = {
-  bg1: "#0D1117", bg2: "#161B22",
-  b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  blue: "#0ea5e9", green: "#4ADE80", red: "#F87171", yellow: "#FBBF24", violet: "#A78BFA",
-};
 
 /**
  * Uma linha, vinda pronta do banco.

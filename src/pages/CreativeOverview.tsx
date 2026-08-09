@@ -22,66 +22,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIdioma, SeletorIdioma } from "@/ci/idioma";
 import { useAcuracia, SeloConfianca, AvisoConfianca } from "@/ci/confianca";
 import { BarraStatus } from "@/ci/BarraStatus";
+import { LateralCI } from "@/ci/Layout";
+import { T, F, Card, I, Ic } from "@/ci/tema";
 
-const T = {
-  bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
-  b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  blue: "#0ea5e9", green: "#4ADE80", red: "#F87171", yellow: "#FBBF24",
-  purple: "#8B5CF6", violet: "#A78BFA", teal: "#2DD4BF", orange: "#FBBF24",
-};
-const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 type Row = Record<string, any>;
 
-// ── Ícones (inline, sem dependência) ────────────────────────────────────────
-const I = {
-  home: "M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
-  brand: "M4 4h16v16H4zM8 8h8v8H8z",
-  ads: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 5v8m-4-4h8",
-  recipe: "M4 6h16M4 12h16M4 18h10",
-  hook: "M13 2 4 14h6l-1 8 9-12h-6z",
-  person: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-8 9a8 8 0 0 1 16 0",
-  product: "M20 7 12 3 4 7v10l8 4 8-4z",
-  report: "M4 20V10m5 10V4m5 16v-7m5 7V8",
-  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.5-4.5",
-  layers: "M12 2 2 7l10 5 10-5zM2 12l10 5 10-5M2 17l10 5 10-5",
-  bulb: "M9 21h6M10 17h4a5 5 0 1 0-4 0z",
-  shield: "M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z",
-  refresh: "M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6",
-  globe: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z",
-  doc: "M6 2h8l4 4v16H6zM14 2v4h4",
-  spark: "m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z",
-  chat: "M4 5h16v11H9l-5 4z",
-  warn: "M12 3 2 20h20zM12 10v4m0 3h.01",
-  check: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm-4-9 3 3 5-5",
-  clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-14v5l3 2",
-  phone: "M8 2h8v20H8zM11 19h2",
-  arrow: "M5 12h14m-5-5 5 5-5 5",
-};
-const Ic = ({ d, s = 16, c = "currentColor", w = 1.6 }: { d: string; s?: number; c?: string; w?: number }) => (
-  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={w}
-       strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d={d} /></svg>
-);
+/*
+ * Saíram deste arquivo, e o motivo importa mais que o que saiu:
+ *
+ * · A LATERAL. Existiam duas — esta e a de src/ci/Layout.tsx. Ninguém mantém
+ *   duas cópias em dia: liberei Pessoas e Produtos na de lá e elas continuavam
+ *   cinzas aqui, que é justamente a tela onde a pessoa entra. Uma navegação
+ *   que discorda de si mesma é pior que uma navegação feia.
+ *
+ * · CORES, ÍCONES E O CARD. Eram cópias locais que já tinham derivado das
+ *   outras telas. Agora vêm de @/ci/tema, que é a única fonte.
+ */
 
-const NAV = [
-  { id: "overview", k: "nav_overview", icon: I.home, href: "/ci", pronto: true },
-  { id: "marcas", k: "nav_brands", icon: I.brand, href: "/importar", pronto: true },
-  { id: "anuncios", k: "nav_ads", icon: I.ads, href: "/shapermint", pronto: true },
-  { id: "receitas", k: "nav_recipes", icon: I.recipe, href: "/ci/receitas", pronto: true },
-  { id: "hooks", k: "nav_hooks", icon: I.hook, href: "/ci/hooks", pronto: true },
-  { id: "pessoas", k: "nav_people", icon: I.person, href: "/ci/pessoas", pronto: true },
-  { id: "produtos", k: "nav_products", icon: I.product, href: "/ci/produtos", pronto: true },
-  { id: "relatorios", k: "nav_reports", icon: I.report, href: "/ci/relatorio", pronto: true },
-];
-
-// ── Peças ───────────────────────────────────────────────────────────────────
-
-const Card = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{
-    background: T.bg1, border: `1px solid ${T.b1}`, borderRadius: 13, padding: 18, ...style,
-  }}>{children}</div>
-);
+// ── Peças desta tela ────────────────────────────────────────────────────────
 
 /**
  * `selo` recebe o selo de confiança do campo que o painel apresenta.
@@ -124,7 +82,7 @@ const Kpi = ({ icon, cor, label, valor, sufixo, hint, apagado }: {
   icon: string; cor: string; label: string; valor: React.ReactNode;
   sufixo?: string; hint?: string; apagado?: boolean;
 }) => (
-  <Card style={{ flex: "1 1 175px", minWidth: 175, display: "flex", alignItems: "center", gap: 13, padding: 16 }}>
+  <Card style={{ marginBottom: 0, flex: "1 1 175px", minWidth: 175, display: "flex", alignItems: "center", gap: 13, padding: 16 }}>
     <div style={{
       width: 40, height: 40, borderRadius: 11, background: `${cor}1f`,
       display: "grid", placeItems: "center", flexShrink: 0,
@@ -185,7 +143,7 @@ const Donut = ({ fatias }: { fatias: { label: string; pct: number; cor: string }
   );
 };
 
-const PALETA = [T.purple, T.blue, T.teal, T.orange, "rgba(240,246,252,0.28)"];
+const PALETA = [T.violetForte, T.blue, T.teal, T.yellow, "rgba(240,246,252,0.28)"];
 
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -477,75 +435,18 @@ export default function CreativeOverview() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg0, color: T.t1, fontFamily: F, display: "flex" }}>
 
-      {/* ══ Lateral ══════════════════════════════════════════════════════════ */}
-      <aside style={{
-        width: 215, borderRight: `1px solid ${T.b1}`, padding: "22px 13px",
-        display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh",
-      }}>
-        <div style={{ padding: "0 9px 20px" }}>
-          <div style={{ fontSize: 22, fontWeight: 730, letterSpacing: "-.025em" }}>AdBrief</div>
-          <div style={{ fontSize: 11.5, color: T.violet, fontWeight: 570, marginTop: 1 }}>Creative Intelligence</div>
-        </div>
+      {/* ══ Lateral — a mesma de todas as telas do CI ════════════════════════ */}
+      {/*
+        Saíram daqui, de propósito:
 
-        <nav style={{ display: "grid", gap: 3 }}>
-          {NAV.map(n => {
-            const ativo = n.id === "overview";
-            const conteudo = (
-              <div style={{
-                display: "flex", alignItems: "center", gap: 11, padding: "9px 11px",
-                borderRadius: 9, fontSize: 13.5,
-                background: ativo ? "rgba(139,92,246,.13)" : "transparent",
-                border: `1px solid ${ativo ? "rgba(139,92,246,.28)" : "transparent"}`,
-                color: ativo ? T.t1 : n.pronto ? T.t2 : T.label,
-                cursor: n.href ? "pointer" : "default",
-              }}>
-                <Ic d={n.icon} s={16} c={ativo ? T.violet : "currentColor"} />
-                <span style={{ flex: 1 }}>{t(n.k)}</span>
-                {!n.pronto && <span style={{ fontSize: 9, color: T.violet, opacity: .8 }}>{t("nav_soon")}</span>}
-              </div>
-            );
-            return n.href
-              ? <a key={n.id} href={n.href} style={{ textDecoration: "none" }}>{conteudo}</a>
-              : <div key={n.id}>{conteudo}</div>;
-          })}
-        </nav>
+        · O bloco "Creative Team / Plano Pro". Era inventado — não existe conta
+          com esse nome, nem plano lido de lugar nenhum. Chrome de produto que
+          afirma um fato falso sobre o usuário.
 
-        <div style={{ marginTop: "auto", display: "grid", gap: 12 }}>
-          <a href="/ci/qualidade" style={{
-            display: "flex", alignItems: "center", gap: 9, padding: "8px 11px",
-            borderRadius: 8, fontSize: 12.6, color: T.t3, textDecoration: "none",
-            border: `1px solid ${T.b1}`, marginBottom: 6,
-          }}>
-            <Ic d={I.check} s={14} c={T.t3} /> {t("nav_quality")}
-          </a>
-          <a href="/ci/saude" style={{
-            display: "flex", alignItems: "center", gap: 9, padding: "8px 11px",
-            borderRadius: 8, fontSize: 12.6, color: T.t3, textDecoration: "none",
-            border: `1px solid ${T.b1}`,
-          }}>
-            <Ic d={I.shield} s={14} c={T.t3} /> {t("nav_health")}
-          </a>
-          <div style={{ display: "flex", gap: 11, alignItems: "flex-start", padding: "0 9px" }}>
-            <Ic d={I.spark} s={17} c={T.violet} />
-            <div style={{ fontSize: 12.2, color: T.t3, lineHeight: 1.45 }}>
-              {t("tagline").split("\n")[0]}<br />{t("tagline").split("\n")[1]}
-            </div>
-          </div>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 10, padding: "11px 9px",
-            borderTop: `1px solid ${T.b1}`,
-          }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 9, background: "rgba(139,92,246,.18)",
-              display: "grid", placeItems: "center", color: T.violet, fontWeight: 700, fontSize: 13,
-            }}>C</div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12.8, fontWeight: 600 }}>Creative Team</div>
-              <div style={{ fontSize: 11, color: T.t3 }}>Plano Pro</div>
-            </div>
-          </div>
-        </div>
-      </aside>
+        · Os atalhos soltos de Qualidade e Saúde no rodapé. Estavam duplicados:
+          já eram itens da nav. Agora vivem no grupo "Confiar".
+      */}
+      <LateralCI ativo="overview" en={en} />
 
       {/* ══ Conteúdo ═════════════════════════════════════════════════════════ */}
       <main style={{ flex: 1, minWidth: 0 }}>
@@ -591,7 +492,7 @@ export default function CreativeOverview() {
         </div>
 
         {erro && (
-          <Card style={{ borderColor: "rgba(248,113,113,.4)", marginBottom: 14 }}>
+          <Card style={{ borderColor: "rgba(248,113,113,.4)" }}>
             <div style={{ color: T.red, fontSize: 13.3 }}>{erro}</div>
           </Card>
         )}
@@ -608,7 +509,7 @@ export default function CreativeOverview() {
         {!carregando && d && marca && (
           <>
             {semReal && (
-              <Card style={{ borderColor: "rgba(251,191,36,.38)", background: "rgba(251,191,36,.045)", marginBottom: 14 }}>
+              <Card style={{ borderColor: "rgba(251,191,36,.38)", background: "rgba(251,191,36,.045)" }}>
                 <div style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
                   <Ic d={I.warn} s={17} c={T.yellow} />
                   <div>
@@ -634,7 +535,7 @@ export default function CreativeOverview() {
                    apagado={!assets.length} hint="Vídeos distintos por SHA-256. O mesmo vídeo em 5 anúncios conta 1." />
               <Kpi icon={I.bulb} cor={T.green} label={t("kpi_recipes")} valor={conceitos.length}
                    apagado={!conceitos.length} hint="Agrupamento de anúncios que contam a mesma ideia." />
-              <Kpi icon={I.person} cor={T.orange} label={t("kpi_people")} valor={pessoas.length}
+              <Kpi icon={I.person} cor={T.yellow} label={t("kpi_people")} valor={pessoas.length}
                    apagado={!pessoas.length} hint="Grupos anônimos. Nunca identificamos quem é." />
               <Kpi icon={I.shield} cor={T.teal} label={t("kpi_coverage")} valor={cobertura} sufixo="%"
                    apagado={!cobertura} hint="Assets com análise concluída sobre o total." />
@@ -643,7 +544,7 @@ export default function CreativeOverview() {
             {/* ── Linha 2 ───────────────────────────────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: "1.62fr 1fr", gap: 12, marginBottom: 12 }}>
 
-              <Card>
+              <Card style={{ marginBottom: 0 }}>
                 <Head hint="Anúncios diferentes que contam a mesma ideia. A barra mostra quanto cada receita se repete." selo={selo("receita")}>
                   {t("panel_repeats")}
                 </Head>
@@ -776,7 +677,7 @@ export default function CreativeOverview() {
                 )}
               </Card>
 
-              <Card>
+              <Card style={{ marginBottom: 0 }}>
                 <Head hint="Distribuição dos estilos visuais que o modelo identificou, com evidência." selo={selo("formato")}>
                   {t("panel_mix")}
                 </Head>
@@ -804,7 +705,7 @@ export default function CreativeOverview() {
             {/* ── Linha 3 ───────────────────────────────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 12 }}>
 
-              <Card>
+              <Card style={{ marginBottom: 0 }}>
                 <Head hint="A sequência de funções de cena que mais se repete: problema → produto → demonstração → CTA." selo={selo("estrutura")}>
                   {t("panel_scripts")}
                 </Head>
@@ -844,7 +745,7 @@ export default function CreativeOverview() {
                 )}
               </Card>
 
-              <Card>
+              <Card style={{ marginBottom: 0 }}>
                 <Head hint="Cada hook carrega a evidência que o sustenta: a fala, o texto na tela ou o frame." selo={selo("hook")}>
                   {t("panel_hooks")}
                 </Head>
@@ -877,7 +778,7 @@ export default function CreativeOverview() {
                 )}
               </Card>
 
-              <Card>
+              <Card style={{ marginBottom: 0 }}>
                 <Head hint="Agrupamento anônimo por aparência recorrente. Nunca identificamos a pessoa.">
                   {t("panel_people")}
                 </Head>
@@ -903,7 +804,7 @@ export default function CreativeOverview() {
             {/* ── Linha 4 ───────────────────────────────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: "1.35fr 1fr", gap: 12 }}>
 
-              <Card>
+              <Card style={{ marginBottom: 0 }}>
                 <Head hint="O que a marca diz que resolve, o que promete e com o que prova." selo={selo("proof")}>
                   {t("panel_messages")}
                 </Head>
@@ -941,7 +842,7 @@ export default function CreativeOverview() {
                 )}
               </Card>
 
-              <Card>
+              <Card style={{ marginBottom: 0 }}>
                 <Head hint="A receita dominante convertida em instruções de roteiro." selo={selo("receita")}>
                   {t("panel_brief")}
                 </Head>

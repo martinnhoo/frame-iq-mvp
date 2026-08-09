@@ -20,15 +20,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LayoutCI } from "@/ci/Layout";
+import { T, F, Card } from "@/ci/tema";
 
-const T = {
-  bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
-  b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  blue: "#0ea5e9", green: "#4ADE80", red: "#F87171", yellow: "#FBBF24", purple: "#A78BFA",
-};
-const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
 type Row = Record<string, any>;
 
@@ -58,12 +51,6 @@ async function callFn<T = any>(fn: string, body: unknown): Promise<{ ok: boolean
 
 // ── Peças visuais ───────────────────────────────────────────────────────────
 
-const Card = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{
-    background: T.bg1, border: `1px solid ${T.b1}`, borderRadius: 14,
-    padding: 22, marginBottom: 18, ...style,
-  }}>{children}</div>
-);
 
 const Label = ({ children }: { children: React.ReactNode }) => (
   <div style={{

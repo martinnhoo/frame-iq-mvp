@@ -1,123 +1,150 @@
 /**
  * Layout do Creative Intelligence — lateral + barra de status, em toda tela.
  *
- * ── Por que existe ────────────────────────────────────────────────────────
- * A lateral existia só em /ci. Abrir Receitas, Qualidade ou Saúde jogava o
- * usuário numa página solta com um "← Visão geral" no canto — sem saber onde
- * estava, o que mais havia, nem se o worker estava trabalhando. Navegar exigia
- * voltar ao começo toda vez.
+ * ── A navegação passou a ser agrupada ─────────────────────────────────────
+ * A lista era plana e misturava três coisas diferentes: de onde o dado vem
+ * (Marcas, Anúncios), o que você aprende com ele (Receitas, Hooks, Produtos,
+ * Pessoas) e se dá para confiar nele (Qualidade, Saúde). Oito itens seguidos
+ * sem hierarquia obrigam a ler todos toda vez.
  *
- * ── A decisão de manter os "em breve" visíveis ────────────────────────────
- * Hooks, Pessoas, Produtos e Relatórios aparecem na lista mesmo sem existir,
- * marcados. Esconder o que falta faria o produto parecer completo e, pior,
- * esconderia de mim mesmo o que ainda não entreguei. A lista é o mapa combinado;
- * o selo diz onde ele ainda não virou estrada.
+ * Agora são três blocos com título. O do meio — ENTENDER — é onde o produto
+ * mora, e é o único que fica aberto por padrão na leitura visual: os outros
+ * dois têm cabeçalho discreto e servem de apoio.
+ *
+ * ── O logo ────────────────────────────────────────────────────────────────
+ * Estava escrito à mão como texto roxo, enquanto o resto do app tem um
+ * componente Logo de verdade — "ad" claro + "brief" em gradiente. Duas marcas
+ * no mesmo produto é pior que uma marca feia: quem entra em /ci não reconhece
+ * onde está.
  */
+import { Logo, LogoMark } from "@/components/Logo";
 import { BarraStatus } from "./BarraStatus";
+import { T, F, I, Ic } from "@/ci/tema";
 
-const T = {
-  bg0: "#080B11", bg1: "#0D1117",
-  b1: "rgba(240,246,252,0.07)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  label: "rgba(240,246,252,0.40)",
-  violet: "#8B5CF6",
-};
-const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
-const I = {
-  home: "M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
-  brand: "M4 4h16v16H4zM8 8h8v8H8z",
-  ads: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 5v8m-4-4h8",
-  recipe: "M4 6h16M4 12h16M4 18h10",
-  hook: "M13 2 4 14h6l-1 8 9-12h-6z",
-  person: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-8 9a8 8 0 0 1 16 0",
-  product: "M20 7 12 3 4 7v10l8 4 8-4z",
-  report: "M4 20V10m5 10V4m5 16v-7m5 7V8",
-  check: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm-4-9 3 3 5-5",
-  shield: "M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z",
-};
 
-const Ic = ({ d, s = 16, c = "currentColor" }: { d: string; s?: number; c?: string }) => (
-  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.6}
-       strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d={d} /></svg>
-);
 
-/** `pronto: false` = ainda não construído. Fica na lista, marcado. */
-export const NAV_CI = [
-  { id: "overview", pt: "Visão geral", en: "Overview",  icon: I.home,    href: "/ci",           pronto: true },
-  { id: "marcas",   pt: "Marcas",      en: "Brands",    icon: I.brand,   href: "/importar",     pronto: true },
-  { id: "anuncios", pt: "Anúncios",    en: "Ads",       icon: I.ads,     href: "/shapermint",   pronto: true },
-  { id: "receitas", pt: "Receitas",    en: "Recipes",   icon: I.recipe,  href: "/ci/receitas",  pronto: true },
-  { id: "hooks",    pt: "Hooks",       en: "Hooks",     icon: I.hook,    href: "/ci/hooks",     pronto: true },
-  { id: "pessoas",  pt: "Pessoas",     en: "People",    icon: I.person,  href: "/ci/pessoas",   pronto: true },
-  { id: "produtos", pt: "Produtos",    en: "Products",  icon: I.product, href: "/ci/produtos",  pronto: true },
-  { id: "relatorios", pt: "Relatórios", en: "Reports",  icon: I.report,  href: "/ci/relatorio", pronto: true },
+type Item = { id: string; pt: string; en: string; icon: string; href: string | null; pronto?: boolean };
+
+/**
+ * Os três grupos, na ordem em que se usa o produto: primeiro o que entra,
+ * depois o que se aprende, por último se dá para acreditar.
+ */
+export const GRUPOS_CI: { pt: string; en: string; itens: Item[] }[] = [
+  {
+    pt: "Entrada", en: "Input",
+    itens: [
+      { id: "marcas",   pt: "Marcas",   en: "Brands", icon: I.brand, href: "/importar" },
+      { id: "anuncios", pt: "Anúncios", en: "Ads",    icon: I.ads,   href: "/shapermint" },
+    ],
+  },
+  {
+    pt: "Entender", en: "Understand",
+    itens: [
+      { id: "overview", pt: "Visão geral", en: "Overview", icon: I.home,    href: "/ci" },
+      { id: "receitas", pt: "Receitas",    en: "Recipes",  icon: I.recipe,  href: "/ci/receitas" },
+      { id: "hooks",    pt: "Hooks",       en: "Hooks",    icon: I.hook,    href: "/ci/hooks" },
+      { id: "produtos", pt: "Produtos",    en: "Products", icon: I.product, href: "/ci/produtos" },
+      { id: "pessoas",  pt: "Pessoas",     en: "People",   icon: I.person,  href: "/ci/pessoas" },
+    ],
+  },
+  {
+    pt: "Confiar", en: "Trust",
+    itens: [
+      { id: "qualidade",  pt: "Qualidade",  en: "Quality", icon: I.check,  href: "/ci/qualidade" },
+      { id: "saude",      pt: "Saúde",      en: "Health",  icon: I.shield, href: "/ci/saude" },
+      { id: "relatorios", pt: "Relatórios", en: "Reports", icon: I.report, href: "/ci/relatorio" },
+    ],
+  },
 ];
 
-const RODAPE = [
-  { id: "qualidade", pt: "Qualidade", en: "Quality", icon: I.check,  href: "/ci/qualidade" },
-  { id: "saude",     pt: "Saúde",     en: "Health",  icon: I.shield, href: "/ci/saude" },
-];
+/** Compatibilidade com quem importava a lista plana. */
+export const NAV_CI = GRUPOS_CI.flatMap(g => g.itens);
 
 export function LateralCI({ ativo, en = false }: { ativo: string; en?: boolean }) {
   const rotulo = (n: { pt: string; en: string }) => (en ? n.en : n.pt);
+
   return (
     <aside style={{
-      width: 215, borderRight: `1px solid ${T.b1}`, padding: "22px 13px",
-      display: "flex", flexDirection: "column", position: "sticky", top: 0,
-      height: "100vh", flexShrink: 0,
+      width: 214, borderRight: `1px solid ${T.b1}`, padding: "20px 12px 16px",
+      display: "flex", flexDirection: "column", gap: 22,
+      position: "sticky", top: 0, height: "100vh", flexShrink: 0,
+      background: T.bg0,
     }}>
-      <a href="/ci" style={{ padding: "0 9px 20px", textDecoration: "none", color: T.t1 }}>
-        <div style={{ fontSize: 22, fontWeight: 730, letterSpacing: "-.025em" }}>AdBrief</div>
-        <div style={{ fontSize: 11.5, color: "#A78BFA", fontWeight: 570, marginTop: 1 }}>
-          Creative Intelligence
-        </div>
+      {/* ── Marca ──────────────────────────────────────────────────────── */}
+      <a href="/ci" style={{
+        display: "flex", alignItems: "center", gap: 10, padding: "0 8px",
+        textDecoration: "none",
+      }}>
+        <LogoMark size={26} />
+        <span style={{ display: "grid", gap: 1, lineHeight: 1.1 }}>
+          <Logo size="md" />
+          <span style={{
+            fontSize: 9.6, letterSpacing: ".085em", textTransform: "uppercase",
+            color: T.label, fontWeight: 640,
+          }}>Creative Intelligence</span>
+        </span>
       </a>
 
-      <nav style={{ display: "grid", gap: 3 }}>
-        {NAV_CI.map(n => {
-          const sel = n.id === ativo;
-          const corpo = (
+      {/* ── Grupos ─────────────────────────────────────────────────────── */}
+      <nav style={{ display: "grid", gap: 18, overflowY: "auto" }}>
+        {GRUPOS_CI.map(grupo => (
+          <div key={grupo.pt} style={{ display: "grid", gap: 2 }}>
             <div style={{
-              display: "flex", alignItems: "center", gap: 11, padding: "9px 11px",
-              borderRadius: 9, fontSize: 13.5,
-              background: sel ? "rgba(139,92,246,.13)" : "transparent",
-              border: `1px solid ${sel ? "rgba(139,92,246,.28)" : "transparent"}`,
-              color: sel ? T.t1 : n.pronto ? T.t2 : T.label,
-              cursor: n.href ? "pointer" : "default",
-            }}>
-              <Ic d={n.icon} s={16} c={sel ? "#A78BFA" : "currentColor"} />
-              <span style={{ flex: 1 }}>{rotulo(n)}</span>
-              {!n.pronto && (
-                <span style={{ fontSize: 9, color: "#A78BFA", opacity: .8 }}>
-                  {en ? "soon" : "em breve"}
-                </span>
-              )}
-            </div>
-          );
-          return n.href
-            ? <a key={n.id} href={n.href} style={{ textDecoration: "none" }}>{corpo}</a>
-            : <div key={n.id} title={en
-                ? "Not built yet — it stays on the list so the gap is visible."
-                : "Ainda não construído — fica na lista para o buraco ficar visível."}>{corpo}</div>;
-        })}
+              fontSize: 9.4, letterSpacing: ".1em", textTransform: "uppercase",
+              color: T.label, fontWeight: 700, padding: "0 11px 5px",
+            }}>{rotulo(grupo)}</div>
+
+            {grupo.itens.map(n => {
+              const sel = n.id === ativo;
+              const corpo = (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "7px 11px", borderRadius: 8, fontSize: 13.2,
+                  background: sel ? "rgba(139,92,246,.13)" : "transparent",
+                  color: sel ? T.t1 : n.href ? T.t2 : T.label,
+                  cursor: n.href ? "pointer" : "default",
+                  position: "relative",
+                }}>
+                  {/* Barra à esquerda em vez de borda em volta: a borda cheia
+                      desalinha o texto do item ativo em 1px em relação aos
+                      outros, e o olho percebe mesmo sem saber o quê. */}
+                  {sel && (
+                    <span style={{
+                      position: "absolute", left: 0, top: 6, bottom: 6, width: 2.5,
+                      borderRadius: 2, background: T.violet,
+                    }} />
+                  )}
+                  <Ic d={n.icon} s={15.5} c={sel ? T.violet : "currentColor"} />
+                  <span style={{ flex: 1 }}>{rotulo(n)}</span>
+                  {n.pronto === false && (
+                    <span style={{ fontSize: 8.8, color: T.violet, opacity: .8 }}>
+                      {en ? "soon" : "em breve"}
+                    </span>
+                  )}
+                </div>
+              );
+              return n.href
+                ? <a key={n.id} href={n.href} style={{ textDecoration: "none" }}>{corpo}</a>
+                : <div key={n.id}>{corpo}</div>;
+            })}
+          </div>
+        ))}
       </nav>
 
-      <div style={{ marginTop: "auto", display: "grid", gap: 7 }}>
-        {RODAPE.map(n => {
-          const sel = n.id === ativo;
-          return (
-            <a key={n.id} href={n.href} style={{
-              display: "flex", alignItems: "center", gap: 9, padding: "8px 11px",
-              borderRadius: 8, fontSize: 12.6, textDecoration: "none",
-              color: sel ? T.t1 : T.t3,
-              border: `1px solid ${sel ? "rgba(139,92,246,.28)" : T.b1}`,
-              background: sel ? "rgba(139,92,246,.10)" : "transparent",
-            }}>
-              <Ic d={n.icon} s={14} c={sel ? "#A78BFA" : T.t3} /> {rotulo(n)}
-            </a>
-          );
-        })}
+      {/* ── O rodapé é a regra do produto ──────────────────────────────── */}
+      {/*
+        Fica na lateral, visível em toda tela, porque é a frase que impede a
+        leitura errada de tudo que está à direita. Num painel cheio de números,
+        alguém sempre vai supor que barra grande significa "funcionou melhor".
+      */}
+      <div style={{
+        marginTop: "auto", padding: "12px 11px 0", borderTop: `1px solid ${T.b1}`,
+        fontSize: 10.8, color: T.t3, lineHeight: 1.5,
+      }}>
+        {en
+          ? "Public repetition signal. Not spend, impressions or ROAS."
+          : "Sinal público de repetição. Não é gasto, impressão nem ROAS."}
       </div>
     </aside>
   );
