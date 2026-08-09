@@ -49,7 +49,7 @@ export const NAV_CI = [
   { id: "anuncios", pt: "Anúncios",    en: "Ads",       icon: I.ads,     href: "/shapermint",   pronto: true },
   { id: "receitas", pt: "Receitas",    en: "Recipes",   icon: I.recipe,  href: "/ci/receitas",  pronto: true },
   { id: "hooks",    pt: "Hooks",       en: "Hooks",     icon: I.hook,    href: "/ci/hooks",     pronto: true },
-  { id: "pessoas",  pt: "Pessoas",     en: "People",    icon: I.person,  href: null,            pronto: false },
+  { id: "pessoas",  pt: "Pessoas",     en: "People",    icon: I.person,  href: "/ci/pessoas",   pronto: true },
   { id: "produtos", pt: "Produtos",    en: "Products",  icon: I.product, href: "/ci/produtos",  pronto: true },
   { id: "relatorios", pt: "Relatórios", en: "Reports",  icon: I.report,  href: "/ci/relatorio", pronto: true },
 ];

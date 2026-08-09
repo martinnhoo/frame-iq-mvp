@@ -45,6 +45,11 @@ const CAMPOS = [
   { id: "cta", nome: "CTA", ajuda: "" },
   { id: "estrutura", nome: "Estrutura de cena", ajuda: "A sequência de funções está certa?" },
   { id: "receita", nome: "Receita", ajuda: "Este anúncio pertence ao grupo em que caiu?" },
+  { id: "mecanismo", nome: "Mecanismo", ajuda: "COMO o produto entrega — material, construção. Não é o benefício." },
+  // O agrupamento de pessoas é manual, mas manual não é infalível: reconhecer
+  // a mesma pessoa em dois ângulos diferentes é onde se erra. Sem estar aqui,
+  // o erro não teria onde ser registrado.
+  { id: "pessoa", nome: "Pessoa", ajuda: "O PERSON_xxx marcado neste anúncio é mesmo a mesma pessoa dos outros?" },
 ] as const;
 
 const VEREDITOS = [

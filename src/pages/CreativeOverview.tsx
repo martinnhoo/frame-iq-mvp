@@ -70,7 +70,7 @@ const NAV = [
   { id: "anuncios", k: "nav_ads", icon: I.ads, href: "/shapermint", pronto: true },
   { id: "receitas", k: "nav_recipes", icon: I.recipe, href: "/ci/receitas", pronto: true },
   { id: "hooks", k: "nav_hooks", icon: I.hook, href: "/ci/hooks", pronto: true },
-  { id: "pessoas", k: "nav_people", icon: I.person, href: null, pronto: false },
+  { id: "pessoas", k: "nav_people", icon: I.person, href: "/ci/pessoas", pronto: true },
   { id: "produtos", k: "nav_products", icon: I.product, href: "/ci/produtos", pronto: true },
   { id: "relatorios", k: "nav_reports", icon: I.report, href: "/ci/relatorio", pronto: true },
 ];
