@@ -194,7 +194,16 @@ def main() -> int:
     check("prompt proíbe inventar mecanismo para preencher",
           "NÃO invente um mecanismo" in prompt)
     check("prompt exige UM valor em scene_function",
-          "aceita UM valor da lista, nunca vários" in prompt)
+          "é OBRIGATÓRIO em toda cena, com UM valor da lista" in prompt)
+    # A CAUSA do bug era a notação. Enquanto o schema escrever "a|b|c", o modelo
+    # vai continuar devolvendo "a|b" de vez em quando — a regra em texto ajuda,
+    # mas não conserta o exemplo que ele está copiando.
+    check("o schema NÃO usa mais 'a|b|c' em scene_function",
+          '"scene_function": "hook|problem' not in prompt)
+    check("o schema usa a notação explícita de escolha",
+          "<UMA de: hook, problem" in prompt)
+    check("framing e setting_kind também deixaram a notação com barra",
+          "close-up|medium|wide" not in prompt and "home|studio" not in prompt)
 
     # ── scene_function: o enum voltando como resposta ───────────────────────
     # Visto em produção. Uma estrutura de roteiro saiu como

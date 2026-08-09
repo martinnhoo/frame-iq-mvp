@@ -40,6 +40,10 @@ from typing import Any
 from .config import Settings
 
 # v2: regras 8 e 9 — label em inglês, curto e canônico.
+# v5: a notação "a|b|c" do schema era a CAUSA de o modelo devolver o cardápio
+#     como resposta. Trocada por "<UMA de: a, b, c>" em todos os campos de
+#     lista fechada. Regra 11 também deixou de convidar ao null: 472 das 638
+#     cenas estavam sem função, e sem função não há estrutura de roteiro.
 # v4: regra 11 — `scene_function` com UM valor. O modelo devolvia o enum
 #     inteiro do schema ("hook|problem") e inventava valores fora da lista.
 #     A estrutura de roteiro é chave de agrupamento: cada combinação virava uma
@@ -51,7 +55,7 @@ from .config import Settings
 #
 # Sem bumpar a versão, resultado de prompt velho e novo ficam indistinguíveis no
 # banco, e "este anúncio já foi reanalisado?" não tem resposta.
-PROMPT_VERSION = "semantic/v4"
+PROMPT_VERSION = "semantic/v5"
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
@@ -88,19 +92,22 @@ class SemanticResult:
 
 _SCHEMA_HINT = """{
   "scenes": [{"start": 0.0, "end": 2.5, "setting": "banheiro com espelho",
-              "setting_kind": "home|studio|outdoor|retail|ugc-selfie",
-              "description": "", "camera_style": "", "framing": "close-up|medium|wide",
-              "action": "", "scene_function": "hook|problem|solution|demo|proof|offer|cta",
+              "setting_kind": "<UMA de: home, studio, outdoor, retail, ugc-selfie>",
+              "description": "", "camera_style": "",
+              "framing": "<UMA de: close-up, medium, wide>",
+              "action": "",
+              "scene_function": "<UMA de: hook, problem, solution, product, demo, proof, benefit, objection, offer, cta>",
               "product_visible": true, "confidence": 0.0}],
   "products": [{"label": "", "product_type": "", "timestamp_s": 0.0,
                 "evidence": "", "confidence": 0.0}],
-  "hooks": [{"kind": "verbal|visual|written", "label": "", "timestamp_s": 0.0,
-             "evidence": "", "evidence_kind": "speech|onscreen|copy|visual",
+  "hooks": [{"kind": "<UMA de: verbal, visual, written>", "label": "", "timestamp_s": 0.0,
+             "evidence": "", "evidence_kind": "<UMA de: speech, onscreen, copy, visual>",
              "confidence": 0.0}],
   "angles": [{"label": "", "evidence": "", "confidence": 0.0}],
   "mechanisms": [{"label": "", "evidence": "", "confidence": 0.0}],
   "promises": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
-  "proofs": [{"label": "", "proof_type": "demonstration|testimonial|before_after|statistic|authority|social_proof",
+  "proofs": [{"label": "",
+              "proof_type": "<UMA de: demonstration, testimonial, before_after, statistic, authority, social_proof>",
               "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
   "objections": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
   "offers": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
@@ -176,15 +183,23 @@ REGRAS OBRIGATÓRIAS
 
     Mecanismo também precisa de `evidence`, como todo o resto.
 
-11. `scene_function` aceita UM valor da lista, nunca vários. A barra vertical no
-    schema significa "escolha uma destas", não faz parte da resposta.
+11. `scene_function` é OBRIGATÓRIO em toda cena, com UM valor da lista, escrito
+    exatamente como está lá. Onde o schema mostra "<UMA de: a, b, c>", a
+    resposta é `a` — a lista é o cardápio, não o valor.
 
     Sim:  "hook"   ·  "demo"   ·  "proof"
-    Não:  "hook|problem"        (o enum copiado de volta)
+    Não:  "hook|problem"        (o cardápio copiado de volta)
     Não:  "objection handling"  (fora da lista)
 
-    Se a cena não se encaixar em nenhuma, use null. Cena sem função é resposta
-    honesta; função inventada quebra o agrupamento de estruturas.
+    Praticamente toda cena de anúncio cabe em uma destas dez: hook, problem,
+    solution, product, demo, proof, benefit, objection, offer, cta. Se estiver
+    em dúvida entre duas, escolha a que descreve o PAPEL da cena no roteiro,
+    não o que aparece na imagem — uma pessoa falando sobre o resultado é
+    `proof`, mesmo que o produto esteja em cena.
+
+    Use null só quando realmente não houver como decidir. Cena sem função vira
+    buraco na estrutura de roteiro, que é uma das leituras mais usadas do
+    produto — mas função inventada é pior, porque parece dado.
 
 METADADOS
   duração: {metadata.get('duration_s')}s · {metadata.get('width')}x{metadata.get('height')} · {metadata.get('aspect_ratio')}
