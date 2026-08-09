@@ -810,7 +810,13 @@ def analyze_locally(
         raw={"heuristics_matched": len(terms)},
         provider="heuristic", model="local/v1", prompt_version="local/v1",
         fidelity="degraded",
-        warnings=["Sem GEMINI_API_KEY: análise por casamento de padrão, não semântica."],
+        # A mensagem NÃO diz o motivo, porque daqui não dá para saber: a
+        # heurística é chamada tanto quando falta chave quanto quando o Gemini
+        # falhou. A versão anterior afirmava "Sem GEMINI_API_KEY" sempre — e
+        # isso mandou o diagnóstico para o lado errado, porque a chave existia.
+        # Quem sabe o motivo é `analyze()`, e é lá que ele é anexado.
+        warnings=["Análise por casamento de padrão, não semântica — "
+                  "o modelo não produziu este resultado."],
     )
 
 

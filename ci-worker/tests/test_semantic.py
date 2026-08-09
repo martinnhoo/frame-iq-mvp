@@ -323,7 +323,14 @@ def main() -> int:
         {"body_text": "Rated 5 stars by thousands of customers"},
     )
     check("fallback local é sempre marcado como degraded", local.fidelity == "degraded")
-    check("fallback avisa por que está degradado", any("GEMINI" in w for w in local.warnings))
+    # A heurística NÃO afirma o motivo — ela não sabe. Era chamada tanto por
+    # falta de chave quanto por falha do Gemini, e dizia "Sem GEMINI_API_KEY"
+    # nos dois casos. Essa mensagem mandou o diagnóstico do fallback silencioso
+    # para o lado errado por horas: a chave existia.
+    check("o fallback diz que não foi o modelo",
+          any("não semântica" in w for w in local.warnings), str(local.warnings))
+    check("o fallback NÃO afirma um motivo que não conhece",
+          not any("GEMINI_API_KEY" in w for w in local.warnings), str(local.warnings))
     achados = {t["kind"] for t in local.normalized["terms"]}
     check("heurística acha CTA, oferta e prova social",
           {"cta", "offer", "proof"} <= achados, str(sorted(achados)))
