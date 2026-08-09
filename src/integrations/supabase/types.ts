@@ -7758,13 +7758,72 @@ export type Database = {
       ci_concept_variation: {
         Args: { p_concept_id: string }
         Returns: {
+          ads_com_valor: number
+          ads_no_conceito: number
+          cobertura_pct: number
+          dominancia_pct: number
+          dominante: string
           kind: string
-          mantido: boolean
           n_valores: number
+          papel: string
           valores: Json
         }[]
       }
+      ci_creative_priority: {
+        Args: { p_brand_id: string }
+        Returns: {
+          ads: number
+          assets_unicos: number
+          ativos: number
+          concept_id: string
+          dias_no_ar: number
+          duracao_max_s: number
+          duracao_min_s: number
+          eixos_mantidos: number
+          eixos_variados: number
+          hook_dominante: string
+          nome: string
+          pessoas: number
+          presenca: string
+          presenca_motivo: string
+          share_pct: number
+          variacoes: number
+        }[]
+      }
+      ci_hook_patterns: {
+        Args: { p_brand_id: string; p_limite?: number }
+        Returns: {
+          assets: number
+          chave: string
+          duracao_media_s: number
+          estrutura: string
+          exemplos: Json
+          label: string
+          primeiro_frame: string
+          receitas: number
+          tipo: string
+        }[]
+      }
       ci_owns_brand: { Args: { p_brand_id: string }; Returns: boolean }
+      ci_product_playbook: {
+        Args: { p_brand_id: string }
+        Returns: {
+          angulos: Json
+          assets: number
+          ativos: number
+          chave: string
+          ctas: Json
+          duracao_media_s: number
+          formatos: Json
+          hooks: Json
+          ofertas: Json
+          problemas: Json
+          produto: string
+          promessas: Json
+          provas: Json
+          receitas: number
+        }[]
+      }
       ci_quality_summary: {
         Args: { p_brand_id: string }
         Returns: {
@@ -7774,6 +7833,20 @@ export type Database = {
           errados: number
           parciais: number
           revisados: number
+        }[]
+      }
+      ci_queue_status: {
+        Args: { p_brand_id?: string }
+        Returns: {
+          analise_falhou: number
+          analise_fila: number
+          analise_rodando: number
+          analise_total: number
+          download_falhou: number
+          download_fila: number
+          download_rodando: number
+          download_total: number
+          ultimo_evento_seg: number
         }[]
       }
       ci_reap_stale_jobs: {
