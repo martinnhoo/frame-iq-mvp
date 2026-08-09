@@ -275,6 +275,41 @@ def main() -> int:
               bucket=settings.storage_bucket, lease_s=settings.lease_seconds,
               concurrency=settings.concurrency, max_attempts=settings.max_job_attempts)
 
+    # ── O Gemini responde? ──────────────────────────────────────────────────
+    #
+    # Custa alguns tokens e responde no boot a pergunta que nos custou um dia:
+    # 37 dos 40 anúncios foram analisados por regex porque o Gemini falhava, o
+    # worker caía num fallback silencioso, e descobrir o motivo exigia SQL,
+    # logs e chute — enquanto quem sabia era o próprio worker, que faz a
+    # chamada e recebe o status.
+    #
+    # O resultado vai para ci_job_events, que /ci/saude lê. A falha passa a ter
+    # nome e instrução ("gere outra chave", "a cota estourou") em vez de virar
+    # dado de regex silenciosamente.
+    from .diagnostico import diagnosticar_gemini  # noqa: PLC0415
+    diag = diagnosticar_gemini(settings)
+    boot.emit("gemini_diagnostico", **diag)
+    try:
+        # ci_job_events exige user_id. O worker não tem "um usuário" — ele é do
+        # sistema — então pega o dono de qualquer marca existente. Se não houver
+        # marca nenhuma, não há tela para mostrar isto de qualquer forma, e o
+        # log estruturado no stdout continua valendo.
+        donos = supa.select("ci_brands", params={"select": "user_id", "limit": "1"})
+        dono = (donos or [{}])[0].get("user_id")
+        if not dono:
+            raise RuntimeError("nenhuma marca cadastrada: nada a que anexar o evento")
+        supa.insert("ci_job_events", {
+            "user_id": dono,
+            "job_kind": "analysis",
+            "level": "info" if diag["ok"] else "error",
+            "stage": "boot",
+            "message": f"Gemini: {diag['codigo']} — {diag['explicacao']}",
+            "payload": {k: v for k, v in diag.items() if k != "corpo"},
+        })
+    except Exception as exc:  # noqa: BLE001
+        # Não subir por causa do diagnóstico. Ele informa, não decide.
+        boot.emit("gemini_diagnostico_nao_gravado", message=str(exc)[:200])
+
     # Órfãos do boot: temporários de jobs que morreram junto com o processo
     # anterior. Sem isto, cada crash deixa lixo no volume até ele encher e
     # TODOS os jobs passarem a falhar por um motivo que não é deles.
