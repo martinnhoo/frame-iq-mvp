@@ -568,9 +568,25 @@ def stage_semantic_analysis(ctx: Ctx) -> None:
     }
 
     started = time.monotonic()
+    # A heurística local só entra quando as tentativas acabaram. Antes disso a
+    # exceção sobe e o job volta para a fila — falha transitória de rede não
+    # pode virar dado permanente de regex.
+    tentativas = int(ctx.job.get("attempts") or 0)
+    maximo = int(ctx.job.get("max_attempts") or 3)
+    ultima_chance = tentativas >= maximo - 1
+
     ctx.semantic = semantic_analyze(
         ctx.settings, ctx.keyframe_paths, ctx.transcript_text,
-        ctx.segments, ctx.onscreen, metadata)
+        ctx.segments, ctx.onscreen, metadata,
+        permitir_fallback=ultima_chance)
+
+    if ctx.semantic.fidelity == "degraded":
+        # Nível error de propósito: isto aparece na tela de saúde e na fila,
+        # não só num campo de aviso que ninguém abre.
+        ctx.log.error(
+            "análise DEGRADADA: feita por heurística local, não pelo modelo",
+            error_code="semantic_degraded", retryable=False,
+            stage="semantic_analysis")
     ctx.warnings.extend(ctx.semantic.warnings)
 
     ctx.supa.insert("ci_model_runs", {

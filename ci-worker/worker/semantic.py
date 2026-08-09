@@ -821,14 +821,46 @@ def analyze(
     segments: list[dict],
     onscreen: list[dict],
     metadata: dict[str, Any],
+    permitir_fallback: bool = False,
 ) -> SemanticResult:
-    """Gemini quando há chave; heurística local marcada como degradada quando não."""
-    if settings.gemini_api_key:
-        try:
-            return analyze_with_gemini(
-                settings, keyframes, transcript_text, segments, onscreen, metadata)
-        except SemanticError as exc:
-            result = analyze_locally(transcript_text, segments, onscreen, metadata)
-            result.warnings.append(f"Gemini falhou, caiu no fallback local: {exc}")
-            return result
-    return analyze_locally(transcript_text, segments, onscreen, metadata)
+    """
+    Gemini quando há chave. Heurística local só como ÚLTIMO recurso.
+
+    ── O que esse fallback custou ────────────────────────────────────────────
+    Antes, qualquer falha do Gemini caía direto na heurística, gravava o
+    resultado como análise concluída e seguia. O aviso ia parar dentro do job,
+    onde ninguém olha.
+
+    O resultado apareceu semanas depois: 37 dos 40 anúncios tinham
+    prompt_version 'local/v1'. O produto inteiro — receitas, hooks, mecanismos,
+    estruturas — estava sendo montado sobre saída de regex. Os rótulos em
+    português que passei um dia inteiro tentando canonizar são strings fixas
+    daqui de baixo, não do modelo.
+
+    Uma falha transitória de rede virava dado permanente de regex, e nada na
+    tela dizia isso. Degradação silenciosa é pior que erro: erro alguém
+    conserta.
+
+    ── A regra agora ─────────────────────────────────────────────────────────
+    Falhou o Gemini? A exceção sobe e o job vai para retry. Só quando as
+    tentativas acabam é que a heurística entra — e aí ela entra marcada como
+    degradada, com aviso de nível error, e o dado dela NÃO alimenta receita.
+    """
+    if not settings.gemini_api_key:
+        # Sem chave não há o que tentar de novo. Degrada na hora, marcado.
+        resultado = analyze_locally(transcript_text, segments, onscreen, metadata)
+        resultado.warnings.append(
+            "GEMINI_API_KEY ausente: análise feita por heurística local, não por modelo")
+        return resultado
+
+    try:
+        return analyze_with_gemini(
+            settings, keyframes, transcript_text, segments, onscreen, metadata)
+    except SemanticError as exc:
+        if not permitir_fallback:
+            # Sobe. O job tenta de novo, e a fila mostra a falha.
+            raise
+        resultado = analyze_locally(transcript_text, segments, onscreen, metadata)
+        resultado.warnings.append(
+            f"Gemini falhou em todas as tentativas, caiu na heurística local: {exc}")
+        return resultado

@@ -275,6 +275,45 @@ def main() -> int:
           len(n_cena["scenes"]) == 1 and n_cena["scenes"][0]["scene_function"] is None,
           str(n_cena["scenes"]))
 
+    # ══ O fallback NÃO pode ser silencioso ═══════════════════════════════════
+    #
+    # 37 dos 40 anúncios em produção tinham prompt_version 'local/v1'. Uma
+    # falha transitória do Gemini virava dado permanente de regex, e nada na
+    # tela dizia isso. O produto inteiro foi montado sobre isso por semanas.
+    # SemanticError já vem do import no topo. Reimportar aqui criaria um nome
+    # local e o `except` falharia com UnboundLocalError antes de chegar no try.
+    import dataclasses  # noqa: PLC0415
+    import worker.semantic as _sem  # noqa: PLC0415
+
+    base = dataclasses.replace(settings, gemini_api_key="chave-que-vai-falhar")
+    original = _sem.analyze_with_gemini
+    _sem.analyze_with_gemini = lambda *a, **k: (_ for _ in ()).throw(
+        SemanticError("500 do Gemini"))
+    try:
+        erro_subiu = False
+        try:
+            analyze(base, [], "t", [], [], {}, permitir_fallback=False)
+        except SemanticError:
+            erro_subiu = True
+        check("com tentativas sobrando, a falha SOBE e o job vai para retry",
+              erro_subiu)
+
+        ultimo = analyze(base, [], "t", [], [], {}, permitir_fallback=True)
+        check("só na última tentativa cai na heurística",
+              ultimo.fidelity == "degraded", ultimo.fidelity)
+        check("e o resultado diz, por escrito, que não foi o modelo",
+              any("heurística local" in w for w in ultimo.warnings),
+              str(ultimo.warnings))
+    finally:
+        _sem.analyze_with_gemini = original
+
+    sem_chave = dataclasses.replace(base, gemini_api_key="")
+    r_sem = analyze(sem_chave, [], "t", [], [], {})
+    check("sem chave, degrada na hora — mas marcado",
+          r_sem.fidelity == "degraded"
+          and any("GEMINI_API_KEY ausente" in w for w in r_sem.warnings),
+          str(r_sem.warnings))
+
     # ══ Fallback local ═══════════════════════════════════════════════════════
     local = analyze_locally(
         "these leggings will never roll down, guarantee results in 7 days",
