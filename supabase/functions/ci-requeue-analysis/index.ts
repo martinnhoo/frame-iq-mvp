@@ -42,7 +42,7 @@ const json = (body: unknown, status = 200) =>
  * um teste resolve. Existe um teste que lê os dois arquivos e falha se
  * divergirem, então a duplicação é verificada, não confiada.
  */
-const PROMPT_VERSION_ATUAL = "semantic/v5";
+const PROMPT_VERSION_ATUAL = "semantic/v6";
 
 /** Os estágios refeitos. O resto é pulado pelo checkpoint do worker. */
 const ESTAGIOS_A_REFAZER = ["semantic_analysis", "normalization", "persistence"];
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
   const { data: { user }, error: erroUser } = await comUsuario.auth.getUser();
   if (erroUser || !user) return json({ error: "unauthorized" }, 401);
 
-  let body: { brand_id?: string; dry_run?: boolean };
+  let body: { brand_id?: string; dry_run?: boolean; limite?: number };
   try { body = await req.json(); } catch { body = {}; }
 
   const brandId = body.brand_id;
@@ -98,12 +98,24 @@ Deno.serve(async (req) => {
       .map((r: { asset_id: string }) => r.asset_id),
   );
 
-  const alvos = (jobs ?? []).filter((j: any) =>
+  const desatualizados = (jobs ?? []).filter((j: any) =>
     // Já analisado alguma vez...
     (j.completed_stages ?? []).includes("semantic_analysis") &&
     // ...mas não com o prompt atual.
     !naVersaoAtual.has(j.asset_id)
   );
+
+  // ── `limite`: validar barato antes de refazer tudo ──────────────────────
+  // O prompt foi de v2 a v6 num dia. Cada versão nasceu de um defeito visto
+  // DEPOIS de reanalisar quarenta anúncios — um deploy e uma rodada paga por
+  // iteração. Isso não é iterar, é rodar em círculo.
+  //
+  // Com limite, verificar uma mudança custa o preço de três anúncios. Só
+  // depois de olhar o resultado é que se refaz o resto.
+  const limite = typeof body.limite === "number" && body.limite > 0
+    ? Math.floor(body.limite)
+    : null;
+  const alvos = limite ? desatualizados.slice(0, limite) : desatualizados;
 
   // Quem nunca foi analisado não entra na conta de "refazer": ele não está
   // desatualizado, está pendente. Misturar os dois faria o botão prometer um
@@ -118,7 +130,10 @@ Deno.serve(async (req) => {
     marca: marca.name,
     total_jobs: (jobs ?? []).length,
     ja_na_versao_atual: naVersaoAtual.size,
-    a_refazer: alvos.length,
+    // Quantos estão desatualizados no total, e quantos serão feitos AGORA.
+    // Mostrar só o recorte esconderia o tamanho do trabalho pendente.
+    a_refazer: desatualizados.length,
+    sera_feito_agora: alvos.length,
     pendentes_na_fila: pendentes,
   };
 

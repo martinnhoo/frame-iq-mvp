@@ -117,18 +117,28 @@ export function BarraStatus({ brandId, en = false }: { brandId?: string | null; 
     return () => window.clearInterval(t);
   }, [ler, conferirDesatualizados]);
 
-  const reanalisar = useCallback(async () => {
+  /**
+   * `limite` existe para quebrar o ciclo caro de iteração.
+   *
+   * Mudança de prompt precisa ser verificada contra saída real do modelo. Fazer
+   * isso reanalisando tudo custa dinheiro e tempo a cada tentativa — foi assim
+   * que o prompt foi de v2 a v6 num dia. Com amostra, verificar custa o preço
+   * de três anúncios; só depois de olhar é que se refaz o resto.
+   */
+  const reanalisar = useCallback(async (limite?: number) => {
     if (!brandId || ocupado) return;
     setOcupado(true); setAviso(null);
     try {
       const { data, error } = await supabase.functions.invoke("ci-requeue-analysis", {
-        body: { brand_id: brandId },
+        body: { brand_id: brandId, ...(limite ? { limite } : {}) },
       });
       if (error) throw error;
+      const feitos = data?.atualizados ?? 0;
+      const restam = (data?.a_refazer ?? 0) - feitos;
       setAviso(en
-        ? `${data?.atualizados ?? 0} ads back in queue`
-        : `${data?.atualizados ?? 0} anúncios de volta na fila`);
-      setARefazer(0);
+        ? `${feitos} back in queue${restam > 0 ? ` · ${restam} still outdated` : ""}`
+        : `${feitos} de volta na fila${restam > 0 ? ` · ainda faltam ${restam}` : ""}`);
+      setARefazer(restam > 0 ? restam : 0);
       void ler();
     } catch (err: any) {
       setAviso(err?.message ?? (en ? "could not requeue" : "não deu para recolocar na fila"));
@@ -230,9 +240,29 @@ export function BarraStatus({ brandId, en = false }: { brandId?: string | null; 
 
         {/* Some quando não há nada desatualizado. Botão que não faz nada é pior
             que botão ausente — ensina a clicar sem consequência. */}
+        {/* Amostra primeiro. O botão pequeno vem ANTES do grande de propósito:
+            a ordem na tela é a ordem recomendada, e refazer tudo sem ter olhado
+            três é o erro que este par de botões existe para evitar. */}
+        {aRefazer != null && aRefazer > 3 && (
+          <button
+            onClick={() => reanalisar(3)}
+            disabled={ocupado}
+            title={en
+              ? "Re-analyse 3 ads first and check the result. Verifying a prompt change should not cost a full run."
+              : "Reanalisa 3 anúncios para você conferir o resultado. Verificar uma mudança de prompt não deveria custar uma rodada inteira."}
+            style={{
+              background: "transparent",
+              border: `1px solid ${T.b2}`,
+              color: T.t2,
+              borderRadius: 8, padding: "5px 10px", fontSize: 12.2, fontWeight: 600,
+              cursor: ocupado ? "default" : "pointer",
+            }}
+          >{en ? "Test on 3" : "Testar em 3"}</button>
+        )}
+
         {aRefazer != null && aRefazer > 0 && (
           <button
-            onClick={reanalisar}
+            onClick={() => reanalisar()}
             disabled={ocupado}
             title={en
               ? `${aRefazer} ads were analysed with an older prompt. Re-running costs Gemini only — no SpreshApp credits, no re-download, no re-transcription.`

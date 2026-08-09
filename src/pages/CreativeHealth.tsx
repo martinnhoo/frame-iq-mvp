@@ -122,6 +122,32 @@ export default function CreativeHealth() {
         filaDe("ci_download_jobs"), filaDe("ci_analysis_jobs"),
       ]);
 
+      /**
+       * Violações do contrato com o modelo.
+       *
+       * Desde que a chamada ao Gemini passou a usar `response_schema`, isto
+       * DEVERIA ficar sempre em zero — campo com enum não consegue voltar
+       * inválido. É exatamente por isso que vale contar: no dia em que sair de
+       * zero, o contrato deixou de valer (modelo trocado, campo renomeado,
+       * schema não enviado) e alguém precisa saber no primeiro anúncio, não
+       * depois de quarenta e de uma tela estranha.
+       *
+       * Foi assim que o "hook|problem" passou despercebido: nada contava.
+       */
+      const { data: resultados } = await supabase
+        .from("ci_analysis_results")
+        .select("prompt_version,normalized_output")
+        .eq("kind", "semantic")
+        .limit(500);
+      const violacoes: string[] = [];
+      const porVersao: Record<string, number> = {};
+      for (const r of (resultados ?? []) as Row[]) {
+        porVersao[r.prompt_version ?? "?"] = (porVersao[r.prompt_version ?? "?"] ?? 0) + 1;
+        for (const v of (r.normalized_output?.violacoes_de_contrato ?? []) as string[]) {
+          if (violacoes.length < 12) violacoes.push(v);
+        }
+      }
+
       const { data: ultimaRun } = await supabase.from("ci_import_runs")
         .select("created_at,status,ads_returned,ads_created,credits_spent,stop_reason")
         .order("created_at", { ascending: false }).limit(1);
@@ -129,7 +155,8 @@ export default function CreativeHealth() {
       setD({
         marcas, ads, adsReais, assets, assetsOk, cenas, cenasComFuncao, keyframes,
         transcripts, segmentos, onscreen, termos, vinculos, conceitos, membros,
-        pessoas, runs, kinds, filaDown, filaAn, ultimaRun: (ultimaRun ?? [])[0] ?? null,
+        pessoas, runs, kinds, filaDown, filaAn, violacoes, porVersao,
+        ultimaRun: (ultimaRun ?? [])[0] ?? null,
       });
     } catch (e: any) { setErro(e.message); }
     finally { setCarregando(false); }
@@ -210,6 +237,55 @@ export default function CreativeHealth() {
             </Card>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <Card style={{
+                borderColor: (d.violacoes as string[]).length
+                  ? "rgba(248,113,113,.36)" : undefined,
+              }}>
+                <div style={{ fontSize: 14.5, fontWeight: 640, marginBottom: 4 }}>
+                  Contrato com o modelo
+                </div>
+                <div style={{ fontSize: 11.8, color: T.t3, marginBottom: 11, lineHeight: 1.5 }}>
+                  A chamada ao Gemini manda um schema com listas fechadas. Valor fora
+                  da lista não é improvável — é impossível de decodificar. Aqui tem que
+                  ser sempre zero; se sair de zero, o contrato deixou de valer.
+                </div>
+
+                {(d.violacoes as string[]).length === 0 ? (
+                  <div style={{ fontSize: 12.8, color: T.green }}>
+                    Nenhuma violação nos últimos 500 resultados.
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gap: 5 }}>
+                    <div style={{ fontSize: 12.6, color: T.red, fontWeight: 620, marginBottom: 3 }}>
+                      {(d.violacoes as string[]).length} violação(ões) — o schema não está
+                      sendo aplicado
+                    </div>
+                    {(d.violacoes as string[]).map((v, i) => (
+                      <div key={i} style={{
+                        fontSize: 11.8, color: T.t2, background: T.bg2,
+                        borderRadius: 6, padding: "5px 8px", fontFamily: "monospace",
+                      }}>{v}</div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Qual versão de prompt gerou o que está no banco. Sem isto,
+                    "por que a tela mudou?" não tem resposta. */}
+                <div style={{
+                  marginTop: 12, paddingTop: 10, borderTop: `1px solid ${T.b1}`,
+                  display: "flex", gap: 14, flexWrap: "wrap", fontSize: 12.2,
+                }}>
+                  {Object.entries(d.porVersao as Record<string, number>)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([v, n]) => (
+                      <span key={v} style={{ color: T.t3 }}>
+                        <strong style={{ color: T.t1 }}>{n}</strong> em{" "}
+                        <span style={{ fontFamily: "monospace" }}>{v}</span>
+                      </span>
+                    ))}
+                </div>
+              </Card>
+
               {([["Fila de download", d.filaDown], ["Fila de análise", d.filaAn]] as const).map(([titulo, fila]) => {
                 const total = Object.values(fila as Record<string, number>).reduce((a, b) => a + b, 0);
                 const travados = (fila as Row).queued ?? 0;

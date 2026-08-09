@@ -193,17 +193,39 @@ def main() -> int:
           "MECANISMO = COMO" in prompt and "ÂNGULO    = POR QUE" in prompt)
     check("prompt proíbe inventar mecanismo para preencher",
           "NÃO invente um mecanismo" in prompt)
-    check("prompt exige UM valor em scene_function",
-          "é OBRIGATÓRIO em toda cena, com UM valor da lista" in prompt)
-    # A CAUSA do bug era a notação. Enquanto o schema escrever "a|b|c", o modelo
-    # vai continuar devolvendo "a|b" de vez em quando — a regra em texto ajuda,
-    # mas não conserta o exemplo que ele está copiando.
+    # O prompt agora fala de JULGAMENTO, não de formato — o formato é imposto
+    # pelo response_schema. Verificar que a orientação semântica continua lá:
+    check("prompt explica que scene_function é o PAPEL, não o que aparece",
+          "descreve o PAPEL da cena no roteiro" in prompt)
     check("o schema NÃO usa mais 'a|b|c' em scene_function",
           '"scene_function": "hook|problem' not in prompt)
-    check("o schema usa a notação explícita de escolha",
-          "<UMA de: hook, problem" in prompt)
-    check("framing e setting_kind também deixaram a notação com barra",
-          "close-up|medium|wide" not in prompt and "home|studio" not in prompt)
+
+    # ══ O contrato ═══════════════════════════════════════════════════════════
+    # Isto é o que quebra o ciclo. Enquanto o formato dependia de o modelo
+    # obedecer texto, cada defeito custava uma versão de prompt, um deploy e uma
+    # reanálise paga. Com response_schema, valor fora do enum não é improvável —
+    # é impossível de decodificar.
+    from worker.semantic import RESPONSE_SCHEMA, FUNCOES_ENUM  # noqa: PLC0415
+
+    cena = RESPONSE_SCHEMA["properties"]["scenes"]["items"]
+    check("scene_function é enum fechado no contrato",
+          cena["properties"]["scene_function"]["enum"] == FUNCOES_ENUM)
+    check("scene_function é obrigatório — era ele que faltava em 74% das cenas",
+          "scene_function" in cena["required"])
+    check("o enum inclui 'unknown', para o modelo não ser forçado a chutar",
+          "unknown" in FUNCOES_ENUM)
+    check("framing e setting_kind também são enum",
+          "enum" in cena["properties"]["framing"]
+          and "enum" in cena["properties"]["setting_kind"])
+    check("hook exige kind, label e evidence",
+          set(RESPONSE_SCHEMA["properties"]["hooks"]["items"]["required"])
+          == {"kind", "label", "evidence"})
+    check("mechanisms está no contrato",
+          "mechanisms" in RESPONSE_SCHEMA["properties"])
+    check("todo item de taxonomia exige evidence",
+          all("evidence" in RESPONSE_SCHEMA["properties"][k]["items"]["required"]
+              for k in ("products", "hooks", "angles", "mechanisms", "promises",
+                        "proofs", "objections", "offers", "ctas")))
 
     # ── scene_function: o enum voltando como resposta ───────────────────────
     # Visto em produção. Uma estrutura de roteiro saiu como
@@ -225,6 +247,25 @@ def main() -> int:
           _fc("cena de abertura bonita") is None, str(_fc("cena de abertura bonita")))
     check("vazio vira None", _fc("") is None and _fc(None) is None)
     check("só barras vira None", _fc("|||") is None, str(_fc("|||")))
+    check("'unknown' vira None — é resposta do contrato, não erro",
+          _fc("unknown") is None)
+
+    # ── Violações são CONTADAS, não corrigidas em silêncio ──────────────────
+    # Com response_schema isto deveria ficar sempre vazio. É por isso que vale
+    # contar: no dia em que o contrato deixar de valer — modelo trocado, campo
+    # renomeado — alguém precisa saber no primeiro anúncio.
+    n_viol = normalize_semantic(
+        {"scenes": [{"start": 0, "end": 1, "scene_function": "hook|problem"},
+                    {"start": 1, "end": 2, "scene_function": "coisa inventada"},
+                    {"start": 2, "end": 3, "scene_function": "unknown"},
+                    {"start": 3, "end": 4, "scene_function": "demo"}]},
+        provider="gemini", model="m")
+    check("saída fora do contrato é registrada",
+          len(n_viol["violacoes_de_contrato"]) == 2,
+          str(n_viol["violacoes_de_contrato"]))
+    check("'unknown' e valor válido NÃO contam como violação",
+          not any("unknown" in v or "'demo'" in v for v in n_viol["violacoes_de_contrato"]),
+          str(n_viol["violacoes_de_contrato"]))
     # A cena entra na lista mesmo sem função: descartá-la perderia a duração e
     # o enquadramento, que são observações válidas.
     n_cena = normalize_semantic(

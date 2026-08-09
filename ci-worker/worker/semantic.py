@@ -40,6 +40,10 @@ from typing import Any
 from .config import Settings
 
 # v2: regras 8 e 9 — label em inglês, curto e canônico.
+# v6: response_schema na API. O formato deixa de ser pedido e passa a ser
+#     imposto — campo com enum não consegue voltar inválido. As regras de
+#     formato saíram do prompt; sobrou o que é julgamento (o que colocar em
+#     cada campo), que é o que prompt sabe fazer.
 # v5: a notação "a|b|c" do schema era a CAUSA de o modelo devolver o cardápio
 #     como resposta. Trocada por "<UMA de: a, b, c>" em todos os campos de
 #     lista fechada. Regra 11 também deixou de convidar ao null: 472 das 638
@@ -55,7 +59,7 @@ from .config import Settings
 #
 # Sem bumpar a versão, resultado de prompt velho e novo ficam indistinguíveis no
 # banco, e "este anúncio já foi reanalisado?" não tem resposta.
-PROMPT_VERSION = "semantic/v5"
+PROMPT_VERSION = "semantic/v6"
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
@@ -125,6 +129,149 @@ _SCHEMA_HINT = """{
 }"""
 
 
+# ── O contrato com o modelo ─────────────────────────────────────────────────
+#
+# Isto é a correção definitiva de uma classe inteira de bug, e a razão de ela
+# existir merece ficar registrada.
+#
+# Em poucas horas o prompt foi de v2 a v5. Cada versão nasceu de um defeito
+# descoberto DEPOIS de analisar quarenta anúncios: rótulo em português, rótulo
+# longo demais, mecanismo ausente, "hook|problem" no lugar de "hook". A cada
+# defeito eu escrevia mais uma regra em texto, e cada regra custava um deploy do
+# worker e uma reanálise paga.
+#
+# O erro não era nenhum dos bugs. Era o método: eu estava PEDINDO ao modelo que
+# respeitasse um formato, quando a API permite EXIGIR.
+#
+# `response_schema` faz o Gemini gerar sob restrição. Um campo com `enum` não
+# pode voltar com valor fora da lista — não é o modelo se comportando bem, é a
+# decodificação que não permite outra coisa. "hook|problem" e
+# "objection handling" deixam de ser possíveis, não de ser prováveis.
+#
+# O que continua sendo trabalho de prompt: o que colocar em cada campo. O que
+# passa a ser trabalho de schema: qual a forma. Confundir os dois foi o que me
+# fez rodar em círculo.
+FUNCOES_ENUM = [
+    "hook", "problem", "solution", "product", "demo",
+    "proof", "benefit", "objection", "offer", "cta",
+    # "unknown" existe de propósito. Sem ele, um campo obrigatório com enum
+    # força o modelo a escolher mesmo quando não há resposta — e aí ele chuta,
+    # o que é pior que o buraco. Com ele, "não sei" é uma resposta que cabe no
+    # contrato, e vira NULL no banco.
+    "unknown",
+]
+
+def _txt(desc: str = "") -> dict[str, Any]:
+    return {"type": "STRING", "description": desc} if desc else {"type": "STRING"}
+
+RESPONSE_SCHEMA: dict[str, Any] = {
+    "type": "OBJECT",
+    "properties": {
+        "scenes": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "start": {"type": "NUMBER"},
+                    "end": {"type": "NUMBER"},
+                    "setting": _txt("onde a cena acontece"),
+                    "setting_kind": {"type": "STRING",
+                                     "enum": ["home", "studio", "outdoor", "retail",
+                                              "ugc-selfie", "unknown"]},
+                    "description": _txt(),
+                    "camera_style": _txt(),
+                    "framing": {"type": "STRING",
+                                "enum": ["close-up", "medium", "wide", "unknown"]},
+                    "action": _txt(),
+                    "scene_function": {
+                        "type": "STRING", "enum": FUNCOES_ENUM,
+                        "description": "o PAPEL da cena no roteiro, não o que aparece nela",
+                    },
+                    "product_visible": {"type": "BOOLEAN"},
+                    "confidence": {"type": "NUMBER"},
+                },
+                # scene_function é obrigatório: era ele que vinha faltando em 74%
+                # das cenas, e sem função não existe estrutura de roteiro.
+                "required": ["start", "end", "scene_function"],
+            },
+        },
+        "products": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {"label": _txt(), "product_type": _txt(),
+                           "timestamp_s": {"type": "NUMBER"}, "evidence": _txt(),
+                           "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "hooks": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {
+                "kind": {"type": "STRING", "enum": ["verbal", "visual", "written"]},
+                "label": _txt(), "timestamp_s": {"type": "NUMBER"}, "evidence": _txt(),
+                "evidence_kind": {"type": "STRING",
+                                  "enum": ["speech", "onscreen", "copy", "visual", "inferred"]},
+                "confidence": {"type": "NUMBER"}},
+            "required": ["kind", "label", "evidence"]}},
+        "angles": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {"label": _txt("POR QUE a pessoa deveria se importar"),
+                           "evidence": _txt(), "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "mechanisms": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {"label": _txt("COMO o produto entrega — material, construção"),
+                           "evidence": _txt(), "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "promises": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {"label": _txt(), "evidence": _txt(),
+                           "timestamp_s": {"type": "NUMBER"}, "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "proofs": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {
+                "label": _txt(),
+                "proof_type": {"type": "STRING",
+                               "enum": ["demonstration", "testimonial", "before_after",
+                                        "statistic", "authority", "social_proof"]},
+                "evidence": _txt(), "timestamp_s": {"type": "NUMBER"},
+                "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "objections": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {"label": _txt(), "evidence": _txt(),
+                           "timestamp_s": {"type": "NUMBER"}, "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "offers": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {"label": _txt(), "evidence": _txt(),
+                           "timestamp_s": {"type": "NUMBER"}, "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "ctas": {"type": "ARRAY", "items": {
+            "type": "OBJECT",
+            "properties": {"label": _txt(), "evidence": _txt(),
+                           "timestamp_s": {"type": "NUMBER"}, "confidence": {"type": "NUMBER"}},
+            "required": ["label", "evidence"]}},
+        "creative_analysis": {
+            "type": "OBJECT",
+            "properties": {
+                campo: {"type": "OBJECT",
+                        "properties": {"label": _txt(), "evidence": _txt()},
+                        "required": ["label", "evidence"]}
+                for campo in ("story_structure", "emotional_tone",
+                              "visual_style", "editing_rhythm")
+            },
+        },
+        "timing": {"type": "OBJECT", "properties": {
+            "time_to_product_s": {"type": "NUMBER"}, "time_to_offer_s": {"type": "NUMBER"},
+            "time_to_cta_s": {"type": "NUMBER"}, "hook_duration_s": {"type": "NUMBER"}}},
+        "flags": {"type": "OBJECT", "properties": {
+            campo: {"type": "BOOLEAN"} for campo in (
+                "has_before_after", "has_testimonial", "has_problem_solution",
+                "has_urgency", "has_social_proof", "has_demonstration")}},
+    },
+    "required": ["scenes", "hooks", "angles"],
+}
+
+
 def build_prompt(transcript_text: str, segments: list[dict], onscreen: list[dict],
                  metadata: dict[str, Any]) -> str:
     seg_lines = "\n".join(
@@ -183,23 +330,14 @@ REGRAS OBRIGATÓRIAS
 
     Mecanismo também precisa de `evidence`, como todo o resto.
 
-11. `scene_function` é OBRIGATÓRIO em toda cena, com UM valor da lista, escrito
-    exatamente como está lá. Onde o schema mostra "<UMA de: a, b, c>", a
-    resposta é `a` — a lista é o cardápio, não o valor.
+11. `scene_function` descreve o PAPEL da cena no roteiro, não o que aparece
+    nela. Uma pessoa falando sobre o resultado é `proof`, mesmo com o produto
+    em cena. O produto sendo usado é `demo`; o produto sendo apresentado é
+    `product`.
 
-    Sim:  "hook"   ·  "demo"   ·  "proof"
-    Não:  "hook|problem"        (o cardápio copiado de volta)
-    Não:  "objection handling"  (fora da lista)
-
-    Praticamente toda cena de anúncio cabe em uma destas dez: hook, problem,
-    solution, product, demo, proof, benefit, objection, offer, cta. Se estiver
-    em dúvida entre duas, escolha a que descreve o PAPEL da cena no roteiro,
-    não o que aparece na imagem — uma pessoa falando sobre o resultado é
-    `proof`, mesmo que o produto esteja em cena.
-
-    Use null só quando realmente não houver como decidir. Cena sem função vira
-    buraco na estrutura de roteiro, que é uma das leituras mais usadas do
-    produto — mas função inventada é pior, porque parece dado.
+    O formato já é garantido pelo schema da resposta — você não consegue devolver
+    valor fora da lista. Use `unknown` quando a cena realmente não tiver papel
+    identificável; é melhor que chutar, e o sistema trata como "sem função".
 
 METADADOS
   duração: {metadata.get('duration_s')}s · {metadata.get('width')}x{metadata.get('height')} · {metadata.get('aspect_ratio')}
@@ -283,6 +421,9 @@ def analyze_with_gemini(
         "generationConfig": {
             "temperature": 0.2,
             "response_mime_type": "application/json",
+            # O contrato. Sem isto o modelo é livre para inventar forma, e a
+            # única defesa vira regra em texto — que é pedido, não garantia.
+            "response_schema": RESPONSE_SCHEMA,
         },
     }).encode()
 
@@ -412,7 +553,7 @@ SINONIMOS_DE_CENA = {
 }
 
 
-def _funcao_de_cena(bruto: Any) -> str | None:
+def _funcao_de_cena(bruto: Any, violacoes: list[str] | None = None) -> str | None:
     """
     Devolve UMA função válida, ou None.
 
@@ -423,17 +564,26 @@ def _funcao_de_cena(bruto: Any) -> str | None:
     if not bruto:
         return None
     texto = str(bruto).strip().lower()
-    if not texto:
+    if not texto or texto == "unknown":
+        # "unknown" é resposta legítima do contrato: o enum tem esse valor
+        # justamente para o modelo poder dizer "não sei" sem chutar. Vira NULL
+        # e NÃO conta como violação.
         return None
 
-    # "hook|problem" → tenta cada parte, na ordem, e fica com a primeira válida.
     for parte in texto.split("|"):
         parte = parte.strip()
         if not parte:
             continue
         parte = SINONIMOS_DE_CENA.get(parte, parte)
         if parte in FUNCOES_DE_CENA:
+            if violacoes is not None and parte != texto:
+                # Chegou aqui = o response_schema não segurou. Isso é sintoma de
+                # o contrato ter deixado de ser aplicado (modelo trocado, campo
+                # renomeado), e precisa ser VISÍVEL, não corrigido em silêncio.
+                violacoes.append(f"scene_function fora do contrato: {bruto!r}")
             return "demo" if parte == "demonstration" else parte
+    if violacoes is not None:
+        violacoes.append(f"scene_function inválida, descartada: {bruto!r}")
     return None
 
 
@@ -448,6 +598,11 @@ def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dic
     """
     terms: list[dict[str, Any]] = []
     dropped = 0
+    # Toda vez que o dado chega fora do contrato, registra. Com response_schema
+    # isto deveria ficar sempre vazio — e é exatamente por isso que vale contar:
+    # o dia em que parar de ficar, alguém precisa saber no primeiro anúncio, não
+    # depois de quarenta e de uma tela estranha.
+    violacoes: list[str] = []
 
     for key, kind in TERM_KINDS.items():
         for item in raw.get(key) or []:
@@ -536,7 +691,7 @@ def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dic
             "camera_style": (item.get("camera_style") or None),
             "framing": (item.get("framing") or None),
             "action": (item.get("action") or None),
-            "scene_function": _funcao_de_cena(item.get("scene_function")),
+            "scene_function": _funcao_de_cena(item.get("scene_function"), violacoes),
             "product_visible": bool(item.get("product_visible")),
             "confidence": _clamp(item.get("confidence")),
         })
@@ -546,6 +701,7 @@ def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dic
     flags = raw.get("flags") or {}
 
     return {
+        "violacoes_de_contrato": violacoes[:20],
         "terms": terms,
         "scenes": scenes,
         "creative_analysis": {
