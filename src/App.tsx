@@ -42,7 +42,7 @@ const CreativePeople = lazy(() => import("./pages/CreativePeople"));
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
 const AdBriefAI        = lazy(() => import("./pages/dashboard/AdBriefAI"));
 const IntelligencePage = lazy(() => import("./pages/dashboard/IntelligencePage"));
-const Landing = lazy(() => import("./pages/Landing"));
+
 const AdDiary         = lazy(() => import("./pages/dashboard/AdDiary"));
 const AnalysesList     = lazy(() => import("./pages/dashboard/AnalysesList"));
 const AnalysisDetail   = lazy(() => import("./pages/dashboard/AnalysisDetail"));
