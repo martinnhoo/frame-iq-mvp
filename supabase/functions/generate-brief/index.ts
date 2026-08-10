@@ -3,6 +3,7 @@ import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 const createSvcClient = createClient;
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.39.0";
+import { patternScopeFilters } from "../_shared/tenant-boundary.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,37 +43,38 @@ Deno.serve(async (req) => {
     const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const restHeaders = { apikey: svcKey, Authorization: `Bearer ${svcKey}` };
 
-    // ── Load learned patterns for constraint ──
+    // Tenant observations and global benchmarks are deliberately separate.
     let patternConstraintBlock = "";
     try {
-      const [winnersRes, antiRes] = await Promise.all([
-        fetch(`${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.true&confidence=gte.0.25&order=impact_pct.desc&limit=10`, { headers: restHeaders }),
-        fetch(`${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.false&impact_pct=lt.-10&confidence=gte.0.25&order=impact_pct.asc&limit=5`, { headers: restHeaders }),
+      const scopes = patternScopeFilters(user_id);
+      const fields = "pattern_key,variables,avg_ctr,avg_cpc,avg_roas,avg_thumb_stop,confidence,sample_size,insight_text";
+      const [tenantRes, globalRes] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/learned_patterns?user_id=eq.${encodeURIComponent(scopes.tenant.user_id)}&scope=eq.${scopes.tenant.scope}&is_winner=eq.true&confidence=gte.0.25&select=${fields}&order=confidence.desc&limit=10`, { headers: restHeaders }),
+        fetch(`${supabaseUrl}/rest/v1/learned_patterns?user_id=is.null&scope=eq.${scopes.global.scope}&is_winner=eq.true&confidence=gte.0.25&select=${fields}&order=confidence.desc&limit=5`, { headers: restHeaders }),
       ]);
-      const winners = winnersRes.ok ? await winnersRes.json() : [];
-      const antis = antiRes.ok ? await antiRes.json() : [];
+      const tenantPatterns = tenantRes.ok ? await tenantRes.json() : [];
+      const globalBenchmarks = globalRes.ok ? await globalRes.json() : [];
 
-      if (winners.length > 0 || antis.length > 0) {
+      if (tenantPatterns.length > 0 || globalBenchmarks.length > 0) {
         patternConstraintBlock = `\n\n════════════════════════════════════════
 PATTERN CONSTRAINT — MANDATORY FOR BRIEF
 ════════════════════════════════════════
 
-PROVEN WINNING PATTERNS (from real account data):
-${winners.map((w: any) => `• ${w.pattern_key}: ${w.ai_insight || ''} (impact: +${w.impact_pct}%, confidence: ${w.confidence}, samples: ${w.sample_size || '?'})`).join('\n')}
+ACCOUNT-OBSERVED CANDIDATE PATTERNS:
+${tenantPatterns.map((p: any) => `• ${p.pattern_key}: ${p.insight_text || ''} (confidence: ${p.confidence}, samples: ${p.sample_size || '?'})`).join('\n') || '• No qualifying tenant observations.'}
 
-${antis.length > 0 ? `ANTI-PATTERNS (proven to underperform):
-${antis.map((a: any) => `• AVOID: ${a.pattern_key}: ${a.ai_insight || ''} (impact: ${a.impact_pct}%)`).join('\n')}` : ''}
+GLOBAL BENCHMARK REFERENCES (not tenant evidence; never present as account truth):
+${globalBenchmarks.map((p: any) => `• ${p.pattern_key}: ${p.insight_text || ''} (confidence: ${p.confidence}, samples: ${p.sample_size || '?'})`).join('\n') || '• None available.'}
 
 RULES FOR BRIEF:
-1. "formats" MUST prioritize formats that match winning patterns. Cite which pattern supports each format choice.
-2. "visual_direction" MUST incorporate visual elements from winning patterns.
-3. "do_not" MUST include all anti-patterns explicitly.
-4. "key_messages" MUST align with proven messaging patterns when they exist.
-5. If no pattern fits a recommendation, state it transparently in the field.
+1. Treat tenant observations as candidates, not causal performance proof.
+2. Keep global references clearly labeled and separate from account observations.
+3. Never infer ROAS, CPA, conversion, or scalability from public-ad repetition.
+4. If no tenant observation fits a recommendation, state it transparently.
 ════════════════════════════════════════`;
       } else {
         patternConstraintBlock = `\n\n════════════════════════════════════════
-NO PROVEN PATTERNS YET
+NO QUALIFYING ACCOUNT-OBSERVED PATTERNS YET
 ════════════════════════════════════════
 This account has no statistically validated patterns yet.
 Build the brief on general best practices. Be transparent about this.
@@ -87,12 +89,12 @@ Build the brief on general best practices. Be transparent about this.
             "Content-Type": "application/json",
             Authorization: `Bearer ${svcKey}`,
           },
-          body: JSON.stringify({ action: "get_context", user_id }),
+          body: JSON.stringify({ action: "get_context", internal_user_id: user_id }),
         });
         if (loopRes.ok) {
           const loopData = await loopRes.json();
           if (loopData.has_data && loopData.context) {
-            loopContext = `\n\n--- ACCOUNT CREATIVE INTELLIGENCE (learned from this client's real ad data) ---\n${loopData.context}\n--- Use these insights to calibrate the brief. Favor proven patterns when applicable. ---`;
+            loopContext = `\n\n--- ACCOUNT CREATIVE INTELLIGENCE (learned from this client's real ad data) ---\n${loopData.context}\n--- Use these observations cautiously; they are not causal performance proof. ---`;
           }
         }
       } catch { /* loop context is optional */ }
