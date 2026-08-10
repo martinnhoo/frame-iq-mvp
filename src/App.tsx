@@ -125,11 +125,8 @@ const App = () => (
           <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* Raiz vai pro signup — LP eliminada, acesso é por convite. */}
-              {/* A raiz jogava direto no /signup: quem chegava por anúncio via um
-                  formulário antes de saber o que o produto faz. Agora tem uma
-                  página de vendas, e o cadastro continua a um clique. */}
-              <Route path="/" element={<Landing />} />
+              {/* Sem landing page: a raiz vai direto pro login. */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
 
               {/* ── Auth ────────────────────────────────────────────── */}
               <Route path="/login" element={<Login />} />
