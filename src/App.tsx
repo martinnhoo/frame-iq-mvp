@@ -42,7 +42,7 @@ const CreativePeople = lazy(() => import("./pages/CreativePeople"));
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
 const AdBriefAI        = lazy(() => import("./pages/dashboard/AdBriefAI"));
 const IntelligencePage = lazy(() => import("./pages/dashboard/IntelligencePage"));
-const Landing = lazy(() => import("./pages/Landing"));
+
 const AdDiary         = lazy(() => import("./pages/dashboard/AdDiary"));
 const AnalysesList     = lazy(() => import("./pages/dashboard/AnalysesList"));
 const AnalysisDetail   = lazy(() => import("./pages/dashboard/AnalysisDetail"));
@@ -125,11 +125,8 @@ const App = () => (
           <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* Raiz vai pro signup — LP eliminada, acesso é por convite. */}
-              {/* A raiz jogava direto no /signup: quem chegava por anúncio via um
-                  formulário antes de saber o que o produto faz. Agora tem uma
-                  página de vendas, e o cadastro continua a um clique. */}
-              <Route path="/" element={<Landing />} />
+              {/* Sem landing page: a raiz vai direto pro login. */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
 
               {/* ── Auth ────────────────────────────────────────────── */}
               <Route path="/login" element={<Login />} />

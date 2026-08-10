@@ -3916,6 +3916,61 @@ export type Database = {
           },
         ]
       }
+      ci_person_appearances: {
+        Row: {
+          ad_id: string
+          brand_id: string
+          cluster_id: string
+          confianca: number | null
+          created_at: string
+          id: string
+          origem: string
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          brand_id: string
+          cluster_id: string
+          confianca?: number | null
+          created_at?: string
+          id?: string
+          origem?: string
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          brand_id?: string
+          cluster_id?: string
+          confianca?: number | null
+          created_at?: string
+          id?: string
+          origem?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_person_appearances_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ci_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_person_appearances_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_person_appearances_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "ci_person_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ci_person_clusters: {
         Row: {
           ad_count: number
@@ -4439,6 +4494,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ci_term_family: {
+        Row: {
+          kind: string
+          label: string
+          ordem: number
+          slug: string
+        }
+        Insert: {
+          kind: string
+          label: string
+          ordem?: number
+          slug: string
+        }
+        Update: {
+          kind?: string
+          label?: string
+          ordem?: number
+          slug?: string
+        }
+        Relationships: []
       }
       ci_transcript_segments: {
         Row: {
@@ -7805,6 +7881,25 @@ export type Database = {
         }[]
       }
       ci_owns_brand: { Args: { p_brand_id: string }; Returns: boolean }
+      ci_person_next_label: { Args: { p_brand_id: string }; Returns: string }
+      ci_person_overview: {
+        Args: { p_brand_id: string }
+        Returns: {
+          ads: number
+          apelido: string
+          assets_unicos: number
+          ativos: number
+          cluster_id: string
+          duracao_media_s: number
+          exemplos: Json
+          formatos: Json
+          label: string
+          primeiro_visto: string
+          receitas: number
+          share_pct: number
+          ultimo_visto: string
+        }[]
+      }
       ci_product_playbook: {
         Args: { p_brand_id: string }
         Returns: {
