@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { resolveAuthenticatedTenant } from "../_shared/tenant-boundary.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,20 +26,24 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { action, user_id, variables, analysis_data, persona_id } = body;
-
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
+    const {
+      action,
+      user_id: requestedUserId,
+      internal_user_id: internalUserId,
+      variables,
+      analysis_data,
+      persona_id,
+    } = body;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supaFetch = supaFetchFactory(supabaseUrl, supabaseKey);
+    const sb = createClient(supabaseUrl, supabaseKey);
 
     // ── CRON MODE: re-learn for ALL users with creative_entries ──────────────
     // Called by pg_cron every Monday 3h UTC — recalibrates patterns with time-decay
     if (action === "cron_relearn" || (!action && isCronAuthorized(req))) {
       if (!isCronAuthorized(req)) return unauthorizedResponse(corsHeaders);
-      const sb = createClient(supabaseUrl, supabaseKey);
       // Get distinct user_ids with creative_entries
       const { data: users } = await sb
         .from("creative_entries" as any)
@@ -49,7 +54,7 @@ serve(async (req) => {
       for (const uid of uniqueUsers) {
         try {
           await sb.functions.invoke("creative-loop", {
-            body: { action: "learn", user_id: uid }
+            body: { action: "learn", internal_user_id: uid }
           });
           processed++;
         } catch { /* continue */ }
@@ -57,6 +62,32 @@ serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, users_processed: processed }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
+    }
+
+    // Normal calls are always pinned to the verified JWT subject. Service/cron
+    // calls use a separate field and are accepted only through cron-auth.
+    let user_id: string;
+    if (isCronAuthorized(req)) {
+      if (!internalUserId || typeof internalUserId !== "string") {
+        return new Response(JSON.stringify({ error: "internal_user_id_required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      user_id = internalUserId;
+    } else {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      if (!authHeader.startsWith("Bearer ")) return unauthorizedResponse(corsHeaders);
+      const { data: { user }, error } = await sb.auth.getUser(authHeader.slice(7));
+      if (error || !user) return unauthorizedResponse(corsHeaders);
+      try {
+        user_id = resolveAuthenticatedTenant(user.id, requestedUserId);
+      } catch {
+        return new Response(JSON.stringify({ error: "tenant_mismatch" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // ── ACTION: store_analysis ──
@@ -97,14 +128,14 @@ serve(async (req) => {
     if (action === "get_context") {
       const fetches: Promise<Response>[] = [
         supaFetch(`creative_memory?user_id=eq.${user_id}&select=*&order=created_at.desc&limit=50`),
-        supaFetch(`learned_patterns?user_id=eq.${user_id}&is_winner=eq.true&select=*&order=confidence.desc&limit=10`),
+        supaFetch(`learned_patterns?user_id=eq.${user_id}&scope=eq.tenant&is_winner=eq.true&select=*&order=confidence.desc&limit=10`),
         supaFetch(`user_ai_profile?user_id=eq.${user_id}&select=*&limit=1`),
         supaFetch(`chat_memory?user_id=eq.${user_id}&select=memory_text,memory_type,importance&order=importance.desc&limit=15`),
       ];
       // Also fetch persona-specific patterns from detect-patterns system
       if (persona_id) {
         fetches.push(
-          supaFetch(`learned_patterns?user_id=eq.${user_id}&persona_id=eq.${persona_id}&select=*&order=confidence.desc&limit=10`)
+          supaFetch(`learned_patterns?user_id=eq.${user_id}&scope=eq.tenant&persona_id=eq.${persona_id}&select=*&order=confidence.desc&limit=10`)
         );
       }
       const [memoriesRes, patternsRes, profileRes, chatMemoryRes, personaPatternsRes] = await Promise.all(fetches);
@@ -143,7 +174,7 @@ serve(async (req) => {
       }
 
       if (patterns?.length) {
-        contextLines.push(`\nWINNING PATTERNS (proven by data):`);
+        contextLines.push(`\nACCOUNT-OBSERVED CANDIDATE PATTERNS:`);
         for (const p of patterns.slice(0, 5)) {
           const vars = Object.entries(p.variables || {})
             .filter(([_, v]) => v !== "unknown")
@@ -272,8 +303,9 @@ serve(async (req) => {
       const winnerPatterns = patterns.filter(p => p.is_winner);
       let insights: Record<string, string> = {};
 
-      if (winnerPatterns.length > 0) {
-        const prompt = `Analyze these winning ad creative patterns and write a 1-sentence insight for each explaining WHY it works. Be specific.
+      const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+      if (winnerPatterns.length > 0 && ANTHROPIC_API_KEY) {
+        const prompt = `Analyze these account-observed higher-metric creative patterns and write a 1-sentence, non-causal hypothesis for each. Be specific and do not claim the pattern caused performance.
 
 Patterns:
 ${winnerPatterns.map(p => `- ${p.pattern_key}: CTR ${(p.avg_ctr! * 100).toFixed(2)}%, ${p.sample_size} samples, confidence ${(p.confidence * 100).toFixed(0)}%`).join("\n")}
@@ -297,14 +329,14 @@ Return JSON: { "pattern_key": "insight text", ... }`;
 
       for (const p of patterns) {
         const body = {
-          user_id, pattern_key: p.pattern_key, variables: p.variables,
+          user_id, scope: "tenant", pattern_key: p.pattern_key, variables: p.variables,
           avg_ctr: p.avg_ctr, avg_cpc: p.avg_cpc, avg_roas: p.avg_roas,
           avg_thumb_stop: p.avg_thumb_stop, sample_size: p.sample_size,
           confidence: p.confidence, is_winner: p.is_winner,
           insight_text: insights[p.pattern_key] || null,
           last_updated: new Date().toISOString(),
         };
-        await supaFetch(`learned_patterns?user_id=eq.${user_id}&pattern_key=eq.${encodeURIComponent(p.pattern_key)}`, { method: "DELETE" });
+        await supaFetch(`learned_patterns?user_id=eq.${user_id}&scope=eq.tenant&pattern_key=eq.${encodeURIComponent(p.pattern_key)}`, { method: "DELETE" });
         await supaFetch("learned_patterns", { method: "POST", body: JSON.stringify(body) });
       }
 
@@ -318,7 +350,7 @@ Return JSON: { "pattern_key": "insight text", ... }`;
     if (action === "predict") {
       if (!variables) throw new Error("Missing variables for prediction");
 
-      const pRes = await supaFetch(`learned_patterns?user_id=eq.${user_id}&select=*&order=confidence.desc`);
+      const pRes = await supaFetch(`learned_patterns?user_id=eq.${user_id}&scope=eq.tenant&select=*&order=confidence.desc`);
       const patterns = await pRes.json();
 
       if (!patterns?.length) {
@@ -360,7 +392,7 @@ Return JSON: { "pattern_key": "insight text", ... }`;
       const rawScore = Math.round(Math.min(Math.max(ratio * 50 + 25, 10), 98));
       const avgConfidence = totalConf / matching.length;
 
-      let reasoning = `Based on ${matching.length} similar patterns, this combination ${rawScore >= 60 ? "aligns with your winning creatives" : "hasn't shown strong results yet"}.`;
+      let reasoning = `Based on ${matching.length} similar account observations, this combination ${rawScore >= 60 ? "aligns with creatives that had higher observed metrics" : "hasn't shown strong observed metrics yet"}. This is not causal proof.`;
 
       try {
         const aiRes = await fetch("https://api.anthropic.com/v1/messages", {

@@ -6687,7 +6687,7 @@ export type Database = {
           pattern_key: string
           persona_id: string | null
           sample_size: number | null
-          scope: string
+          scope: "tenant" | "global_benchmark"
           user_id: string | null
           variables: Json
         }
@@ -6705,7 +6705,7 @@ export type Database = {
           pattern_key: string
           persona_id?: string | null
           sample_size?: number | null
-          scope?: string
+          scope?: "tenant" | "global_benchmark"
           user_id?: string | null
           variables?: Json
         }
@@ -6723,7 +6723,7 @@ export type Database = {
           pattern_key?: string
           persona_id?: string | null
           sample_size?: number | null
-          scope?: string
+          scope?: "tenant" | "global_benchmark"
           user_id?: string | null
           variables?: Json
         }
