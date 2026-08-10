@@ -39,6 +39,11 @@ from typing import Any
 
 from .config import Settings
 
+# v7: ÂNGULO e MECANISMO passam a ter FAMÍLIA de lista fechada. Ver o bloco
+#     FAMILIAS_ANGULO abaixo: 20 anúncios estavam produzindo 20 receitas, todas
+#     com 1 asset e 0 variações, porque "stays in place", "stays in place +
+#     no wires" e "stays in place + thick band" são três chaves diferentes para
+#     uma ideia só. A regra 9 PEDIA reuso de rótulo; texto livre não obedece.
 # v2: regras 8 e 9 — label em inglês, curto e canônico.
 # v6: response_schema na API. O formato deixa de ser pedido e passa a ser
 #     imposto — campo com enum não consegue voltar inválido. As regras de
@@ -59,7 +64,7 @@ from .config import Settings
 #
 # Sem bumpar a versão, resultado de prompt velho e novo ficam indistinguíveis no
 # banco, e "este anúncio já foi reanalisado?" não tem resposta.
-PROMPT_VERSION = "semantic/v6"
+PROMPT_VERSION = "semantic/v7"
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
@@ -107,8 +112,10 @@ _SCHEMA_HINT = """{
   "hooks": [{"kind": "<UMA de: verbal, visual, written>", "label": "", "timestamp_s": 0.0,
              "evidence": "", "evidence_kind": "<UMA de: speech, onscreen, copy, visual>",
              "confidence": 0.0}],
-  "angles": [{"label": "", "evidence": "", "confidence": 0.0}],
-  "mechanisms": [{"label": "", "evidence": "", "confidence": 0.0}],
+  "angles": [{"family": "<UMA de: comfort, fit, support, appearance, confidence, convenience, time_saving, durability, performance, price_value, offer_urgency, health_wellbeing, safety, versatility, social_proof, availability, sustainability, unknown>",
+              "label": "", "evidence": "", "confidence": 0.0}],
+  "mechanisms": [{"family": "<UMA de: material, construction, shape_design, technology, adjustability, coverage, ingredient, process, service, unknown>",
+                  "label": "", "evidence": "", "confidence": 0.0}],
   "promises": [{"label": "", "evidence": "", "timestamp_s": 0.0, "confidence": 0.0}],
   "proofs": [{"label": "",
               "proof_type": "<UMA de: demonstration, testimonial, before_after, statistic, authority, social_proof>",
@@ -161,6 +168,81 @@ FUNCOES_ENUM = [
     "unknown",
 ]
 
+# ── Famílias de ângulo e de mecanismo ───────────────────────────────────────
+#
+# ── O defeito que isto corrige ──────────────────────────────────────────────
+# Com 20 anúncios reais da Shapermint, o sistema montou 20 receitas — cada uma
+# com 1 anúncio e 0 variações. Ou seja: a tela de receitas não estava agrupando
+# nada, só listando anúncios com outro nome. Os rótulos que o modelo devolveu:
+#
+#     stays in place              comfortable fit + no wires
+#     stays in place + no wires   wire-free comfort + wire-free construction
+#     stays in place + thick band comfort
+#     stays in place + wireless design
+#
+# É UMA ideia escrita de sete jeitos. O canonicalizador do banco tira acento e
+# stopword; ele não tem como saber que "no wires" e "wireless design" são a
+# mesma coisa, e nunca terá — isso é julgamento semântico, não normalização de
+# string.
+#
+# ── Por que família fechada, e não mais uma regra de prompt ─────────────────
+# A regra 9 já dizia, em letras maiúsculas, que rótulos iguais deviam se
+# repetir entre anúncios. O modelo não obedeceu. É a MESMA lição do
+# `response_schema`: o que precisa ser garantido se garante no contrato, não no
+# pedido. Escrever a regra 9 com mais ênfase seria a nona volta no mesmo
+# círculo.
+#
+# ── O que se perde, dito na cara ────────────────────────────────────────────
+# Família é grossa de propósito. "não sai do lugar" e "não aperta" caem as duas
+# em `fit`, e alguém pode querer separá-las. A especificidade não some: ela vai
+# para `label`, que continua texto livre e vira EIXO DE VARIAÇÃO — a mesma
+# solução que já usei para prova. A receita passa a dizer "ajuste, testado com
+# sete redações diferentes", que é uma frase útil; sete receitas de um anúncio
+# cada não são.
+#
+# ── Por que a lista é genérica, e não de shapewear ──────────────────────────
+# A marca seguinte pode ser de suplemento ou de eletrônico. Uma lista com
+# "sem aro" e "modelagem" só serviria para uma vertical e a próxima importação
+# cairia inteira em `unknown`. Estas famílias são razões de compra, que
+# atravessam categoria.
+FAMILIAS_ANGULO: dict[str, str] = {
+    "comfort":          "conforto",
+    "fit":              "caimento e ajuste",
+    "support":          "suporte e sustentação",
+    "appearance":       "aparência e silhueta",
+    "confidence":       "confiança e autoestima",
+    "convenience":      "praticidade",
+    "time_saving":      "economia de tempo",
+    "durability":       "durabilidade e qualidade",
+    "performance":      "desempenho e eficácia",
+    "price_value":      "preço e custo-benefício",
+    "offer_urgency":    "oferta e urgência",
+    "health_wellbeing": "saúde e bem-estar",
+    "safety":           "segurança",
+    "versatility":      "versatilidade",
+    "social_proof":     "aprovação e pertencimento",
+    "availability":     "onde comprar",
+    "sustainability":   "sustentabilidade",
+    # Como em scene_function: sem "unknown" num campo obrigatório de enum, o
+    # modelo é forçado a escolher mesmo sem base, e chuta. Chute entra no banco
+    # com a mesma cara de observação.
+    "unknown":          "não identificado",
+}
+
+FAMILIAS_MECANISMO: dict[str, str] = {
+    "material":      "material e tecido",
+    "construction":  "construção e estrutura",
+    "shape_design":  "formato e modelagem",
+    "technology":    "tecnologia",
+    "adjustability": "regulagem",
+    "coverage":      "cobertura",
+    "ingredient":    "ingrediente ou fórmula",
+    "process":       "modo de uso",
+    "service":       "serviço, garantia ou entrega",
+    "unknown":       "não identificado",
+}
+
+
 def _txt(desc: str = "") -> dict[str, Any]:
     return {"type": "STRING", "description": desc} if desc else {"type": "STRING"}
 
@@ -210,16 +292,25 @@ RESPONSE_SCHEMA: dict[str, Any] = {
                                   "enum": ["speech", "onscreen", "copy", "visual", "inferred"]},
                 "confidence": {"type": "NUMBER"}},
             "required": ["kind", "label", "evidence"]}},
+        # `family` é o que agrupa e por isso é enum; `label` é o que distingue
+        # e por isso é livre. Separar os dois papéis é a correção inteira: antes
+        # um campo só tentava fazer as duas coisas e não fazia nenhuma bem.
         "angles": {"type": "ARRAY", "items": {
             "type": "OBJECT",
-            "properties": {"label": _txt("POR QUE a pessoa deveria se importar"),
-                           "evidence": _txt(), "confidence": {"type": "NUMBER"}},
-            "required": ["label", "evidence"]}},
+            "properties": {
+                "family": {"type": "STRING", "enum": list(FAMILIAS_ANGULO),
+                           "description": "a razão de compra, da lista fechada"},
+                "label": _txt("como ESTE anúncio diz isso, 2-4 palavras em inglês"),
+                "evidence": _txt(), "confidence": {"type": "NUMBER"}},
+            "required": ["family", "evidence"]}},
         "mechanisms": {"type": "ARRAY", "items": {
             "type": "OBJECT",
-            "properties": {"label": _txt("COMO o produto entrega — material, construção"),
-                           "evidence": _txt(), "confidence": {"type": "NUMBER"}},
-            "required": ["label", "evidence"]}},
+            "properties": {
+                "family": {"type": "STRING", "enum": list(FAMILIAS_MECANISMO),
+                           "description": "COMO o produto entrega, da lista fechada"},
+                "label": _txt("a característica concreta, 2-4 palavras em inglês"),
+                "evidence": _txt(), "confidence": {"type": "NUMBER"}},
+            "required": ["family", "evidence"]}},
         "promises": {"type": "ARRAY", "items": {
             "type": "OBJECT",
             "properties": {"label": _txt(), "evidence": _txt(),
@@ -301,34 +392,35 @@ REGRAS OBRIGATÓRIAS
    onde há repetição. `evidence` é CITAÇÃO e fica no idioma original — traduzir
    evidência seria falsear o que a marca disse.
 
-9. `label` CURTO e CANÔNICO: 2 a 4 palavras, minúsculas, sem adjetivo de
-   intensidade. Descreva a CATEGORIA, não a execução daquele anúncio.
+9. `label` CURTO: 2 a 4 palavras, minúsculas, sem adjetivo de intensidade.
 
-   Sim:  "stays in place"  ·  "wire-free comfort"  ·  "social proof"
-   Não:  "Superior comfort with no wire and jelly strips" (execução, não categoria)
-   Não:  "Comfort"  (vago demais para distinguir de qualquer outro)
-
-   Se dois anúncios defendem a mesma ideia com palavras diferentes, o label tem
-   que ser IGUAL nos dois. Prefira reusar um rótulo óbvio a inventar um novo
-   mais preciso.
+   Sim:  "stays in place"  ·  "no wires"  ·  "40% off"
+   Não:  "Superior comfort with no wire and jelly strips"
 
 10. ÂNGULO e MECANISMO são coisas diferentes, e confundir os dois é o erro mais
     caro desta análise.
 
-    ÂNGULO    = POR QUE a pessoa deveria se importar. O benefício, a promessa,
-                a razão de compra.
-    MECANISMO = COMO o produto entrega aquilo. A característica física, o
-                material, a construção, a tecnologia.
+    ÂNGULO    = POR QUE a pessoa deveria se importar. A razão de compra.
+    MECANISMO = COMO o produto entrega aquilo. A característica concreta.
 
-    Exemplo:  "não sai do lugar" é ÂNGULO.
-              "faixas de silicone" é o MECANISMO que faz não sair do lugar.
+    Exemplo:  "não sai do lugar" é ÂNGULO (família `fit`).
+              "faixas de silicone" é o MECANISMO (família `material`).
 
-    Um anúncio pode ter ângulo sem mecanismo explícito — nesse caso devolva
-    `mechanisms` vazio. NÃO invente um mecanismo para preencher, e NÃO repita
-    o ângulo com outras palavras: mecanismo repetido do ângulo destrói o
-    agrupamento, porque cria distinção onde não há.
+    Os dois têm DOIS campos, com papéis distintos:
 
-    Mecanismo também precisa de `evidence`, como todo o resto.
+      `family` — vem de lista fechada e é o que AGRUPA anúncios. Escolha a
+                 família pela razão de compra, não pelas palavras usadas:
+                 "stays in place", "no slipping" e "não escorrega" são todas
+                 `fit`. É esperado e desejável que anúncios diferentes repitam
+                 a mesma família — é assim que a receita se forma.
+
+      `label`  — como ESTE anúncio disse. É o que DISTINGUE dentro da família,
+                 e vira eixo de variação. Aqui a redação específica é bem-vinda.
+
+    Use `unknown` quando não houver base. Não force uma família para preencher.
+
+    Um anúncio pode ter ângulo sem mecanismo explícito — devolva `mechanisms`
+    vazio. NÃO invente mecanismo, e NÃO repita o ângulo com outras palavras.
 
 11. `scene_function` descreve o PAPEL da cena no roteiro, não o que aparece
     nela. Uma pessoa falando sobre o resultado é `proof`, mesmo com o produto
@@ -587,6 +679,69 @@ def _funcao_de_cena(bruto: Any, violacoes: list[str] | None = None) -> str | Non
     return None
 
 
+# Sinônimos que o modelo devolve com frequência e que têm família óbvia.
+# Existe pela mesma razão de SINONIMOS_DE_CENA: com response_schema isto não
+# deveria ser alcançável, e justamente por isso o caminho conta violação. Se um
+# dia começar a contar, o contrato deixou de valer e alguém precisa saber.
+SINONIMOS_DE_FAMILIA = {
+    "price": "price_value", "value": "price_value", "cost": "price_value",
+    "offer": "offer_urgency", "urgency": "offer_urgency", "discount": "offer_urgency",
+    "health": "health_wellbeing", "wellbeing": "health_wellbeing",
+    "wellness": "health_wellbeing",
+    "aesthetics": "appearance", "looks": "appearance", "style": "appearance",
+    "self_esteem": "confidence", "self-esteem": "confidence",
+    "ease": "convenience", "convenience_ease": "convenience",
+    "proof": "social_proof", "testimonial": "social_proof",
+    "quality": "durability", "efficacy": "performance", "results": "performance",
+    "fabric": "material", "composition": "material",
+    "design": "shape_design", "shape": "shape_design", "cut": "shape_design",
+    "tech": "technology", "patent": "technology",
+    "adjustment": "adjustability", "fitting": "adjustability",
+    "formula": "ingredient", "ingredients": "ingredient",
+    "usage": "process", "method": "process",
+    "warranty": "service", "shipping": "service", "delivery": "service",
+}
+
+
+def _familia(bruto: Any, familias: dict[str, str], campo: str,
+             violacoes: list[str] | None = None) -> str | None:
+    """
+    Devolve UMA família válida da lista, ou None.
+
+    None quando o modelo diz `unknown` — que é resposta legítima do contrato —
+    ou quando o valor não é decodificável. Nos dois casos o item é descartado
+    em vez de virar um ângulo inventado: uma receita montada sobre família
+    chutada agrupa anúncios que não têm nada a ver, e isso é pior que uma
+    receita a menos.
+    """
+    if not bruto:
+        return None
+    texto = str(bruto).strip().lower().replace(" ", "_")
+    if not texto or texto == "unknown":
+        return None
+    if texto in familias:
+        return texto
+
+    # Daqui para baixo o response_schema falhou. Ainda tentamos aproveitar, mas
+    # sempre registrando — recuperação silenciosa esconde contrato quebrado.
+    alvo = SINONIMOS_DE_FAMILIA.get(texto)
+    if alvo in familias:
+        if violacoes is not None:
+            violacoes.append(f"{campo}.family fora do contrato, mapeada: {bruto!r} → {alvo}")
+        return alvo
+    # O modelo já devolveu o cardápio inteiro uma vez ("hook|problem"); pode
+    # repetir aqui.
+    for parte in texto.split("|"):
+        parte = SINONIMOS_DE_FAMILIA.get(parte.strip(), parte.strip())
+        if parte in familias and parte != "unknown":
+            if violacoes is not None:
+                violacoes.append(f"{campo}.family veio em lista, usada a primeira: {bruto!r}")
+            return parte
+    if violacoes is not None:
+        violacoes.append(f"{campo}.family inválida, descartada: {bruto!r}")
+    return None
+
+
 def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dict[str, Any]:
     """
     Converte a saída do modelo no formato que o banco espera, descartando o que
@@ -611,6 +766,43 @@ def normalize_semantic(raw: dict[str, Any], *, provider: str, model: str) -> dic
                 continue
             label = str(item.get("label") or "").strip()
             evidence = str(item.get("evidence") or "").strip()
+
+            # ── Ângulo e mecanismo saem como DOIS termos ────────────────────
+            #
+            # A família agrupa; o rótulo distingue. Guardar os dois no mesmo
+            # termo faria um dos dois papéis vencer, e foi o que produziu 20
+            # receitas de um anúncio cada.
+            #
+            # Repare que aqui `label` NÃO é obrigatório: o que precisa existir é
+            # família + evidência. Um ângulo sem redação específica ainda é um
+            # ângulo, e antes era descartado por falta de label.
+            if kind in ("angle", "mechanism"):
+                if not evidence:
+                    dropped += 1
+                    continue
+                familias = FAMILIAS_ANGULO if kind == "angle" else FAMILIAS_MECANISMO
+                familia = _familia(item.get("family"), familias, kind, violacoes)
+                if familia is None:
+                    dropped += 1
+                    continue
+                comum = {
+                    "confidence": _clamp(item.get("confidence")),
+                    "evidence": evidence[:1000],
+                    "evidence_kind": str(item.get("evidence_kind") or "inferred"),
+                    "timestamp_s": _num(item.get("timestamp_s")),
+                    "source": provider,
+                    "model_version": model,
+                }
+                terms.append({"kind": kind, "slug": familia,
+                              "label": familias[familia], **comum})
+                # O detalhe só entra se disser algo além da família. "comfort"
+                # dentro da família conforto não é variação, é eco — e encheria
+                # o eixo de variação com ruído que parece sinal.
+                if label and _slug(label) != familia:
+                    terms.append({"kind": f"{kind}_detail", "slug": _slug(label),
+                                  "label": label[:200], **comum})
+                continue
+
             if not label or not evidence:
                 dropped += 1
                 continue

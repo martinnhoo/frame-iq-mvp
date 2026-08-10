@@ -92,13 +92,22 @@ def main() -> int:
             f"('333333{i}3-3333-3333-3333-333333333333','{MARCA}','{USER}','AD_{i}',"
             f"'video','{{}}'::jsonb,{demo},{ativo});")
 
-    termos = [("angle", "conforto"), ("angle", "preco"), ("angle", "coelho"),
-              ("hook", "hook-a"), ("hook", "hook-b"), ("hook", "hook-c")]
-    for i, (kind, slug) in enumerate(termos):
+    # B6: o SLUG do ângulo tem que ser uma família de ci_term_family, senão o
+    # termo não forma receita. O LABEL continua livre — e é ele que
+    # ci_terms_ranked exibe, por isso as asserções abaixo seguem falando de
+    # "conforto" e "preco".
+    #
+    # "coelho" fica de fora da lista de propósito: ele só existe para provar
+    # que termo de anúncio DEMO não entra em agregado, e nunca precisa agrupar.
+    termos = [("angle", "comfort", "conforto"), ("angle", "price_value", "preco"),
+              ("angle", "coelho", "coelho"),
+              ("hook", "hook-a", "hook-a"), ("hook", "hook-b", "hook-b"),
+              ("hook", "hook-c", "hook-c")]
+    for i, (kind, slug, label) in enumerate(termos):
         db.psql(
             f"insert into public.ci_taxonomy_terms(id,brand_id,user_id,kind,slug,label)"
             f" values ('444444{i}4-4444-4444-4444-444444444444','{MARCA}','{USER}',"
-            f"'{kind}','{slug}','{slug}');")
+            f"'{kind}','{slug}','{label}');")
 
     # A,B,C → conforto + hook próprio | D,E → preço | DEMO → coelho
     lig = [(0, 0), (1, 0), (2, 0), (0, 3), (1, 4), (2, 5), (3, 1), (4, 1), (5, 2)]

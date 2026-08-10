@@ -98,9 +98,13 @@ def main() -> int:
             f" values ('333333{i}3-3333-3333-3333-333333333333','{MARCA}','{USER}',"
             f"'AD_{nome}','video','{{}}'::jsonb);")
 
+    # B6: ângulo e mecanismo agora vêm de lista fechada (ci_term_family). Slug
+    # fora da lista não forma assinatura — de propósito, para que rótulo antigo
+    # de texto livre pare de fragmentar receita. Por isso este cenário usa os
+    # slugs das famílias, e não mais "conforto"/"preco" escritos à mão.
     for i, (kind, slug) in enumerate(
-            [("angle", "conforto"), ("angle", "preco"),
-             ("proof", "antes-depois"), ("mechanism", "tecido")]):
+            [("angle", "comfort"), ("angle", "price_value"),
+             ("proof", "antes-depois"), ("mechanism", "material")]):
         db.psql(
             f"insert into public.ci_taxonomy_terms(id,brand_id,user_id,kind,slug,label)"
             f" values ('444444{i}4-4444-4444-4444-444444444444','{MARCA}','{USER}',"
@@ -139,13 +143,17 @@ def main() -> int:
 
     # v2: a assinatura é ÂNGULO + MECANISMO. A prova saiu — ela é execução da
     # mesma ideia, e mantê-la na assinatura quebrava um ângulo em várias
-    # receitas. Por isso o nome agora é "conforto", não "conforto + antes-depois".
+    # receitas.
+    #
+    # v3 (B6): o NOME da receita passou a vir de ci_term_family, não do que o
+    # modelo escreveu. É por isso que se espera "preço e custo-benefício" e não
+    # "price_value": o slug é a chave, o rótulo da tabela é o que a tela mostra.
     check("a receita dominante junta os 3 de mesmo ângulo",
           receitas.get("conforto", (0, 0))[0] == 3, str(receitas))
     check("ângulo diferente NÃO é agrupado junto",
-          receitas.get("preco", (0, 0))[0] == 1, str(receitas))
+          receitas.get("preço e custo-benefício", (0, 0))[0] == 1, str(receitas))
     check("mecanismo sozinho vira receita própria",
-          receitas.get("tecido", (0, 0))[0] == 1)
+          receitas.get("material e tecido", (0, 0))[0] == 1, str(receitas))
     check("ad_count bate com o número de membros em toda receita",
           all(a == m for a, m in receitas.values()), str(receitas))
 

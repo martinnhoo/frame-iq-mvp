@@ -160,6 +160,12 @@ export default function CreativeHealth() {
     ["proof", "Provas"], ["objection", "Objeções"], ["offer", "Ofertas"],
     ["cta", "CTAs"], ["visual_style", "Estilo visual (formato)"],
     ["story_structure", "Estrutura de história"], ["mechanism", "Mecanismos"],
+    // Os dois _detail são a redação específica que antes disputava com a
+    // família o papel de chave de agrupamento. Ficam listados para que um zero
+    // aqui, com ângulos preenchidos ao lado, apareça — significaria que o
+    // modelo está devolvendo família sem dizer como o anúncio a expressou, e
+    // os eixos de variação ficariam vazios sem explicação.
+    ["angle_detail", "Ângulos · redação"], ["mechanism_detail", "Mecanismos · redação"],
   ] as const;
 
   return (

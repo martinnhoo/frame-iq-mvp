@@ -245,9 +245,14 @@ export default function CreativeOverview() {
     if (r?.anuncios_sem_sinal > 0) {
       // Não é erro, mas o usuário precisa saber que parte da base ficou fora —
       // senão a soma das receitas não bate com o total de anúncios e parece bug.
-      setErro(`${r.anuncios_sem_sinal} anúncio(s) ficaram fora: a análise não ` +
-              `extraiu ângulo, mecanismo nem prova deles. Sem nenhum dos três não ` +
-              `há assinatura para agrupar.`);
+      // O motivo mais comum hoje NÃO é "o modelo não extraiu": é análise antiga,
+      // de quando ângulo era texto livre. Dizer só "não extraiu" mandaria quem
+      // lê investigar o modelo, quando a saída é clicar em Reanalisar.
+      setErro(`${r.anuncios_sem_sinal} anúncio(s) ficaram fora do agrupamento. ` +
+              `Ou a análise não achou ângulo nem mecanismo, ou ela é anterior à ` +
+              `versão atual — ângulo virou lista fechada e rótulo antigo de texto ` +
+              `livre não forma mais receita. O botão Reanalisar na barra resolve ` +
+              `o segundo caso.`);
     }
     await carregar(marca.id);
   };
@@ -783,10 +788,21 @@ export default function CreativeOverview() {
                   {t("panel_people")}
                 </Head>
                 {pessoas.length === 0 ? (
-                  <Falta pendente motivo={
-                    "O agrupamento de pessoas ainda não foi escrito. Quando for, cada grupo vem com " +
-                    "identificador anônimo (PERSON_014) e só o que dá para observar: em quantos criativos " +
-                    "aparece, duração média, formato. Nunca nome, etnia, idade ou qualquer atributo sensível."
+                  /* Este bloco dizia "ainda não foi escrito" DEPOIS de a tela
+                     existir. Texto de estado que não acompanha o estado é pior
+                     que texto nenhum: ele afirma com confiança uma coisa falsa,
+                     e quem lê não vai clicar para conferir. */
+                  <Falta motivo={
+                    "Ninguém foi agrupado ainda. O agrupamento é seu: não existe reconhecimento " +
+                    "facial aqui, e o identificador é anônimo por construção (PERSON_014), nunca " +
+                    "nome, etnia, idade ou qualquer atributo sensível."
+                  } acao={
+                    <a href="/ci/pessoas" style={{
+                      display: "inline-flex", alignItems: "center", gap: 7,
+                      background: T.violetForte, color: "#0B0713", border: "none",
+                      borderRadius: 8, padding: "7px 13px", fontSize: 12.4,
+                      fontWeight: 620, textDecoration: "none",
+                    }}>Agrupar pessoas</a>
                   } />
                 ) : (
                   <div style={{ display: "grid", gap: 9 }}>
