@@ -411,7 +411,7 @@ export class SpreshClient {
 
   async getBrandAdsPage(
     params: BrandAdsParams,
-  ): Promise<{ ads: SpreshAd[]; nextCursor: string | null; hasMore: boolean; creditsSpent: number }> {
+  ): Promise<{ ads: SpreshAd[]; nextCursor: string | null; hasMore: boolean; creditsSpent: number; responsePayload: SpreshAdsResponse }> {
     const worstCase = this.pageWorstCase();
     const reservation = this.budget.reserve(worstCase);
     try {
@@ -461,7 +461,7 @@ export class SpreshClient {
     const hasMore = typeof data.has_more === "boolean" ? data.has_more : Boolean(nextCursor);
 
     this.logger({ method: "GET", path, durationMs: 0, attempt: 1, creditsCharged: actual, adsReturned: ads.length });
-    return { ads, nextCursor, hasMore, creditsSpent: actual };
+    return { ads, nextCursor, hasMore, creditsSpent: actual, responsePayload: data };
   }
 
   /** GET /v1/ad-details/:id — 1 crédito quando devolve dados, 0 quando não. */
@@ -494,7 +494,17 @@ export class SpreshClient {
    * `stopReason` existe para a UI dizer POR QUE parou. "Vieram 20 de 3.000" com
    * motivo 'max_ads' é informação; sem motivo, parece bug.
    */
-  async collectBrandAds(params: BrandAdsParams & { maxAds: number }): Promise<{
+  async collectBrandAds(params: BrandAdsParams & {
+    maxAds: number;
+    onPage?: (page: {
+      pageIndex: number;
+      cursorIn: string | null;
+      cursorOut: string | null;
+      hasMore: boolean;
+      creditsSpent: number;
+      responsePayload: SpreshAdsResponse;
+    }) => Promise<void>;
+  }): Promise<{
     ads: SpreshAd[];
     pagesFetched: number;
     creditsSpent: number;
@@ -538,6 +548,16 @@ export class SpreshClient {
       }
 
       const page = await this.getBrandAdsPage({ ...params, cursor });
+      // Durability boundary: the caller persists this exact paid response and
+      // this await must complete before normalization or aggregation begins.
+      await params.onPage?.({
+        pageIndex: pagesFetched,
+        cursorIn: cursor ?? null,
+        cursorOut: page.nextCursor,
+        hasMore: page.hasMore,
+        creditsSpent: page.creditsSpent,
+        responsePayload: page.responsePayload,
+      });
       pagesFetched++;
       creditsSpent += page.creditsSpent;
       collected.push(...page.ads);
