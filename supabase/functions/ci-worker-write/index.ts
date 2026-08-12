@@ -12,7 +12,7 @@
  * Acabou saindo melhor que a ideia original de mandar a service role para o
  * Fly. A chave nunca sai do Supabase, e a superfície de ataque deixa de ser
  * "acesso total ao banco" e passa a ser exatamente o que está permitido aqui:
- * tabelas com prefixo ci_, uma lista fechada de RPCs, e o bucket ci-media.
+ * uma matriz por tabela/ação/identidade, RPCs fechadas e chaves brand-scoped.
  *
  * ── Arquivo grande NÃO passa por aqui ──────────────────────────────────────
  * Upload de vídeo usa URL assinada: a função devolve o token, e o worker faz o
@@ -37,15 +37,12 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-/**
- * Só tabelas do módulo. Sem isto, um segredo vazado viraria escrita em
- * `profiles`, `user_credits` ou qualquer outra coisa do produto.
- */
 /** Lista fechada. Nenhuma outra função do banco é chamável por aqui. */
 const RPC_ALLOWLIST = new Set([
   "ci_claim_job",
   "ci_reap_stale_jobs",
   "ci_refresh_taxonomy_stats",
+  "ci_enqueue_legacy_mixed_job",
 ]);
 
 const BUCKET = "ci-media";
@@ -178,6 +175,13 @@ Deno.serve(async (req) => {
       if (body.fn === "ci_refresh_taxonomy_stats") {
         const brandId = String(body.args?.p_brand_id ?? "");
         if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(brandId)) {
+          return json({ error: "rpc_args_not_allowed" }, 400);
+        }
+      }
+      if (body.fn === "ci_enqueue_legacy_mixed_job") {
+        const ids = [body.args?.p_asset_id, body.args?.p_brand_id, body.args?.p_user_id];
+        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (ids.some((value) => !uuid.test(String(value ?? ""))) || body.args?.p_contract_version !== "legacy/semantic-v7") {
           return json({ error: "rpc_args_not_allowed" }, 400);
         }
       }

@@ -39,16 +39,15 @@ const TABLE_POLICIES: Record<string, TablePolicy> = {
   },
   ci_ad_assets: {
     actions: ["select", "insert"], selectIdentity: ["id", "asset_id", "ad_id"],
-    insertRequired: ["ad_id", "asset_id", "user_id"], conflicts: ["ad_id,asset_id,role"],
+    insertRequired: ["ad_id", "asset_id", "brand_id", "user_id"], conflicts: ["ad_id,asset_id,role"],
   },
   ci_ads: {
     actions: ["select", "update"], selectIdentity: ["id"], updateIdentity: ["id"],
     updateColumns: ["analysis_status"],
   },
   ci_analysis_jobs: {
-    actions: ["insert", "update"], insertRequired: ["brand_id", "user_id", "asset_id"],
+    actions: ["update"],
     updateIdentity: ["id", "locked_by"], updateColumns: JOB_UPDATE_COLUMNS,
-    conflicts: ["asset_id"],
   },
   ci_analysis_results: {
     actions: ["select", "insert"], selectIdentity: ["id", "asset_id", "ad_asset_id"],
@@ -90,7 +89,7 @@ const TABLE_POLICIES: Record<string, TablePolicy> = {
   },
   ci_ad_taxonomy: {
     actions: ["insert"], insertRequired: ["ad_id", "term_id", "brand_id", "user_id"],
-    conflicts: ["ad_id,term_id,dedup_key"],
+    conflicts: ["ad_id,term_id,dedup_key,assertion_version_key"],
   },
   ci_transcripts: {
     actions: ["select", "insert"], selectIdentity: ["asset_id"],

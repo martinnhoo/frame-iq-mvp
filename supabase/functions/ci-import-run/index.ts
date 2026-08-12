@@ -25,12 +25,18 @@ import { CreditBudget, SpreshClient } from "../_shared/spreshapp/client.ts";
 import { normalizeAds } from "../_shared/spreshapp/normalize.ts";
 import { CREDIT_COST, SpreshError } from "../_shared/spreshapp/types.ts";
 import { corsHeaders, fail, json, logEvent, requireCiAccess, serverCaps } from "../_shared/ci-guard.ts";
+import {
+  importRequestFingerprint,
+  replayAdsFromPages,
+} from "../_shared/ci-contract.ts";
 
 interface ImportBody {
   brand_id?: string;
   max_ads?: number;
   dry_run?: boolean;
   resume_run_id?: string;
+  replay_run_id?: string;
+  idempotency_key?: string;
   filters?: {
     display_format?: "ALL" | "VIDEO" | "IMAGE";
     country?: string;
@@ -83,28 +89,44 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Retomada: continua do cursor gravado, sem repetir o que já veio.
+  if (body.resume_run_id && body.replay_run_id) {
+    return fail("bad_request", "Escolha resume_run_id ou replay_run_id, nunca ambos.");
+  }
+
+  const cursorContextHash = await importRequestFingerprint({
+    brand_id: brand.id,
+    page_id: page.page_id,
+    filters,
+    max_ads: maxAds,
+    cursor: null,
+  });
+
+  // Retomada: o cursor só é válido no mesmo contexto de marca/página/filtros.
   let cursor: string | undefined;
   if (body.resume_run_id) {
     const { data: prev } = await admin
-      .from("ci_import_runs").select("next_cursor")
+      .from("ci_import_runs").select("brand_id,brand_page_id,next_cursor,cursor_context_hash")
       .eq("id", body.resume_run_id).eq("user_id", userId).maybeSingle();
+    if (!prev || prev.brand_id !== brand.id || prev.brand_page_id !== page.id || prev.cursor_context_hash !== cursorContextHash) {
+      return fail("cursor_context_mismatch", "O cursor pertence a outro contexto de importação.", 409);
+    }
     cursor = prev?.next_cursor ?? undefined;
     if (!cursor) return fail("cannot_resume", "A execução anterior não deixou cursor — não há de onde continuar.", 409);
   }
 
-  const apiKey = Deno.env.get("SPRESHAPP_API_KEY");
-  if (!apiKey) return fail("not_configured", "SPRESHAPP_API_KEY não está configurada nos secrets.", 503);
-
-  const budget = new CreditBudget(maxCredits);
-  const client = new SpreshClient({
-    apiKey,
-    baseUrl: Deno.env.get("SPRESHAPP_BASE_URL") ?? undefined,
-    budget,
-    logger: (e) => console.log(JSON.stringify({ fn: "ci-import-run", brand: brand.slug, ...e })),
+  const requestFingerprint = await importRequestFingerprint({
+    brand_id: brand.id,
+    page_id: page.page_id,
+    filters,
+    max_ads: maxAds,
+    cursor: cursor ?? null,
   });
 
-  const estimate = client.estimateCredits({ includePageSearch: false, maxAds });
+  const estimate = {
+    min: 0,
+    max: maxAds * CREDIT_COST.perAd,
+    explanation: `até ${maxAds} dos anúncios (1 por anúncio retornado)`,
+  };
 
   // ── Ensaio: mostra o custo sem gastar nada ────────────────────────────────
   if (body.dry_run) {
@@ -128,6 +150,33 @@ Deno.serve(async (req) => {
     });
   }
 
+  if (body.idempotency_key) {
+    const { data: prior } = await admin.from("ci_import_runs").select("*")
+      .eq("user_id", userId).eq("idempotency_key", body.idempotency_key).maybeSingle();
+    if (prior) {
+      if (prior.request_fingerprint !== requestFingerprint) {
+        return fail("idempotency_conflict", "A chave de idempotência já foi usada com outra requisição.", 409);
+      }
+      return json({
+        idempotent_replay: true,
+        run_id: prior.id,
+        status: prior.status,
+        pages_fetched: prior.pages_fetched,
+        ads_returned: prior.ads_returned,
+        ads_created: prior.ads_created,
+        ads_updated: prior.ads_updated,
+        credits_spent: prior.credits_spent,
+        next_cursor: prior.next_cursor,
+      });
+    }
+  }
+
+  const apiKey = body.replay_run_id ? null : Deno.env.get("SPRESHAPP_API_KEY");
+  if (!body.replay_run_id && !apiKey) {
+    return fail("not_configured", "SPRESHAPP_API_KEY não está configurada nos secrets.", 503);
+  }
+  const budget = new CreditBudget(maxCredits);
+
   // ── Execução ──────────────────────────────────────────────────────────────
   const { data: run, error: runErr } = await admin.from("ci_import_runs").insert({
     brand_id: brand.id,
@@ -139,26 +188,110 @@ Deno.serve(async (req) => {
     max_ads: maxAds,
     max_credits: maxCredits,
     credits_estimated: estimate.max,
+    request_fingerprint: requestFingerprint,
+    idempotency_key: body.idempotency_key ?? null,
+    cursor_in: cursor ?? null,
+    cursor_context_hash: cursorContextHash,
+    resume_of_run_id: body.resume_run_id ?? null,
+    replay_of_run_id: body.replay_run_id ?? null,
     started_at: new Date().toISOString(),
   }).select().single();
 
-  if (runErr || !run) return fail("db_error", `Não foi possível criar a execução: ${runErr?.message}`, 500);
+  if (runErr || !run) {
+    // The unique index is the final idempotency gate under concurrent calls.
+    // A loser must replay the winner rather than turning a safe race into a
+    // 500 (and, critically, it must never proceed to the paid provider).
+    if (runErr?.code === "23505" && body.idempotency_key) {
+      const { data: prior } = await admin.from("ci_import_runs").select("*")
+        .eq("user_id", userId).eq("idempotency_key", body.idempotency_key).maybeSingle();
+      if (prior?.request_fingerprint === requestFingerprint) {
+        return json({
+          idempotent_replay: true,
+          run_id: prior.id,
+          status: prior.status,
+          pages_fetched: prior.pages_fetched,
+          ads_returned: prior.ads_returned,
+          ads_created: prior.ads_created,
+          ads_updated: prior.ads_updated,
+          credits_spent: prior.credits_spent,
+          next_cursor: prior.next_cursor,
+        });
+      }
+      if (prior) {
+        return fail("idempotency_conflict", "A chave de idempotência já foi usada com outra requisição.", 409);
+      }
+    }
+    return fail("db_error", `Não foi possível criar a execução: ${runErr?.message}`, 500);
+  }
 
   const finishRun = async (patch: Record<string, unknown>) => {
     await admin.from("ci_import_runs")
       .update({ ...patch, finished_at: new Date().toISOString() }).eq("id", run.id);
   };
 
-  let collected;
+  let collected: {
+    ads: ReturnType<typeof replayAdsFromPages>;
+    pagesFetched: number;
+    creditsSpent: number;
+    nextCursor: string | null;
+    stopReason: "max_ads" | "no_more_pages" | "budget" | "cursor_loop" | "local_replay";
+    overFetched: number;
+    overspentCredits: number;
+  };
   try {
-    collected = await client.collectBrandAds({
-      page_id: page.page_id,
-      display_format: filters.display_format,
-      country: filters.country,
-      sort: filters.sort,
-      cursor,
-      maxAds,
-    });
+    if (body.replay_run_id) {
+      const { data: sourceRun } = await admin.from("ci_import_runs")
+        .select("id,brand_id,brand_page_id,next_cursor,cursor_context_hash")
+        .eq("id", body.replay_run_id).eq("user_id", userId).maybeSingle();
+      if (!sourceRun || sourceRun.brand_id !== brand.id || sourceRun.brand_page_id !== page.id || sourceRun.cursor_context_hash !== cursorContextHash) {
+        throw new Error("Replay pertence a outro tenant, marca, página ou contexto de cursor.");
+      }
+      const { data: persistedPages, error: pagesError } = await admin.from("ci_import_pages")
+        .select("page_index,response_payload")
+        .eq("import_run_id", sourceRun.id).order("page_index");
+      if (pagesError || !persistedPages?.length) throw new Error("Replay não possui páginas persistidas.");
+      const replayedAds = replayAdsFromPages(persistedPages);
+      collected = {
+        ads: replayedAds,
+        pagesFetched: persistedPages.length,
+        creditsSpent: 0,
+        nextCursor: sourceRun.next_cursor,
+        stopReason: "local_replay",
+        overFetched: Math.max(0, replayedAds.length - maxAds),
+        overspentCredits: 0,
+      };
+    } else {
+      const client = new SpreshClient({
+        apiKey: apiKey!,
+        baseUrl: Deno.env.get("SPRESHAPP_BASE_URL") ?? undefined,
+        budget,
+        logger: (e) => console.log(JSON.stringify({ fn: "ci-import-run", brand: brand.slug, ...e })),
+      });
+      collected = await client.collectBrandAds({
+        page_id: page.page_id,
+        display_format: filters.display_format,
+        country: filters.country,
+        sort: filters.sort,
+        cursor,
+        maxAds,
+        onPage: async (paidPage) => {
+          const { error } = await admin.from("ci_import_pages").insert({
+            import_run_id: run.id,
+            brand_id: brand.id,
+            user_id: userId,
+            page_index: paidPage.pageIndex,
+            request_fingerprint: requestFingerprint,
+            cursor_in: paidPage.cursorIn,
+            cursor_out: paidPage.cursorOut,
+            cursor_context_hash: cursorContextHash,
+            response_payload: paidPage.responsePayload,
+            credits_spent: paidPage.creditsSpent,
+            has_more: paidPage.hasMore,
+          });
+          if (error) throw new Error(`Falha ao persistir página paga antes da transformação: ${error.message}`);
+        },
+      });
+    }
   } catch (err) {
     const message = err instanceof SpreshError ? err.message : String(err);
     const code = err instanceof SpreshError ? err.code : "unknown";
@@ -172,7 +305,25 @@ Deno.serve(async (req) => {
     return fail(code, message, status, { run_id: run.id, credits_spent: budget.used });
   }
 
-  const { ads: normalized, rejected } = normalizeAds(collected.ads);
+  const pageLedgerRunId = body.replay_run_id ?? run.id;
+  await admin.from("ci_import_pages").update({
+    transform_status: "running",
+    transform_error: null,
+  }).eq("import_run_id", pageLedgerRunId);
+
+  let normalizedResult: ReturnType<typeof normalizeAds>;
+  try {
+    normalizedResult = normalizeAds(collected.ads);
+  } catch (err) {
+    const message = `Transformação local falhou; as páginas pagas permanecem disponíveis para replay: ${String(err)}`;
+    await admin.from("ci_import_pages").update({
+      transform_status: "failed",
+      transform_error: message,
+    }).eq("import_run_id", pageLedgerRunId);
+    await finishRun({ status: "failed", error: message, credits_spent: collected.creditsSpent });
+    return fail("transform_failed", message, 500, { run_id: run.id, replay_available: true });
+  }
+  const { ads: normalized, rejected } = normalizedResult;
 
   // Quais já conhecíamos. Não evita a cobrança — a API já devolveu e cobrou —
   // mas evita linha duplicada e dá o número que o usuário precisa ver.
@@ -287,6 +438,11 @@ Deno.serve(async (req) => {
     : collected.ads.length === 0
       ? "empty"
       : "completed";
+  await admin.from("ci_import_pages").update({
+    transform_status: dbErrors.length ? "failed" : "completed",
+    transform_error: dbErrors.length ? dbErrors.slice(0, 5).join(" | ") : null,
+    transformed_at: new Date().toISOString(),
+  }).eq("import_run_id", pageLedgerRunId);
   await finishRun({
     status,
     pages_fetched: collected.pagesFetched,

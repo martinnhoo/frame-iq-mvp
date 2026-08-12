@@ -1637,8 +1637,13 @@ export type Database = {
       ci_ad_assets: {
         Row: {
           ad_id: string
+          analyzed_context_at: string | null
           asset_id: string
+          brand_id: string | null
+          context_analysis_status: string
+          context_hash_snapshot: string | null
           created_at: string
+          current_context_result_id: string | null
           id: string
           media_source_id: string | null
           role: string
@@ -1648,8 +1653,13 @@ export type Database = {
         }
         Insert: {
           ad_id: string
+          analyzed_context_at?: string | null
           asset_id: string
+          brand_id?: string | null
+          context_analysis_status?: string
+          context_hash_snapshot?: string | null
           created_at?: string
+          current_context_result_id?: string | null
           id?: string
           media_source_id?: string | null
           role?: string
@@ -1659,8 +1669,13 @@ export type Database = {
         }
         Update: {
           ad_id?: string
+          analyzed_context_at?: string | null
           asset_id?: string
+          brand_id?: string | null
+          context_analysis_status?: string
+          context_hash_snapshot?: string | null
           created_at?: string
+          current_context_result_id?: string | null
           id?: string
           media_source_id?: string | null
           role?: string
@@ -1755,53 +1770,98 @@ export type Database = {
       ci_ad_taxonomy: {
         Row: {
           ad_id: string
+          ad_asset_id: string | null
+          analysis_contract_version: string
+          analysis_result_id: string | null
+          assertion_version_key: string | null
           asset_id: string | null
           brand_id: string
           confidence: number
           created_at: string
           dedup_key: string | null
           evidence: string | null
+          evidence_identity_hash: string | null
           evidence_kind: string | null
           id: string
+          is_current: boolean
           is_primary: boolean
+          keyframe_id: string | null
           model_version: string | null
+          onscreen_text_id: string | null
+          provenance_class: string
+          claim_scope: string
+          scene_id: string | null
+          semantic_target_key: string | null
           source: string
+          superseded_at: string | null
+          superseded_by_id: string | null
           term_id: string
           timestamp_s: number | null
+          transcript_segment_id: string | null
           user_id: string
         }
         Insert: {
           ad_id: string
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
+          analysis_result_id?: string | null
+          assertion_version_key?: string | null
           asset_id?: string | null
           brand_id: string
           confidence?: number
           created_at?: string
           dedup_key?: string | null
           evidence?: string | null
+          evidence_identity_hash?: string | null
           evidence_kind?: string | null
           id?: string
+          is_current?: boolean
           is_primary?: boolean
+          keyframe_id?: string | null
           model_version?: string | null
+          onscreen_text_id?: string | null
+          provenance_class?: string
+          claim_scope?: string
+          scene_id?: string | null
+          semantic_target_key?: string | null
           source: string
+          superseded_at?: string | null
+          superseded_by_id?: string | null
           term_id: string
           timestamp_s?: number | null
+          transcript_segment_id?: string | null
           user_id: string
         }
         Update: {
           ad_id?: string
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
+          analysis_result_id?: string | null
+          assertion_version_key?: string | null
           asset_id?: string | null
           brand_id?: string
           confidence?: number
           created_at?: string
           dedup_key?: string | null
           evidence?: string | null
+          evidence_identity_hash?: string | null
           evidence_kind?: string | null
           id?: string
+          is_current?: boolean
           is_primary?: boolean
+          keyframe_id?: string | null
           model_version?: string | null
+          onscreen_text_id?: string | null
+          provenance_class?: string
+          claim_scope?: string
+          scene_id?: string | null
+          semantic_target_key?: string | null
           source?: string
+          superseded_at?: string | null
+          superseded_by_id?: string | null
           term_id?: string
           timestamp_s?: number | null
+          transcript_segment_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1898,6 +1958,9 @@ export type Database = {
           body_text: string | null
           brand_id: string
           concept_id: string | null
+          context_hash: string
+          context_hash_version: string
+          context_updated_at: string | null
           countries: string[] | null
           created_at: string
           cta: string | null
@@ -1932,6 +1995,9 @@ export type Database = {
           body_text?: string | null
           brand_id: string
           concept_id?: string | null
+          context_hash?: string
+          context_hash_version?: string
+          context_updated_at?: string | null
           countries?: string[] | null
           created_at?: string
           cta?: string | null
@@ -1966,6 +2032,9 @@ export type Database = {
           body_text?: string | null
           brand_id?: string
           concept_id?: string | null
+          context_hash?: string
+          context_hash_version?: string
+          context_updated_at?: string | null
           countries?: string[] | null
           created_at?: string
           cta?: string | null
@@ -2020,6 +2089,8 @@ export type Database = {
       }
       ci_analysis_jobs: {
         Row: {
+          ad_asset_id: string | null
+          analysis_contract_version: string
           asset_id: string
           attempts: number
           brand_id: string
@@ -2030,6 +2101,9 @@ export type Database = {
           error_code: string | null
           finished_at: string | null
           id: string
+          claim_token: string | null
+          context_hash: string | null
+          lease_generation: number
           lease_expires_at: string | null
           llm_input_tokens: number | null
           llm_model: string | null
@@ -2042,6 +2116,7 @@ export type Database = {
           priority: number
           progress: number
           requested_stages: string[]
+          scope: string
           skipped_stages: string[]
           stage: string
           started_at: string | null
@@ -2051,6 +2126,8 @@ export type Database = {
           warnings: Json
         }
         Insert: {
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
           asset_id: string
           attempts?: number
           brand_id: string
@@ -2061,6 +2138,9 @@ export type Database = {
           error_code?: string | null
           finished_at?: string | null
           id?: string
+          claim_token?: string | null
+          context_hash?: string | null
+          lease_generation?: number
           lease_expires_at?: string | null
           llm_input_tokens?: number | null
           llm_model?: string | null
@@ -2073,6 +2153,7 @@ export type Database = {
           priority?: number
           progress?: number
           requested_stages?: string[]
+          scope?: string
           skipped_stages?: string[]
           stage?: string
           started_at?: string | null
@@ -2082,6 +2163,8 @@ export type Database = {
           warnings?: Json
         }
         Update: {
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
           asset_id?: string
           attempts?: number
           brand_id?: string
@@ -2092,6 +2175,9 @@ export type Database = {
           error_code?: string | null
           finished_at?: string | null
           id?: string
+          claim_token?: string | null
+          context_hash?: string | null
+          lease_generation?: number
           lease_expires_at?: string | null
           llm_input_tokens?: number | null
           llm_model?: string | null
@@ -2104,6 +2190,7 @@ export type Database = {
           priority?: number
           progress?: number
           requested_stages?: string[]
+          scope?: string
           skipped_stages?: string[]
           stage?: string
           started_at?: string | null
@@ -2132,6 +2219,8 @@ export type Database = {
       ci_analysis_results: {
         Row: {
           ad_id: string | null
+          ad_asset_id: string | null
+          analysis_contract_version: string
           asset_id: string
           brand_id: string
           confidence: number | null
@@ -2147,6 +2236,7 @@ export type Database = {
           has_urgency: boolean | null
           hook_duration_s: number | null
           id: string
+          is_current: boolean
           kind: string
           model: string | null
           model_run_id: string | null
@@ -2154,6 +2244,10 @@ export type Database = {
           prompt_version: string | null
           provider: string | null
           raw_output: Json
+          scope: string
+          context_hash: string | null
+          superseded_at: string | null
+          superseded_by_id: string | null
           text_per_second: number | null
           time_to_cta_s: number | null
           time_to_offer_s: number | null
@@ -2163,6 +2257,8 @@ export type Database = {
         }
         Insert: {
           ad_id?: string | null
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
           asset_id: string
           brand_id: string
           confidence?: number | null
@@ -2178,6 +2274,7 @@ export type Database = {
           has_urgency?: boolean | null
           hook_duration_s?: number | null
           id?: string
+          is_current?: boolean
           kind?: string
           model?: string | null
           model_run_id?: string | null
@@ -2185,6 +2282,10 @@ export type Database = {
           prompt_version?: string | null
           provider?: string | null
           raw_output: Json
+          scope?: string
+          context_hash?: string | null
+          superseded_at?: string | null
+          superseded_by_id?: string | null
           text_per_second?: number | null
           time_to_cta_s?: number | null
           time_to_offer_s?: number | null
@@ -2194,6 +2295,8 @@ export type Database = {
         }
         Update: {
           ad_id?: string | null
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
           asset_id?: string
           brand_id?: string
           confidence?: number | null
@@ -2209,6 +2312,7 @@ export type Database = {
           has_urgency?: boolean | null
           hook_duration_s?: number | null
           id?: string
+          is_current?: boolean
           kind?: string
           model?: string | null
           model_run_id?: string | null
@@ -2216,6 +2320,10 @@ export type Database = {
           prompt_version?: string | null
           provider?: string | null
           raw_output?: Json
+          scope?: string
+          context_hash?: string | null
+          superseded_at?: string | null
+          superseded_by_id?: string | null
           text_per_second?: number | null
           time_to_cta_s?: number | null
           time_to_offer_s?: number | null
@@ -3420,6 +3528,93 @@ export type Database = {
           },
         ]
       }
+      ci_import_pages: {
+        Row: {
+          ads_returned: number
+          brand_id: string
+          created_at: string
+          credits_spent: number
+          cursor_context_hash: string
+          cursor_in: string | null
+          cursor_out: string | null
+          fetched_at: string
+          has_more: boolean
+          id: string
+          import_run_id: string
+          page_index: number
+          provider_request_id: string | null
+          request_fingerprint: string
+          response_hash: string
+          response_payload: Json
+          transform_error: string | null
+          transform_status: string
+          transform_version: string
+          transformed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ads_returned?: number
+          brand_id: string
+          created_at?: string
+          credits_spent?: number
+          cursor_context_hash: string
+          cursor_in?: string | null
+          cursor_out?: string | null
+          fetched_at?: string
+          has_more?: boolean
+          id?: string
+          import_run_id: string
+          page_index: number
+          provider_request_id?: string | null
+          request_fingerprint: string
+          response_hash?: string
+          response_payload: Json
+          transform_error?: string | null
+          transform_status?: string
+          transform_version?: string
+          transformed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ads_returned?: number
+          brand_id?: string
+          created_at?: string
+          credits_spent?: number
+          cursor_context_hash?: string
+          cursor_in?: string | null
+          cursor_out?: string | null
+          fetched_at?: string
+          has_more?: boolean
+          id?: string
+          import_run_id?: string
+          page_index?: number
+          provider_request_id?: string | null
+          request_fingerprint?: string
+          response_hash?: string
+          response_payload?: Json
+          transform_error?: string | null
+          transform_status?: string
+          transform_version?: string
+          transformed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ci_import_pages_import_run_id_fkey"
+            columns: ["import_run_id"]
+            isOneToOne: false
+            referencedRelation: "ci_import_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_import_pages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ci_import_runs: {
         Row: {
           ads_created: number
@@ -3436,14 +3631,22 @@ export type Database = {
           filters: Json
           finished_at: string | null
           id: string
+          idempotency_key: string | null
           max_ads: number
           max_credits: number
           media_urls_found: number
           next_cursor: string | null
+          cursor_in: string | null
+          cursor_context_hash: string | null
+          pages_persisted: number
           pages_fetched: number
+          replay_of_run_id: string | null
+          request_fingerprint: string | null
+          resume_of_run_id: string | null
           source: string
           started_at: string | null
           status: string
+          transform_version: string
           updated_at: string
           user_id: string
         }
@@ -3462,14 +3665,22 @@ export type Database = {
           filters?: Json
           finished_at?: string | null
           id?: string
+          idempotency_key?: string | null
           max_ads?: number
           max_credits?: number
           media_urls_found?: number
           next_cursor?: string | null
+          cursor_in?: string | null
+          cursor_context_hash?: string | null
+          pages_persisted?: number
           pages_fetched?: number
+          replay_of_run_id?: string | null
+          request_fingerprint?: string | null
+          resume_of_run_id?: string | null
           source?: string
           started_at?: string | null
           status?: string
+          transform_version?: string
           updated_at?: string
           user_id: string
         }
@@ -3488,14 +3699,22 @@ export type Database = {
           filters?: Json
           finished_at?: string | null
           id?: string
+          idempotency_key?: string | null
           max_ads?: number
           max_credits?: number
           media_urls_found?: number
           next_cursor?: string | null
+          cursor_in?: string | null
+          cursor_context_hash?: string | null
+          pages_persisted?: number
           pages_fetched?: number
+          replay_of_run_id?: string | null
+          request_fingerprint?: string | null
+          resume_of_run_id?: string | null
           source?: string
           started_at?: string | null
           status?: string
+          transform_version?: string
           updated_at?: string
           user_id?: string
         }
@@ -3698,7 +3917,10 @@ export type Database = {
       ci_model_runs: {
         Row: {
           ad_id: string | null
+          ad_asset_id: string | null
+          analysis_contract_version: string
           analysis_job_id: string | null
+          attempt_number: number
           asset_id: string | null
           brand_id: string
           cost_usd: number | null
@@ -3706,21 +3928,29 @@ export type Database = {
           error: string | null
           finished_at: string | null
           id: string
+          context_hash: string | null
+          input_schema_version: string
           input_summary: Json
           input_tokens: number | null
           input_version: string | null
           latency_ms: number | null
           model: string
           output_tokens: number | null
+          output_schema_version: string
           prompt_version: string
           provider: string
+          provider_request_id: string | null
           purpose: string
+          scope: string
           status: string
           user_id: string
         }
         Insert: {
           ad_id?: string | null
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
           analysis_job_id?: string | null
+          attempt_number?: number
           asset_id?: string | null
           brand_id: string
           cost_usd?: number | null
@@ -3728,21 +3958,29 @@ export type Database = {
           error?: string | null
           finished_at?: string | null
           id?: string
+          context_hash?: string | null
+          input_schema_version?: string
           input_summary?: Json
           input_tokens?: number | null
           input_version?: string | null
           latency_ms?: number | null
           model: string
           output_tokens?: number | null
+          output_schema_version?: string
           prompt_version: string
           provider: string
+          provider_request_id?: string | null
           purpose: string
+          scope?: string
           status?: string
           user_id: string
         }
         Update: {
           ad_id?: string | null
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
           analysis_job_id?: string | null
+          attempt_number?: number
           asset_id?: string | null
           brand_id?: string
           cost_usd?: number | null
@@ -3750,15 +3988,20 @@ export type Database = {
           error?: string | null
           finished_at?: string | null
           id?: string
+          context_hash?: string | null
+          input_schema_version?: string
           input_summary?: Json
           input_tokens?: number | null
           input_version?: string | null
           latency_ms?: number | null
           model?: string
           output_tokens?: number | null
+          output_schema_version?: string
           prompt_version?: string
           provider?: string
+          provider_request_id?: string | null
           purpose?: string
+          scope?: string
           status?: string
           user_id?: string
         }
@@ -4058,13 +4301,28 @@ export type Database = {
       ci_quality_reviews: {
         Row: {
           ad_id: string
+          ad_asset_id: string | null
+          analysis_contract_version: string
+          analysis_result_id: string | null
           asset_id: string | null
           brand_id: string
           campo: string
           created_at: string
+          carry_forward_allowed: boolean
+          corrected_term_id: string | null
+          corrected_value: Json | null
+          effective_at: string
+          evidence_identity_hash: string | null
           id: string
+          is_current: boolean
           observacao: string | null
           revisado_por: string
+          override_action: string
+          reviewer_user_id: string | null
+          semantic_target_key: string | null
+          superseded_at: string | null
+          superseded_by_id: string | null
+          target_assertion_id: string | null
           user_id: string
           valor_correto: string | null
           valor_sistema: string | null
@@ -4072,13 +4330,28 @@ export type Database = {
         }
         Insert: {
           ad_id: string
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
+          analysis_result_id?: string | null
           asset_id?: string | null
           brand_id: string
           campo: string
           created_at?: string
+          carry_forward_allowed?: boolean
+          corrected_term_id?: string | null
+          corrected_value?: Json | null
+          effective_at?: string
+          evidence_identity_hash?: string | null
           id?: string
+          is_current?: boolean
           observacao?: string | null
           revisado_por?: string
+          override_action?: string
+          reviewer_user_id?: string | null
+          semantic_target_key?: string | null
+          superseded_at?: string | null
+          superseded_by_id?: string | null
+          target_assertion_id?: string | null
           user_id: string
           valor_correto?: string | null
           valor_sistema?: string | null
@@ -4086,13 +4359,28 @@ export type Database = {
         }
         Update: {
           ad_id?: string
+          ad_asset_id?: string | null
+          analysis_contract_version?: string
+          analysis_result_id?: string | null
           asset_id?: string | null
           brand_id?: string
           campo?: string
           created_at?: string
+          carry_forward_allowed?: boolean
+          corrected_term_id?: string | null
+          corrected_value?: Json | null
+          effective_at?: string
+          evidence_identity_hash?: string | null
           id?: string
+          is_current?: boolean
           observacao?: string | null
           revisado_por?: string
+          override_action?: string
+          reviewer_user_id?: string | null
+          semantic_target_key?: string | null
+          superseded_at?: string | null
+          superseded_by_id?: string | null
+          target_assertion_id?: string | null
           user_id?: string
           valor_correto?: string | null
           valor_sistema?: string | null
@@ -4243,6 +4531,7 @@ export type Database = {
           product_visible: boolean | null
           scene_function: string | null
           scene_index: number
+          segment_kind: string
           setting: string | null
           setting_kind: string | null
           source: string
@@ -4268,6 +4557,7 @@ export type Database = {
           product_visible?: boolean | null
           scene_function?: string | null
           scene_index: number
+          segment_kind?: string
           setting?: string | null
           setting_kind?: string | null
           source?: string
@@ -4293,6 +4583,7 @@ export type Database = {
           product_visible?: boolean | null
           scene_function?: string | null
           scene_index?: number
+          segment_kind?: string
           setting?: string | null
           setting_kind?: string | null
           source?: string
@@ -7173,6 +7464,38 @@ export type Database = {
       }
     }
     Views: {
+      ci_current_ad_taxonomy: {
+        Row: Database["public"]["Tables"]["ci_ad_taxonomy"]["Row"]
+        Relationships: []
+      }
+      ci_effective_ad_taxonomy: {
+        Row: Database["public"]["Tables"]["ci_ad_taxonomy"]["Row"] & {
+          corrected_value: Json | null
+          effective_term_id: string
+          has_human_override: boolean
+          human_review_id: string | null
+        }
+        Relationships: []
+      }
+      ci_legacy_context_classification: {
+        Row: {
+          ad_count: number | null
+          analysis_status: string | null
+          asset_id: string | null
+          brand_id: string | null
+          contaminated: boolean | null
+          context_count: number | null
+          has_observations: boolean | null
+          late_duplicate: boolean | null
+          legacy_mixed: boolean | null
+          media_type: string | null
+          missing_observations: boolean | null
+          primary_classification: string | null
+          static_unanalysed: boolean | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       ci_angles: {
         Row: {
           ad_count: number | null
@@ -7834,6 +8157,31 @@ export type Database = {
         Returns: Json[]
       }
       ci_compute_scale_signal: { Args: { p_brand_id: string }; Returns: number }
+      ci_canonical_ad_context: {
+        Args: {
+          body_text: string
+          cta: string
+          description: string
+          display_format: string
+          headline: string
+          landing_page: string
+          languages: string[]
+        }
+        Returns: string
+      }
+      ci_compute_ad_context_hash: {
+        Args: {
+          body_text: string
+          cta: string
+          description: string
+          display_format: string
+          headline: string
+          landing_page: string
+          languages: string[]
+        }
+        Returns: string
+      }
+      ci_context_hash_component: { Args: { value: string }; Returns: string }
       ci_concept_variation: {
         Args: { p_concept_id: string }
         Returns: {
@@ -7869,6 +8217,15 @@ export type Database = {
           variacoes: number
         }[]
       }
+      ci_enqueue_legacy_mixed_job: {
+        Args: {
+          p_asset_id: string
+          p_brand_id: string
+          p_contract_version?: string
+          p_user_id: string
+        }
+        Returns: Database["public"]["Tables"]["ci_analysis_jobs"]["Row"][]
+      }
       ci_hook_patterns: {
         Args: { p_brand_id: string; p_limite?: number }
         Returns: {
@@ -7881,6 +8238,13 @@ export type Database = {
           primeiro_frame: string
           receitas: number
           tipo: string
+        }[]
+      }
+      ci_legacy_context_dry_run: {
+        Args: { p_brand_id: string }
+        Returns: {
+          asset_count: number
+          classification: string
         }[]
       }
       ci_owns_brand: { Args: { p_brand_id: string }; Returns: boolean }

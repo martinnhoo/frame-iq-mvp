@@ -532,6 +532,7 @@ def stage_ocr(ctx: Ctx) -> None:
 def stage_semantic_analysis(ctx: Ctx) -> None:
     existing = ctx.supa.select("ci_analysis_results", params={
         "asset_id": f"eq.{ctx.asset_id}", "kind": "eq.semantic",
+        "is_current": "eq.true",
         "select": "id,normalized_output,raw_output,provider,model,fidelity,prompt_version",
         "limit": "1",
     })
@@ -594,6 +595,10 @@ def stage_semantic_analysis(ctx: Ctx) -> None:
         "analysis_job_id": ctx.job_id, "purpose": "semantic_analysis",
         "provider": ctx.semantic.provider, "model": ctx.semantic.model,
         "prompt_version": ctx.semantic.prompt_version,
+        "scope": "legacy_mixed",
+        "analysis_contract_version": "legacy/semantic-v7",
+        "input_schema_version": "legacy/semantic-input-v7",
+        "output_schema_version": "legacy/semantic-output-v7",
         "input_summary": {"keyframes": len(ctx.keyframe_paths),
                           "segments": len(ctx.segments), "onscreen": len(ctx.onscreen)},
         "status": "completed",
@@ -631,6 +636,7 @@ def stage_normalization(ctx: Ctx) -> None:
     ctx.supa.insert("ci_analysis_results", {
         "asset_id": ctx.asset_id, "brand_id": ctx.brand_id, "user_id": ctx.user_id,
         "ad_id": None, "kind": "semantic",
+        "scope": "legacy_mixed", "analysis_contract_version": "legacy/semantic-v7",
         "raw_output": ctx.semantic.raw, "normalized_output": n,
         "time_to_product_s": timing.get("time_to_product_s"),
         "time_to_offer_s": timing.get("time_to_offer_s"),
@@ -649,7 +655,7 @@ def stage_normalization(ctx: Ctx) -> None:
         "prompt_version": ctx.semantic.prompt_version,
         "fidelity": ctx.semantic.fidelity,
         "warnings": [{"message": w} for w in ctx.warnings][:20],
-    }, upsert=True, on_conflict="asset_id,kind")
+    })
     ctx.log.emit("normalized", terms=len(n.get("terms", [])))
 
 
@@ -705,11 +711,14 @@ def stage_persistence(ctx: Ctx) -> None:
                 "evidence_kind": term.get("evidence_kind"),
                 "timestamp_s": term.get("timestamp_s"),
                 "source": term["source"], "model_version": term["model_version"],
+                "claim_scope": "legacy_mixed",
+                "provenance_class": "MODEL_INFERRED",
+                "analysis_contract_version": "legacy/semantic-v7",
                 # on_conflict é OBRIGATÓRIO aqui, não opcional: sem ele o modo
                 # proxy cai em INSERT puro e a primeira duplicata derruba o job
                 # depois de já ter gasto Gemini. dedup_key é coluna gerada —
                 # não se escreve nela, só se mira o índice por ela.
-            }, upsert=True, on_conflict="ad_id,term_id,dedup_key",
+            }, upsert=True, on_conflict="ad_id,term_id,dedup_key,assertion_version_key",
                ignore_duplicates=True)
 
     # Recalcula as contagens dos termos. Sem isto, ad_count fica em zero e a

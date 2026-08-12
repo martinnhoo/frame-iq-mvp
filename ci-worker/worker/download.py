@@ -204,14 +204,21 @@ def run_download_job(
             # Só vídeo entra na fila de análise. Imagem de carrossel não tem
             # transcript nem cena — analisá-la gastaria LLM por nada.
             if kind == "video":
-                supa.insert("ci_analysis_jobs", {
-                    "brand_id": brand_id, "user_id": user_id, "asset_id": asset_id,
-                }, upsert=True, on_conflict="asset_id", ignore_duplicates=True)
+                # Until Phase C removes ad-copy from the semantic prompt, new
+                # jobs must remain explicitly legacy_mixed. The narrow RPC
+                # keeps the Phase A worker boundary closed without lying about
+                # provenance during the Phase B compatibility window.
+                supa.rpc("ci_enqueue_legacy_mixed_job", {
+                    "p_asset_id": asset_id,
+                    "p_brand_id": brand_id,
+                    "p_user_id": user_id,
+                    "p_contract_version": "legacy/semantic-v7",
+                })
 
         # ── 5/6. Vínculo ──────────────────────────────────────────────────────
         stage("linking", 90)
         supa.insert("ci_ad_assets", {
-            "ad_id": ad_id, "asset_id": asset_id, "user_id": user_id,
+            "ad_id": ad_id, "asset_id": asset_id, "brand_id": brand_id, "user_id": user_id,
             "media_source_id": media_source_id,
             "role": "carousel" if (media.get("sort_order") or 0) > 0 else "primary",
             "sort_order": media.get("sort_order") or 0,
