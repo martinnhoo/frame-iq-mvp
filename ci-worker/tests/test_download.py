@@ -136,15 +136,6 @@ class FakeSupa:
         return out
 
     def rpc(self, fn: str, args: dict | None = None) -> Any:
-        if fn == "ci_enqueue_legacy_mixed_job":
-            payload = args or {}
-            return self.insert("ci_analysis_jobs", {
-                "asset_id": payload["p_asset_id"],
-                "brand_id": payload["p_brand_id"],
-                "user_id": payload["p_user_id"],
-                "scope": "legacy_mixed",
-                "analysis_contract_version": payload["p_contract_version"],
-            })
         return None
 
     def log(self, **row: Any) -> None:
@@ -329,9 +320,6 @@ def main() -> int:
         check("primeiro download cria o asset", r1["was_duplicate"] is False)
         check("subiu para o bucket uma vez", storage.put_calls == 1)
         check("vídeo entra na fila de análise", len(supa.tables.get("ci_analysis_jobs", [])) == 1)
-        check("job misto permanece explicitamente legado até a Fase C",
-              supa.tables["ci_analysis_jobs"][0]["scope"] == "legacy_mixed"
-              and supa.tables["ci_analysis_jobs"][0]["analysis_contract_version"] == "legacy/semantic-v7")
         check("objeto registrado no inventário de storage",
               len(supa.tables.get("ci_storage_objects", [])) == 1)
         check("job marcado como completed",
@@ -359,8 +347,6 @@ def main() -> int:
               f"{len(supa.tables['ci_analysis_jobs'])} jobs")
         check("o mesmo asset ficou ligado aos dois anúncios",
               len(supa.tables["ci_ad_assets"]) == 2)
-        check("execuções carregam brand_id composto",
-              all(link["brand_id"] == "marca-1" for link in supa.tables["ci_ad_assets"]))
         check("mídia duplicada marcada como 'duplicate'",
               supa.select("ci_ad_media_sources", params={"id": "eq.ms-2"})[0]["status"] == "duplicate")
 

@@ -62,14 +62,13 @@ Deno.serve(async (req) => {
         fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/creative-loop`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}` },
-          body: JSON.stringify({ action: 'get_context', internal_user_id: user_id, persona_id: persona_id || null }),
+          body: JSON.stringify({ action: 'get_context', user_id, persona_id: persona_id || null }),
         }),
         // GAP 1 FIX: fetch ALL patterns server-side — winners AND losers
         // Never depend on frontend passing context — always fresh from DB
         supabase.from('learned_patterns')
           .select('pattern_key, insight_text, avg_ctr, avg_roas, confidence, hook_type, is_winner')
           .eq('user_id', user_id)
-          .eq('scope', 'tenant')
           .order('confidence', { ascending: false })
           .limit(20),
         // chat_memory — user preferences and account context from past conversations
@@ -180,7 +179,7 @@ Deno.serve(async (req) => {
         if (loopResp && loopResp.ok) {
           const loopData = await loopResp.json();
           if (loopData.has_data && loopData.context) {
-            userContext += `\n\n=== ACCOUNT-OBSERVED CREATIVE PATTERNS ===\n${loopData.context}\n=== Treat these as performance-correlated observations, not causal proof. ===`;
+            userContext += `\n\n=== PROVEN CREATIVE PATTERNS (from this account's real ad data) ===\n${loopData.context}\n=== Generate hooks that match and build on these winning patterns. ===`;
           }
         }
       } catch { /* optional */ }
@@ -214,8 +213,8 @@ Deno.serve(async (req) => {
           userContext += `\n\n═══════════════════════════════════════════════════════════
 PATTERN CONSTRAINT — MANDATORY
 ═══════════════════════════════════════════════════════════
-These patterns are account observations correlated with higher metrics; they are not causal proof.
-Prioritize hooks derived from or aligned with these patterns.
+These patterns are PROVEN by real data from this account.
+EVERY hook MUST be derived from or aligned with these patterns.
 Do NOT generate free-form hooks that ignore these patterns.
 
 WINNING PATTERNS (generate variations based on these):
@@ -235,7 +234,7 @@ Each hook's "why" field must cite which pattern it follows.
         }
       } else {
         // No patterns — be transparent
-        userContext += `\n\n=== NO QUALIFYING ACCOUNT PATTERNS YET ===\nThis account does not have enough data to identify strong patterns.\nGenerate hooks based on available account data. Do NOT pretend patterns exist.`;
+        userContext += `\n\n=== NO PROVEN PATTERNS YET ===\nThis account does not have enough data to identify strong patterns.\nGenerate hooks based on available account data. Do NOT pretend patterns exist.`;
       }
     }
 
@@ -321,14 +320,14 @@ curiosity | social_proof | authority | contrast | story_opener | outcome | quest
 SCORING RULES (predicted_score 0-10):
 Use the account's REAL performance data to calibrate scores:
 - Start at 5.0 (baseline for any hook)
-- +1.5 if hook uses an angle/keyword that appears in higher-metric ads above
+- +1.5 if hook uses an angle/keyword that appears in WINNING ADS above
 - +1.0 if hook matches the format that's performing (video hook style if hook_rate data shows videos win)
 - +0.5 if hook uses proven credibility signals from this account (e.g. "60 anos", location, specific result)
 - +0.5 if hook directly addresses the audience's documented pain points
 - -1.5 if hook uses an angle from UNDERPERFORMING ads
 - -1.0 if hook ignores platform context (e.g. long hook for Google where 30 chars is limit)
 - -0.5 if hook is generic and could be for any competitor
-Score range: 1.0 (generic/wrong angle) to 10.0 (account-supported angle + right format + platform fit)
+Score range: 1.0 (generic/wrong angle) to 10.0 (proven angle + right format + platform fit)
 For Google: higher scores for hooks that include the exact keyword the user searched.
 For Meta video: higher scores for hooks that create tension/curiosity in first 3 seconds.
 For Meta static: higher scores for direct value props that complete the image.
@@ -361,14 +360,14 @@ Generate ${effectiveCount} hooks for:
 ${angle ? `- Angle: ${angle}` : ''}
 ${context ? `- Context/account patterns: ${context}` : ''}
 ${winning_pattern ? `
-═══ USER-SELECTED ACCOUNT PATTERN — VARY THIS ═══
-This user clicked "generate variations" on an observed pattern from their account.
+═══ WINNING PATTERN — REPLICATE THIS ═══
+This user clicked "generate variations" on a PROVEN pattern from their account.
 Your hooks MUST be inspired by and build upon this winning signal:
 - What works: ${winning_pattern.feature_type} = ${winning_pattern.feature_value}
 - Performance: CTR ${winning_pattern.avg_ctr || 'N/A'}${winning_pattern.avg_roas ? `, ROAS ${winning_pattern.avg_roas}x` : ''}${winning_pattern.impact_ctr_pct ? `, Impact: +${winning_pattern.impact_ctr_pct} vs account avg` : ''}
 ${winning_pattern.insight_text ? `- Insight: ${winning_pattern.insight_text}` : ''}
 ${winning_pattern.top_ads?.length ? `- Top ads using this pattern: ${winning_pattern.top_ads.join(' | ')}` : ''}
-CRITICAL: Generate ${count} variations that USE this selected ${winning_pattern.feature_type} approach.
+CRITICAL: Generate ${count} variations that USE this winning ${winning_pattern.feature_type} approach.
 Every hook must apply the "${winning_pattern.feature_value}" technique in a different way.
 Do NOT generate generic hooks — every hook must clearly be a variation of what already works.
 ═══════════════════════════════════════════

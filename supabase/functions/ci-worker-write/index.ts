@@ -12,7 +12,7 @@
  * Acabou saindo melhor que a ideia original de mandar a service role para o
  * Fly. A chave nunca sai do Supabase, e a superfície de ataque deixa de ser
  * "acesso total ao banco" e passa a ser exatamente o que está permitido aqui:
- * uma matriz por tabela/ação/identidade, RPCs fechadas e chaves brand-scoped.
+ * tabelas com prefixo ci_, uma lista fechada de RPCs, e o bucket ci-media.
  *
  * ── Arquivo grande NÃO passa por aqui ──────────────────────────────────────
  * Upload de vídeo usa URL assinada: a função devolve o token, e o worker faz o
@@ -20,10 +20,6 @@
  * estouraria o limite de corpo e o timeout.
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
-import {
-  assertWorkerOperationAllowed,
-  isWorkerStorageKeyAllowed,
-} from "../_shared/ci-worker-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,12 +33,20 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+/**
+ * Só tabelas do módulo. Sem isto, um segredo vazado viraria escrita em
+ * `profiles`, `user_credits` ou qualquer outra coisa do produto.
+ */
+function tableAllowed(table: string): boolean {
+  return /^ci_[a-z_]+$/.test(table);
+}
+
 /** Lista fechada. Nenhuma outra função do banco é chamável por aqui. */
 const RPC_ALLOWLIST = new Set([
   "ci_claim_job",
   "ci_reap_stale_jobs",
   "ci_refresh_taxonomy_stats",
-  "ci_enqueue_legacy_mixed_job",
+  "ci_compute_scale_signal",
 ]);
 
 const BUCKET = "ci-media";
@@ -98,20 +102,9 @@ Deno.serve(async (req) => {
   const { action } = body;
 
   try {
-    if (action === "select" || action === "insert" || action === "update") {
-      try {
-        assertWorkerOperationAllowed(body);
-      } catch (error) {
-        return json({
-          error: "operation_not_allowed",
-          message: error instanceof Error ? error.message : "worker operation denied",
-        }, 403);
-      }
-    }
-
     // ── Leitura ──────────────────────────────────────────────────────────────
     if (action === "select") {
-      if (!body.table) return json({ error: "table_required" }, 400);
+      if (!body.table || !tableAllowed(body.table)) return json({ error: "table_not_allowed" }, 403);
       let q = admin.from(body.table).select(body.select ?? "*");
       for (const [column, filter] of Object.entries(body.filters ?? {})) {
         const [op, ...rest] = filter.split(".");
@@ -131,7 +124,7 @@ Deno.serve(async (req) => {
 
     // ── Escrita ──────────────────────────────────────────────────────────────
     if (action === "insert") {
-      if (!body.table) return json({ error: "table_required" }, 400);
+      if (!body.table || !tableAllowed(body.table)) return json({ error: "table_not_allowed" }, 403);
       const q = body.on_conflict
         ? admin.from(body.table).upsert(body.rows as never, {
             onConflict: body.on_conflict,
@@ -144,7 +137,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "update") {
-      if (!body.table) return json({ error: "table_required" }, 400);
+      if (!body.table || !tableAllowed(body.table)) return json({ error: "table_not_allowed" }, 403);
       // UPDATE sem filtro reescreveria a tabela inteira. Recusar é mais seguro
       // que confiar em quem chama.
       if (!body.match || Object.keys(body.match).length === 0) {
@@ -165,29 +158,6 @@ Deno.serve(async (req) => {
     // ── RPC ──────────────────────────────────────────────────────────────────
     if (action === "rpc") {
       if (!body.fn || !RPC_ALLOWLIST.has(body.fn)) return json({ error: "rpc_not_allowed" }, 403);
-      if (body.fn === "ci_claim_job") {
-        const kind = body.args?.p_kind;
-        const lease = Number(body.args?.p_lease_secs);
-        if (!(["download", "analysis"] as unknown[]).includes(kind) || !Number.isInteger(lease) || lease < 60 || lease > 3600) {
-          return json({ error: "rpc_args_not_allowed" }, 400);
-        }
-      }
-      if (body.fn === "ci_refresh_taxonomy_stats") {
-        const brandId = String(body.args?.p_brand_id ?? "");
-        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(brandId)) {
-          return json({ error: "rpc_args_not_allowed" }, 400);
-        }
-      }
-      if (body.fn === "ci_enqueue_legacy_mixed_job") {
-        const ids = [body.args?.p_asset_id, body.args?.p_brand_id, body.args?.p_user_id];
-        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (ids.some((value) => !uuid.test(String(value ?? ""))) || body.args?.p_contract_version !== "legacy/semantic-v7") {
-          return json({ error: "rpc_args_not_allowed" }, 400);
-        }
-      }
-      if (body.fn === "ci_reap_stale_jobs" && Object.keys(body.args ?? {}).length > 0) {
-        return json({ error: "rpc_args_not_allowed" }, 400);
-      }
       const { data, error } = await admin.rpc(body.fn, body.args ?? {});
       if (error) return json({ error: "db_error", message: error.message }, 400);
       return json({ data });
@@ -196,7 +166,6 @@ Deno.serve(async (req) => {
     // ── Storage ──────────────────────────────────────────────────────────────
     if (action === "sign_upload") {
       if (!body.key) return json({ error: "key_required" }, 400);
-      if (!isWorkerStorageKeyAllowed(body.key)) return json({ error: "storage_key_not_allowed" }, 403);
       // O arquivo não passa por aqui: devolvemos o token e o worker faz o PUT
       // direto no storage. Um vídeo de 80 MB atravessando a edge function
       // estouraria o limite de corpo.
@@ -209,7 +178,6 @@ Deno.serve(async (req) => {
 
     if (action === "sign_download") {
       if (!body.key) return json({ error: "key_required" }, 400);
-      if (!isWorkerStorageKeyAllowed(body.key)) return json({ error: "storage_key_not_allowed" }, 403);
       const { data, error } = await admin.storage
         .from(BUCKET)
         .createSignedUrl(body.key, body.expires_in ?? 3600);
@@ -219,7 +187,6 @@ Deno.serve(async (req) => {
 
     if (action === "storage_remove") {
       if (!body.key) return json({ error: "key_required" }, 400);
-      if (!isWorkerStorageKeyAllowed(body.key)) return json({ error: "storage_key_not_allowed" }, 403);
       const { error } = await admin.storage.from(BUCKET).remove([body.key]);
       if (error) return json({ error: "storage_error", message: error.message }, 400);
       return json({ ok: true });

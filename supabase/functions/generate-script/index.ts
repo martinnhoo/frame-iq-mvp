@@ -1,7 +1,6 @@
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { patternScopeFilters } from "../_shared/tenant-boundary.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +37,7 @@ Deno.serve(async (req) => {
     if (!authUser) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const verified_user_id = authUser.id;
     // ─────────────────────────────────────────────────────────────────────────
-    const { product, offer, audience, format, duration, market, angle, extra_context, ui_language } = await req.json();
+    const { product, offer, audience, format, duration, market, angle, extra_context, user_id, ui_language } = await req.json();
     const effectiveUserId = verified_user_id;
 
     // ── Credit check — must occur before AI logic ───────────────────────────
@@ -57,41 +56,39 @@ Deno.serve(async (req) => {
       const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
       const restHeaders = { apikey: svcKey, Authorization: `Bearer ${svcKey}` };
 
-      // Tenant observations and global benchmarks are deliberately separate.
+      // ── Load learned patterns for constraint ──
       try {
-        const scopes = patternScopeFilters(effectiveUserId);
-        const fields = "pattern_key,variables,avg_ctr,avg_cpc,avg_roas,avg_thumb_stop,confidence,sample_size,insight_text";
-        const tenantRes = await fetch(
-          `${supabaseUrl}/rest/v1/learned_patterns?user_id=eq.${encodeURIComponent(scopes.tenant.user_id)}&scope=eq.${scopes.tenant.scope}&is_winner=eq.true&confidence=gte.0.25&select=${fields}&order=confidence.desc&limit=10`,
+        const winnersRes = await fetch(
+          `${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.true&confidence=gte.0.25&order=impact_pct.desc&limit=10`,
           { headers: restHeaders }
         );
-        const globalRes = await fetch(
-          `${supabaseUrl}/rest/v1/learned_patterns?user_id=is.null&scope=eq.${scopes.global.scope}&is_winner=eq.true&confidence=gte.0.25&select=${fields}&order=confidence.desc&limit=5`,
+        const antiRes = await fetch(
+          `${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.false&impact_pct=lt.-10&confidence=gte.0.25&order=impact_pct.asc&limit=5`,
           { headers: restHeaders }
         );
-        const tenantPatterns = tenantRes.ok ? await tenantRes.json() : [];
-        const globalBenchmarks = globalRes.ok ? await globalRes.json() : [];
+        const winners = winnersRes.ok ? await winnersRes.json() : [];
+        const antis = antiRes.ok ? await antiRes.json() : [];
 
-        if (tenantPatterns.length > 0 || globalBenchmarks.length > 0) {
+        if (winners.length > 0 || antis.length > 0) {
           patternConstraintBlock = `\n\n════════════════════════════════════════
 PATTERN CONSTRAINT — MANDATORY
 ════════════════════════════════════════
 
-ACCOUNT-OBSERVED CANDIDATE PATTERNS:
-${tenantPatterns.map((p: any) => `• ${p.pattern_key}: ${p.insight_text || ''} (confidence: ${p.confidence}, samples: ${p.sample_size || '?'})`).join('\n') || '• No qualifying tenant observations.'}
+PROVEN WINNING PATTERNS (from real account data):
+${winners.map((w: any) => `• ${w.pattern_key}: ${w.ai_insight || ''} (impact: +${w.impact_pct}%, confidence: ${w.confidence}, samples: ${w.sample_size || '?'})`).join('\n')}
 
-GLOBAL BENCHMARK REFERENCES (not tenant evidence; never present as account truth):
-${globalBenchmarks.map((p: any) => `• ${p.pattern_key}: ${p.insight_text || ''} (confidence: ${p.confidence}, samples: ${p.sample_size || '?'})`).join('\n') || '• None available.'}
+${antis.length > 0 ? `ANTI-PATTERNS (proven to underperform):
+${antis.map((a: any) => `• AVOID: ${a.pattern_key}: ${a.ai_insight || ''} (impact: ${a.impact_pct}%)`).join('\n')}` : ''}
 
 RULES:
-1. Treat tenant observations as candidates, not causal performance proof.
-2. Keep global references clearly labeled and separate from account observations.
-3. Never infer ROAS, CPA, conversion, or scalability from public-ad repetition.
-4. If no tenant observation fits the requested format, say so in notes.
+1. At least 2 of the 3 scripts MUST directly apply a winning pattern in their structure, hook style, or format approach.
+2. Each script's "notes" field MUST cite which pattern it follows (or explain why it deviates).
+3. Scripts that follow anti-patterns are PROHIBITED.
+4. If no winning pattern fits the requested format, say so in notes and use best creative judgment.
 ════════════════════════════════════════`;
         } else {
           patternConstraintBlock = `\n\n════════════════════════════════════════
-NO QUALIFYING ACCOUNT-OBSERVED PATTERNS YET
+NO PROVEN PATTERNS YET
 ════════════════════════════════════════
 This account has no statistically validated patterns yet.
 Write scripts based on general best practices for the format and market.
@@ -107,7 +104,7 @@ Be transparent: do NOT claim pattern-based optimization.
           fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` },
-            body: JSON.stringify({ action: "get_context", internal_user_id: effectiveUserId }),
+            body: JSON.stringify({ action: "get_context", user_id: effectiveUserId }),
           }),
           fetch(`${supabaseUrl}/rest/v1/chat_memory?user_id=eq.${effectiveUserId}&select=memory_text,memory_type,importance&order=importance.desc&limit=8`, { headers: restHeaders }),
         ]);
@@ -139,7 +136,7 @@ Be transparent: do NOT claim pattern-based optimization.
         if (loopFetch.status === "fulfilled" && loopFetch.value.ok) {
           const loopData = await loopFetch.value.json();
           if (loopData.has_data && loopData.context) {
-            loopContext += `\n\n=== ACCOUNT CREATIVE OBSERVATIONS ===\n${loopData.context}\n=== Treat these as observed candidates, not causal performance proof. ===`;
+            loopContext += `\n\n=== PROVEN CREATIVE PATTERNS ===\n${loopData.context}\n=== Use winning patterns to write scripts. ===`;
           }
         }
         if (memoryFetch.status === "fulfilled" && memoryFetch.value.ok) {

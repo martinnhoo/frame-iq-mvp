@@ -408,7 +408,7 @@ Deno.serve(async (req) => {
         fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${serviceKey}` },
-          body: JSON.stringify({ action: 'learn', internal_user_id: user_id, persona_id: data?.persona_id || null }),
+          body: JSON.stringify({ action: 'learn', user_id, persona_id: data?.persona_id || null }),
         }).catch(() => {});
       }
     } catch (_) { /* never block */ }
