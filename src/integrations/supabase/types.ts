@@ -5494,6 +5494,534 @@ export type Database = {
           },
         ]
       }
+      clip_accounts: {
+        Row: {
+          active: boolean
+          created_at: string
+          daily_limit: number
+          id: string
+          label: string
+          network_id: string
+          niche: string
+          rules: Json
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          label: string
+          network_id: string
+          niche: string
+          rules?: Json
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          label?: string
+          network_id?: string
+          niche?: string
+          rules?: Json
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_accounts_network_id_user_id_fkey"
+            columns: ["network_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_networks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_networks: {
+        Row: {
+          active: boolean
+          approval_mode: string
+          created_at: string
+          daily_limit: number
+          id: string
+          min_score: number
+          name: string
+          posting_slots: string[]
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          approval_mode?: string
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          min_score?: number
+          name?: string
+          posting_slots?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          approval_mode?: string
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          min_score?: number
+          name?: string
+          posting_slots?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clip_publication_metrics: {
+        Row: {
+          captured_at: string
+          comments: number | null
+          id: number
+          likes: number | null
+          publication_id: string
+          raw: Json
+          saves: number | null
+          shares: number | null
+          user_id: string
+          views: number | null
+          watch_time_seconds: number | null
+        }
+        Insert: {
+          captured_at?: string
+          comments?: number | null
+          id?: number
+          likes?: number | null
+          publication_id: string
+          raw?: Json
+          saves?: number | null
+          shares?: number | null
+          user_id: string
+          views?: number | null
+          watch_time_seconds?: number | null
+        }
+        Update: {
+          captured_at?: string
+          comments?: number | null
+          id?: number
+          likes?: number | null
+          publication_id?: string
+          raw?: Json
+          saves?: number | null
+          shares?: number | null
+          user_id?: string
+          views?: number | null
+          watch_time_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_publication_metrics_publication_id_user_id_fkey"
+            columns: ["publication_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_publications"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_publications: {
+        Row: {
+          clip_id: string
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          last_checked_at: string | null
+          platform: string
+          provider_media_id: string | null
+          provider_payload: Json
+          provider_publish_id: string | null
+          published_at: string | null
+          scheduled_at: string | null
+          social_account_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clip_id: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          last_checked_at?: string | null
+          platform: string
+          provider_media_id?: string | null
+          provider_payload?: Json
+          provider_publish_id?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          social_account_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clip_id?: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          last_checked_at?: string | null
+          platform?: string
+          provider_media_id?: string | null
+          provider_payload?: Json
+          provider_publish_id?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          social_account_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_publications_clip_id_user_id_fkey"
+            columns: ["clip_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clips"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "clip_publications_social_account_id_user_id_fkey"
+            columns: ["social_account_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_social_accounts"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_social_accounts: {
+        Row: {
+          capabilities: Json
+          clip_account_id: string
+          connected_at: string
+          display_name: string | null
+          external_user_id: string
+          id: string
+          platform: string
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          capabilities?: Json
+          clip_account_id: string
+          connected_at?: string
+          display_name?: string | null
+          external_user_id: string
+          id?: string
+          platform: string
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          capabilities?: Json
+          clip_account_id?: string
+          connected_at?: string
+          display_name?: string | null
+          external_user_id?: string
+          id?: string
+          platform?: string
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_social_accounts_clip_account_id_user_id_fkey"
+            columns: ["clip_account_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_accounts"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_social_tokens: {
+        Row: {
+          access_token: string
+          expires_at: string | null
+          provider_payload: Json
+          refresh_expires_at: string | null
+          refresh_token: string | null
+          scopes: string | null
+          social_account_id: string
+          token_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          expires_at?: string | null
+          provider_payload?: Json
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          scopes?: string | null
+          social_account_id: string
+          token_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string | null
+          provider_payload?: Json
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          scopes?: string | null
+          social_account_id?: string
+          token_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_social_tokens_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: true
+            referencedRelation: "clip_social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clip_source_videos: {
+        Row: {
+          created_at: string
+          discovered_at: string
+          duration_seconds: number | null
+          id: string
+          last_error: string | null
+          media_status: string
+          media_storage_path: string | null
+          media_url: string | null
+          provider_video_id: string | null
+          rights_confirmed: boolean
+          source_id: string
+          source_published_at: string | null
+          source_url: string | null
+          thumbnail_url: string | null
+          title: string
+          transcript: Json | null
+          transcript_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discovered_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_error?: string | null
+          media_status?: string
+          media_storage_path?: string | null
+          media_url?: string | null
+          provider_video_id?: string | null
+          rights_confirmed?: boolean
+          source_id: string
+          source_published_at?: string | null
+          source_url?: string | null
+          thumbnail_url?: string | null
+          title: string
+          transcript?: Json | null
+          transcript_status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discovered_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_error?: string | null
+          media_status?: string
+          media_storage_path?: string | null
+          media_url?: string | null
+          provider_video_id?: string | null
+          rights_confirmed?: boolean
+          source_id?: string
+          source_published_at?: string | null
+          source_url?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          transcript?: Json | null
+          transcript_status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_source_videos_source_id_user_id_fkey"
+            columns: ["source_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_sources"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_sources: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          label: string
+          last_checked_at: string | null
+          last_error: string | null
+          network_id: string
+          provider: string
+          provider_channel_id: string | null
+          provider_url: string | null
+          rights_confirmed: boolean
+          updated_at: string
+          uploads_playlist_id: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          network_id: string
+          provider?: string
+          provider_channel_id?: string | null
+          provider_url?: string | null
+          rights_confirmed?: boolean
+          updated_at?: string
+          uploads_playlist_id?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          network_id?: string
+          provider?: string
+          provider_channel_id?: string | null
+          provider_url?: string | null
+          rights_confirmed?: boolean
+          updated_at?: string
+          uploads_playlist_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_sources_network_id_user_id_fkey"
+            columns: ["network_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_networks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clips: {
+        Row: {
+          ai_reason: string | null
+          caption: string | null
+          clip_account_id: string
+          created_at: string
+          end_seconds: number | null
+          hook: string | null
+          id: string
+          on_screen_title: string | null
+          render_status: string
+          rendered_storage_path: string | null
+          rendered_url: string | null
+          scheduled_at: string | null
+          score: number
+          source_video_id: string | null
+          start_seconds: number | null
+          status: string
+          topic: string | null
+          transcript_excerpt: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_reason?: string | null
+          caption?: string | null
+          clip_account_id: string
+          created_at?: string
+          end_seconds?: number | null
+          hook?: string | null
+          id?: string
+          on_screen_title?: string | null
+          render_status?: string
+          rendered_storage_path?: string | null
+          rendered_url?: string | null
+          scheduled_at?: string | null
+          score?: number
+          source_video_id?: string | null
+          start_seconds?: number | null
+          status?: string
+          topic?: string | null
+          transcript_excerpt?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_reason?: string | null
+          caption?: string | null
+          clip_account_id?: string
+          created_at?: string
+          end_seconds?: number | null
+          hook?: string | null
+          id?: string
+          on_screen_title?: string | null
+          render_status?: string
+          rendered_storage_path?: string | null
+          rendered_url?: string | null
+          scheduled_at?: string | null
+          score?: number
+          source_video_id?: string | null
+          start_seconds?: number | null
+          status?: string
+          topic?: string | null
+          transcript_excerpt?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clips_clip_account_id_user_id_fkey"
+            columns: ["clip_account_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_accounts"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "clips_source_video_id_user_id_fkey"
+            columns: ["source_video_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_source_videos"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string | null
