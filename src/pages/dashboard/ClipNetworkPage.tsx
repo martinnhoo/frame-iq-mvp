@@ -212,6 +212,42 @@ export default function ClipNetworkPage() {
   const approve = async (clip:Clip) => { setBusy(`approve:${clip.id}`); try{const {error:e}=await db.from("clips").update({status:"approved",updated_at:new Date().toISOString()}).eq("id",clip.id);if(e)throw e;await load();}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);} };
   const reject = async (clip:Clip) => { setBusy(`reject:${clip.id}`); try{const {error:e}=await db.from("clips").update({status:"rejected",updated_at:new Date().toISOString()}).eq("id",clip.id);if(e)throw e;await load();}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);} };
 
+  // O bucket é privado e continua privado: pedimos uma URL assinada na hora de
+  // assistir ou baixar, em vez de guardar no banco um link que expira.
+  const signMedia = async (clip:Clip, download=false) => {
+    const {data,error:e}=await supabase.functions.invoke("clip-network-sign-media",{body:{clip_id:clip.id,download}});
+    if(e) throw e; if(!data?.url) throw new Error(data?.error||"Mídia não disponível");
+    return data.url as string;
+  };
+
+  const watch = async (clip:Clip) => {
+    setBusy(`watch:${clip.id}`); setError(null);
+    try { const url=await signMedia(clip); setPlaying(p=>({...p,[clip.id]:url})); }
+    catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
+  };
+
+  const downloadClip = async (clip:Clip) => {
+    setBusy(`download:${clip.id}`); setError(null);
+    try { const url=await signMedia(clip,true); window.open(url,"_blank","noopener"); }
+    catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
+  };
+
+  const retryVideo = async (video:SourceVideo) => {
+    setBusy(`retry:${video.id}`); setError(null);
+    try { const {error:e}=await db.rpc("clip_retry_source_video",{p_video_id:video.id}); if(e)throw e; await load(); }
+    catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
+  };
+
+  // Enquanto a máquina está trabalhando, a tela se atualiza sozinha. Pedir para
+  // o usuário apertar "Atualizar" para ver progresso é o oposto de autopilot.
+  useEffect(()=>{
+    if(!running) return;
+    const t=setInterval(()=>{ load(); },15000);
+    return ()=>clearInterval(t);
+  },[running]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+
   if(loading) return <div className="flex min-h-[60vh] items-center justify-center text-white/60"><Loader2 className="mr-2 h-5 w-5 animate-spin"/>Carregando Clip Network…</div>;
 
   if(!network) return <div className="mx-auto max-w-5xl p-6 lg:p-10">
