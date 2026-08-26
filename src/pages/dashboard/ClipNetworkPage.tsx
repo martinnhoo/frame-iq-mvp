@@ -29,7 +29,7 @@ const STAGES = ["discovered","downloading","transcribing","analyzing","rendering
 const stageLabel: Record<string,string> = {
   discovered:"Descoberto", downloading:"Baixando", transcribing:"Transcrevendo",
   analyzing:"Analisando", rendering:"Renderizando", done:"Concluído",
-  error:"Erro", blocked:"Sem autorização",
+  error:"Erro", blocked:"Bloqueado",
 };
 const stageTone = (s:string, readyClips=0):"neutral"|"good"|"warn"|"bad"|"blue" =>
   s==="done" ? readyClips>0 ? "good" : "warn" : s==="error" ? "bad" : s==="blocked" ? "warn" : s==="discovered" ? "neutral" : "blue";
@@ -390,14 +390,21 @@ export default function ClipNetworkPage() {
         const candidates=clipStats.candidates;
         const readyCuts=clipStats.ready;
         const doneWithoutClips=stage==="done"&&readyCuts===0;
-        const canRetry=stage==="error"||(v.attempts||0)>0;
+        const blockedLabel=stage==="blocked"
+          ? !v.rights_confirmed
+            ? "Sem autorização"
+            : v.last_error?.toLowerCase().includes("curta")
+              ? "Fonte curta ignorada"
+              : stageLabel.blocked
+          : undefined;
+        const canRetry=stage!=="blocked"&&(stage==="error"||(v.attempts||0)>0);
         return <div key={v.id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
           {v.thumbnail_url?<img src={v.thumbnail_url} alt={v.title} className="aspect-video w-full object-cover opacity-80"/>:<div className="aspect-video bg-white/5"/>}
           <div className="p-3">
             <div className="text-[10px] text-white/30">{sourceById.get(v.source_id)?.label||"fonte"}</div>
             <a href={v.source_url} target="_blank" rel="noreferrer" className="mt-1 line-clamp-2 block text-xs font-medium leading-5 text-white hover:text-sky-300">{v.title}</a>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Pill tone={stageTone(stage,readyCuts)}>{doneWithoutClips?"Concluído sem clips prontos":stageLabel[stage]||stage}</Pill>
+              <Pill tone={stageTone(stage,readyCuts)}>{blockedLabel||(doneWithoutClips?"Concluído sem clips prontos":stageLabel[stage]||stage)}</Pill>
               {readyCuts>0&&<Pill tone="good">{readyCuts} {readyCuts===1?"corte pronto":"cortes prontos"}</Pill>}
               {readyCuts===0&&candidates>0&&<Pill>{candidates} {candidates===1?"candidato":"candidatos"}</Pill>}
               {v.duration_seconds!=null&&<Pill>{mmss(v.duration_seconds)}</Pill>}

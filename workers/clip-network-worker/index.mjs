@@ -266,11 +266,40 @@ async function renderAndUpload(master, clip, transcript, dir) {
 
 async function failJob(job, error) {
   const retryable = !(error instanceof MediaResolverError) || error.retryable !== false;
-  await call("fail_job", {
-    video_id: job.id, attempts: Number(job.attempts || 0),
-    retryable, error: String(error?.message || error),
-  }).catch((e) => log("não consegui registrar a falha", e?.message));
-  log("job falhou", job.id, error?.message || error);
+  const message = String(error?.message || error);
+
+  if (!retryable) {
+    try {
+      await updateVideo(job.id, {
+        pipeline_stage: "blocked",
+        media_status: "blocked",
+        stage_detail: error?.code === "source_too_short"
+          ? "fonte curta ignorada"
+          : "fonte bloqueada: erro não retentável",
+        last_error: message.slice(0, 2000),
+        locked_by: null,
+        locked_at: null,
+        lease_expires_at: null,
+        next_retry_at: null,
+        processing_finished_at: nowIso(),
+      });
+    } catch (updateError) {
+      log("não consegui registrar o bloqueio terminal", updateError?.message);
+      await call("fail_job", {
+        video_id: job.id,
+        attempts: Number(job.attempts || 0),
+        retryable,
+        error: message,
+      }).catch((e) => log("não consegui registrar a falha", e?.message));
+    }
+  } else {
+    await call("fail_job", {
+      video_id: job.id, attempts: Number(job.attempts || 0),
+      retryable, error: message,
+    }).catch((e) => log("não consegui registrar a falha", e?.message));
+  }
+
+  log("job falhou", job.id, message);
 }
 
 async function processJob(job) {
