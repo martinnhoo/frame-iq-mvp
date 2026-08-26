@@ -276,7 +276,7 @@ export default function ClipNetworkPage() {
     {error&&<div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0"/>{error}</div>}
 
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {[['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fila',queued,'agendados/processando'],['Clips prontos',ready,'renderizados'],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}
+      {[['Processando agora',running,'vídeos na máquina'],['Clips prontos',ready,'renderizados'],['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}
     </div>
 
     <div className="grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
