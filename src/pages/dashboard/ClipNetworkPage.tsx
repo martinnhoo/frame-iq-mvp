@@ -15,7 +15,7 @@ async function clipApi(action:string, payload:Record<string,unknown> = {}) {
   const { data:{ session }, error } = await supabase.auth.getSession();
   if (error) throw error;
   const accessToken = session?.access_token;
-  if (!accessToken) throw new Error("SessÃ£o expirada");
+  if (!accessToken) throw new Error("Sessão expirada");
 
   const response = await fetch(CLIP_NETWORK_API_URL, {
     method: "POST",
@@ -31,7 +31,7 @@ async function clipApi(action:string, payload:Record<string,unknown> = {}) {
   try {
     data = text ? JSON.parse(text) : {};
   } catch {
-    throw new Error(`Resposta invÃ¡lida do Clip Network (${response.status})`);
+    throw new Error(`Resposta inválida do Clip Network (${response.status})`);
   }
 
   if (!response.ok || data?.error) {
@@ -109,7 +109,11 @@ export default function ClipNetworkPage() {
   const today = new Date().toISOString().slice(0,10);
   const publishedToday = publications.filter(p => p.status === "published" && p.published_at?.startsWith(today)).length;
   
-  const ready = clips.filter(c => c.render_status === "ready" || c.render_status === "not_needed").length;
+  const readyClips = useMemo(
+    () => clips.filter(c => c.render_status === "ready" && !!(c.rendered_storage_path || c.rendered_url)),
+    [clips]
+  );
+  const ready = readyClips.length;
   const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length;
 
 
@@ -149,7 +153,7 @@ export default function ClipNetworkPage() {
     const label=sourceLabel.trim(); const url=sourceUrl.trim();
     if(!label||!url){setError("Informe o nome e a URL do canal do YouTube.");return;}
     const normalizedUrl=url.replace(/\/+$/,"").toLowerCase();
-    if(sources.some(source=>source.provider_url?.replace(/\/+$/,"").toLowerCase()===normalizedUrl)){setError("Este canal jÃ¡ estÃ¡ cadastrado nas fontes monitoradas.");return;}
+    if(sources.some(source=>source.provider_url?.replace(/\/+$/,"").toLowerCase()===normalizedUrl)){setError("Este canal já estÃ¡ cadastrado nas fontes monitoradas.");return;}
     setBusy("source"); setError(null);
     try {
       await clipApi("add_source", {
@@ -180,7 +184,7 @@ export default function ClipNetworkPage() {
       const data=await clipApi("discover",{network_id:network.id});
       const failures=(data?.results||[]).filter((result:any)=>result.error);
       await load();
-      if(failures.length) setError(`${failures.length} fonte(s) falharam na busca. Consulte o Ãºltimo erro em cada fonte.`);
+      if(failures.length) setError(`${failures.length} fonte(s) falharam na busca. Consulte o último erro em cada fonte.`);
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
@@ -193,7 +197,7 @@ export default function ClipNetworkPage() {
   };
 
   const removeSource = async (source:Source) => {
-    if(!window.confirm(`Remover a fonte â€œ${source.label}â€? Os vÃ­deos descobertos por ela serÃ£o removidos do pool; cortes jÃ¡ criados serÃ£o preservados.`)) return;
+    if(!window.confirm(`Remover a fonte “${source.label}”? Os vídeos descobertos por ela serão removidos do pool; cortes já criados serão preservados.`)) return;
     setBusy(`remove:${source.id}`); setError(null);
     try {
       await clipApi("remove_source",{source_id:source.id});
@@ -254,9 +258,33 @@ export default function ClipNetworkPage() {
 
   const signMedia = async (clip:Clip, download=false) => {
     const data=await clipApi("sign_media",{clip_id:clip.id,download});
-    if(!data?.url) throw new Error("MÃ­dia nÃ£o disponÃ­vel");
+    if(!data?.url) throw new Error("Mídia não disponível");
     return data.url as string;
   };
+
+  useEffect(()=>{
+    const missing = readyClips.filter(clip => !playing[clip.id]).slice(0,12);
+    if(!missing.length) return;
+
+    let cancelled = false;
+
+    Promise.all(
+      missing.map(async clip => {
+        try {
+          const url = await signMedia(clip);
+          return [clip.id, url] as const;
+        } catch {
+          return null;
+        }
+      })
+    ).then(entries => {
+      if(cancelled) return;
+      const valid = entries.filter(Boolean) as [string,string][];
+      if(valid.length) setPlaying(current => ({...current, ...Object.fromEntries(valid)}));
+    });
+
+    return ()=>{ cancelled = true; };
+  },[clips]);
 
   const watch = async (clip:Clip) => {
     setBusy(`watch:${clip.id}`); setError(null);
@@ -313,6 +341,54 @@ export default function ClipNetworkPage() {
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {[['Processando agora',running,'vídeos na máquina'],['Clips prontos',ready,'renderizados'],['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}
     </div>
+
+    {readyClips.length>0&&<section className="rounded-3xl border border-emerald-500/15 bg-emerald-500/[.035] p-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-white">Clips prontos</h2>
+          <p className="mt-1 text-xs text-white/40">MP4s finalizados e prontos para assistir ou baixar.</p>
+        </div>
+        <Pill tone="good">{readyClips.length} prontos</Pill>
+      </div>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {readyClips.map(clip=><div key={clip.id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+          {playing[clip.id]
+            ? <video
+                src={playing[clip.id]}
+                controls
+                playsInline
+                preload="metadata"
+                className="aspect-[9/16] max-h-[520px] w-full bg-black object-contain"
+              />
+            : <div className="flex aspect-[9/16] max-h-[520px] items-center justify-center bg-black/50 text-white/40">
+                <Loader2 className="h-6 w-6 animate-spin"/>
+              </div>
+          }
+
+          <div className="p-3">
+            <div className="line-clamp-2 text-xs font-medium text-white">
+              {clip.on_screen_title||clip.hook||clip.topic||"Clip pronto"}
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Pill tone="good">{Math.round(clip.score)} score</Pill>
+              {clip.start_seconds!=null&&clip.end_seconds!=null&&
+                <Pill>{Math.round(clip.end_seconds-clip.start_seconds)}s</Pill>}
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <button onClick={()=>watch(clip)} className="inline-flex flex-1 items-center justify-center rounded-lg bg-white px-2.5 py-2 text-[11px] font-semibold text-black">
+                <Play className="mr-1.5 h-3.5 w-3.5"/>Assistir
+              </button>
+              <button onClick={()=>downloadClip(clip)} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-2.5 py-2 text-[11px] text-white/65">
+                <Download className="h-3.5 w-3.5"/>
+              </button>
+            </div>
+          </div>
+        </div>)}
+      </div>
+    </section>}
 
     <div className="grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
       <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
