@@ -28,8 +28,14 @@ function json(data: unknown, status = 200) {
   });
 }
 
-async function gemini(parts: unknown[], systemText: string) {
-  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY ausente no backend");
+/**
+ * Gemini. Duas rotas, mesma família de modelo:
+ * - GEMINI_API_KEY presente → Google direto.
+ * - Caso contrário → AI Gateway do Lovable (LOVABLE_API_KEY, já gerenciada).
+ * Assim ninguém precisa copiar chave de IA para o Fly nem criar chave nova.
+ */
+async function gemini(parts: any[], systemText: string) {
+  if (!GEMINI_API_KEY) return await geminiViaGateway(parts, systemText);
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
     {
@@ -44,6 +50,7 @@ async function gemini(parts: unknown[], systemText: string) {
   );
   const body = await res.json();
   if (!res.ok) throw new Error(`Gemini falhou: ${JSON.stringify(body).slice(0, 600)}`);
+
   const text = (body.candidates?.[0]?.content?.parts || [])
     .map((p: { text?: string }) => p.text || "").join("");
   try {
