@@ -19,12 +19,43 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: clipCors });
   try {
     const { supabase, user } = await requireClipUser(req);
-    const { clip_id, source_video_id, download } = await req.json().catch(() => ({}));
+    const { clip_id, variant_id, revision_id, source_video_id, download } = await req.json().catch(() => ({}));
 
     let path: string | null = null;
     let filename = "clip.mp4";
 
-    if (clip_id) {
+    if (revision_id) {
+      const { data, error } = await supabase
+        .from("clip_revisions")
+        .select("id,user_id,rendered_storage_path,revision_number,clip_variants(variant_key),clips(on_screen_title,hook)")
+        .eq("id", revision_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data || data.user_id !== user.id) return json({ error: "not_found" }, 404);
+      path = data.rendered_storage_path;
+      const clip = Array.isArray(data.clips) ? data.clips[0] : data.clips;
+      const variant = Array.isArray(data.clip_variants) ? data.clip_variants[0] : data.clip_variants;
+      const label = String(clip?.on_screen_title || clip?.hook || "clip")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50) || "clip";
+      filename = `${label}-${variant?.variant_key || "variant"}-v${data.revision_number}.mp4`;
+    } else if (variant_id) {
+      const { data, error } = await supabase
+        .from("clip_variants")
+        .select("id,user_id,variant_key,rendered_storage_path,current_revision,clips(on_screen_title,hook)")
+        .eq("id", variant_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data || data.user_id !== user.id) return json({ error: "not_found" }, 404);
+      path = data.rendered_storage_path;
+      const clip = Array.isArray(data.clips) ? data.clips[0] : data.clips;
+      const label = String(clip?.on_screen_title || clip?.hook || "clip")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50) || "clip";
+      filename = `${label}-${data.variant_key}-v${data.current_revision}.mp4`;
+    } else if (clip_id) {
       const { data, error } = await supabase
         .from("clips")
         .select("id,user_id,rendered_storage_path,on_screen_title,hook")
@@ -48,7 +79,7 @@ Deno.serve(async (req) => {
       path = data.media_storage_path;
       filename = "master.mp4";
     } else {
-      return json({ error: "clip_id or source_video_id required" }, 400);
+      return json({ error: "revision_id, variant_id, clip_id or source_video_id required" }, 400);
     }
 
     if (!path) return json({ error: "media_not_ready" }, 409);

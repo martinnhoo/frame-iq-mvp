@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node index.mjs",
     "once": "node index.mjs --once",
-    "check": "node --check index.mjs && node --check mediaResolver.mjs && node --check gateway.mjs",
-    "test": "node --test mediaResolver.test.mjs"
+    "check": "node --check index.mjs && node --check mediaResolver.mjs && node --check gateway.mjs && node --check render/config.mjs && node --check render/captions.mjs && node --check render/filters.mjs",
+    "test": "node --test *.test.mjs render/*.test.mjs"
   }
 }

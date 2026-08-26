@@ -132,6 +132,8 @@ async function openAiTranscribe(audioBase64: string, mimeType: string) {
 
 const VIDEO_FIELDS = new Set(["pipeline_stage","media_status","stage_detail","duration_seconds","transcript","transcript_status","clips_generated","last_error","locked_by","locked_at","lease_expires_at","next_retry_at","processing_finished_at","updated_at"]);
 const CLIP_FIELDS = new Set(["render_status","rendered_storage_path","rendered_url","last_error","locked_by","lease_expires_at","render_attempts","status","updated_at"]);
+const REVISION_FIELDS = new Set(["render_status","rendered_storage_path","rendered_url","last_error","locked_by","lease_expires_at","render_attempts","parameters","updated_at"]);
+const VARIANT_KEYS = ["blur_caption","zoom_caption","zoom_clean"] as const;
 const pick = (patch: Record<string, unknown>, allow: Set<string>) => Object.fromEntries(Object.entries(patch || {}).filter(([k]) => allow.has(k)));
 
 async function loadContext(sourceId: string) {
@@ -153,6 +155,73 @@ async function syncPlayableClipCount(sourceVideoId: string) {
   const { error } = await admin.from("clip_source_videos").update({ clips_generated: count, updated_at: nowIso() }).eq("id", sourceVideoId);
   if (error) throw error;
   return count;
+}
+
+async function ensureClipVariants(clips: Record<string, any>[]) {
+  const eligible = [...new Map(
+    clips
+      .filter((clip) => clip?.id && clip?.user_id && clip?.source_video_id && clip?.status === "approved")
+      .map((clip) => [clip.id, clip]),
+  ).values()];
+  if (!eligible.length) return { variants: [], revisions: [] };
+
+  const rows = eligible.flatMap((clip) => VARIANT_KEYS.map((variantKey) => ({
+    user_id: clip.user_id,
+    clip_id: clip.id,
+    variant_key: variantKey,
+  })));
+  const { error: upsertError } = await admin.from("clip_variants")
+    .upsert(rows, { onConflict: "clip_id,variant_key", ignoreDuplicates: true });
+  if (upsertError) throw upsertError;
+
+  const { data, error } = await admin.from("clip_variants")
+    .select("*")
+    .in("clip_id", eligible.map((clip) => clip.id))
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  const variants = data || [];
+  const { data: existing, error: revisionReadError } = await admin.from("clip_revisions")
+    .select("*")
+    .in("clip_variant_id", variants.map((variant) => variant.id));
+  if (revisionReadError) throw revisionReadError;
+  const withRevision = new Set((existing || []).map((revision) => revision.clip_variant_id));
+  const missing = variants.filter((variant) => !withRevision.has(variant.id)).map((variant) => ({
+    user_id: variant.user_id,
+    clip_id: variant.clip_id,
+    clip_variant_id: variant.id,
+    revision_number: 1,
+    parameters: variant.parameters || {},
+    interpreted_action: { type: "initial_render", summary: "Render inicial" },
+  }));
+  if (missing.length) {
+    const { error: insertError } = await admin.from("clip_revisions").upsert(missing, { onConflict: "clip_variant_id,revision_number", ignoreDuplicates: true });
+    if (insertError) throw insertError;
+  }
+  const { data: revisions, error: finalReadError } = await admin.from("clip_revisions")
+    .select("*")
+    .in("clip_variant_id", variants.map((variant) => variant.id))
+    .order("created_at", { ascending: true });
+  if (finalReadError) throw finalReadError;
+  for (const variant of variants) {
+    if (variant.current_revision_id) continue;
+    const first = (revisions || []).find((revision) => revision.clip_variant_id === variant.id && revision.revision_number === 1);
+    if (first) {
+      const { error: pointerError } = await admin.from("clip_variants").update({ current_revision_id: first.id, current_revision: 1, updated_at: nowIso() }).eq("id", variant.id).is("current_revision_id", null);
+      if (pointerError) throw pointerError;
+      variant.current_revision_id = first.id;
+    }
+  }
+  return { variants, revisions: revisions || [] };
+}
+
+async function ensureAllApprovedVariants() {
+  const { data, error } = await admin.from("clips")
+    .select("id,user_id,source_video_id,status")
+    .eq("status", "approved")
+    .not("source_video_id", "is", null)
+    .limit(200);
+  if (error) throw error;
+  return ensureClipVariants(data || []);
 }
 
 async function orchestrate(_network: Record<string, any>, accounts: Record<string, any>[], transcript: { segments?: { start: number; end: number; text: string }[]; duration?: number }) {
@@ -253,6 +322,20 @@ Deno.serve(async (req) => {
         if (clip?.source_video_id && ["ready","error"].includes(String(patch.render_status || ""))) await syncPlayableClipCount(clip.source_video_id);
         return json({ ok: true });
       }
+      case "update_revision": {
+        const patch = { ...pick(payload.patch, REVISION_FIELDS), updated_at: nowIso() };
+        const { data: revision, error } = await admin.from("clip_revisions")
+          .update(patch).eq("id", payload.revision_id).select("clip_id").maybeSingle();
+        if (error) throw error;
+        if (!revision) return json({ error: "revision_not_found" }, 404);
+        const { data: clip, error: clipError } = await admin.from("clips")
+          .select("render_status,source_video_id").eq("id", revision.clip_id).maybeSingle();
+        if (clipError) throw clipError;
+        if (clip?.source_video_id && ["ready","error"].includes(String(patch.render_status || ""))) {
+          await syncPlayableClipCount(clip.source_video_id);
+        }
+        return json({ ok: true, clip_render_status: clip?.render_status || "pending" });
+      }
       case "transcribe_chunk": {
         const segments = await openAiTranscribe(String(payload.audio_base64 || ""), String(payload.mime_type || "audio/mpeg"));
         return json({ segments });
@@ -268,12 +351,33 @@ Deno.serve(async (req) => {
           for (const row of rows) { if (known.has(row.dedupe_key)||knownRanges.some((range:any)=>hasTemporalConflict(row,range))) continue; known.add(row.dedupe_key); knownRanges.push(row); fresh.push(row); }
           if (fresh.length) { const { error } = await admin.from("clips").insert(fresh); if (error) throw error; }
         }
-        const { data: clips } = await admin.from("clips").select("*").eq("source_video_id", job.id); const approved = await autoApprove(network, accounts, clips || []); return json({ clips: clips || [], approved });
+        const { data: clips } = await admin.from("clips").select("*").eq("source_video_id", job.id);
+        const approved = await autoApprove(network, accounts, clips || []);
+        const approvedClips = [...new Map([...(clips || []).filter((clip) => clip.status === "approved"), ...approved].map((clip) => [clip.id, clip])).values()];
+        const ensured = await ensureClipVariants(approvedClips);
+        return json({ clips: clips || [], approved, variants: ensured.variants, revisions: ensured.revisions });
       }
       case "next_render_backlog": {
-        const { data: rows, error } = await admin.from("clips").select("*, clip_source_videos(*)").eq("status","approved").eq("render_status","pending").not("source_video_id","is",null).lt("render_attempts",4).order("score",{ascending:false}).limit(1);
-        if (error) throw error; const clip=rows?.[0]; const video=clip?.clip_source_videos; if (!clip||!video?.transcript||!video.rights_confirmed) return json({clip:null});
-        const { data: source } = await admin.from("clip_sources").select("*").eq("id",video.source_id).maybeSingle(); if (!source?.rights_confirmed) return json({clip:null}); return json({clip,video,source});
+        await ensureAllApprovedVariants();
+        const { data: queued, error: queueError } = await admin.from("clip_revisions")
+          .select("clip_id,clips!inner(status)").eq("clips.status","approved")
+          .in("render_status", ["pending","error"]).lt("render_attempts",4)
+          .order("created_at", { ascending: true }).limit(1);
+        if (queueError) throw queueError;
+        const clipId = queued?.[0]?.clip_id;
+        if (!clipId) return json({ clip: null });
+        const { data: clip, error } = await admin.from("clips").select("*, clip_source_videos(*)").eq("id",clipId).eq("status","approved").maybeSingle();
+        if (error) throw error;
+        const video = clip?.clip_source_videos;
+        if (!clip || !video?.transcript || !video.rights_confirmed) return json({clip:null});
+        const { data: source } = await admin.from("clip_sources").select("*").eq("id",video.source_id).maybeSingle();
+        if (!source?.rights_confirmed) return json({clip:null});
+        const { data: variants, error: variantError } = await admin.from("clip_variants").select("*").eq("clip_id",clip.id);
+        if (variantError) throw variantError;
+        const { data: revisions, error: revisionError } = await admin.from("clip_revisions").select("*")
+          .eq("clip_id",clip.id).in("render_status",["pending","error"]).lt("render_attempts",4).order("created_at",{ascending:true});
+        if (revisionError) throw revisionError;
+        return json({clip,variants:variants||[],revisions:revisions||[],video,source});
       }
       case "signed_upload": {
         const { data, error } = await admin.storage.from(BUCKET).createSignedUploadUrl(payload.path,{upsert:true}); if(error) throw error; return json({path:payload.path,signed_url:data.signedUrl,token:data.token});

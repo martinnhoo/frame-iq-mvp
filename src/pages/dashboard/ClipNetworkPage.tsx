@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Supabase generated types are updated by Lovable after the migration is applied. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import ReviewDesk, { type DeskFeedback, type DeskRevision, type DeskVariant } from "@/components/clip-network/ReviewDesk";
 import {
   AlertTriangle, CheckCircle2, Clapperboard, Clock3, Copy, Download, ExternalLink,
   Instagram, Link2, Loader2, Play, Plus, Power, PowerOff, RefreshCw, RotateCcw, Sparkles, Trash2, Upload, Youtube, Zap,
@@ -47,6 +48,9 @@ type Source = { id:string; label:string; provider_url?:string; rights_confirmed:
 type SourceVideo = { id:string; source_id:string; title:string; source_url?:string; thumbnail_url?:string; source_published_at?:string; media_status:string; transcript_status:string; rights_confirmed:boolean; pipeline_stage:string; stage_detail?:string; last_error?:string; clips_generated?:number; attempts?:number; duration_seconds?:number; updated_at?:string };
 type Clip = { id:string; clip_account_id:string; source_video_id?:string; hook?:string; topic?:string; caption?:string; score:number; status:string; render_status:string; rendered_url?:string; rendered_storage_path?:string; last_error?:string; scheduled_at?:string; start_seconds?:number; end_seconds?:number; on_screen_title?:string };
 type Publication = { id:string; clip_id:string; platform:string; status:string; scheduled_at?:string; published_at?:string; provider_media_id?:string; error_message?:string };
+type ClipVariant = DeskVariant;
+type ClipRevision = DeskRevision;
+type ClipFeedback = DeskFeedback;
 
 const fmt = (v?:string) => v ? new Intl.DateTimeFormat("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }).format(new Date(v)) : "—";
 const statusLabel: Record<string,string> = {
@@ -82,6 +86,9 @@ export default function ClipNetworkPage() {
   const [sources,setSources] = useState<Source[]>([]);
   const [videos,setVideos] = useState<SourceVideo[]>([]);
   const [clips,setClips] = useState<Clip[]>([]);
+  const [variants,setVariants] = useState<ClipVariant[]>([]);
+  const [revisions,setRevisions] = useState<ClipRevision[]>([]);
+  const [feedback,setFeedback] = useState<ClipFeedback[]>([]);
   const [publications,setPublications] = useState<Publication[]>([]);
   const [sourceUrl,setSourceUrl] = useState("");
   const [sourceLabel,setSourceLabel] = useState("");
@@ -90,6 +97,7 @@ export default function ClipNetworkPage() {
   const [testCaption,setTestCaption] = useState("Treino de verdade é consistência. #fitness #treino");
   const fileRef = useRef<HTMLInputElement>(null);
   const [playing,setPlaying] = useState<Record<string,string>>({});
+  const [reviewMessage,setReviewMessage] = useState<string|null>(null);
 
   const primaryAccount = accounts[0];
   const instagram = socials.find(s => s.clip_account_id === primaryAccount?.id && s.platform === "instagram" && s.status === "active");
@@ -109,12 +117,15 @@ export default function ClipNetworkPage() {
   const today = new Date().toISOString().slice(0,10);
   const publishedToday = publications.filter(p => p.status === "published" && p.published_at?.startsWith(today)).length;
   
+  const editorialClips = useMemo(() => clips.filter(c => c.source_video_id), [clips]);
+  const legacyClips = useMemo(() => clips.filter(c => !c.source_video_id), [clips]);
   const readyClips = useMemo(
-    () => clips.filter(c => c.render_status === "ready" && !!(c.rendered_storage_path || c.rendered_url)),
-    [clips]
+    () => legacyClips.filter(c => c.render_status === "ready" && !!(c.rendered_storage_path || c.rendered_url)),
+    [legacyClips]
   );
-  const ready = readyClips.length;
-  const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length;
+  const ready = editorialClips.filter(clip => variants.filter(variant=>variant.clip_id===clip.id&&variant.render_status==="ready").length===3).length + readyClips.length;
+  const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length
+    + variants.filter(variant=>["pending","rendering"].includes(variant.render_status)).length;
 
 
   const load = async (showLoading=false) => {
@@ -128,8 +139,19 @@ export default function ClipNetworkPage() {
       setSocials(data?.socials || []);
       setSources(data?.sources || []);
       setVideos((data?.videos || []).filter((video:SourceVideo)=>video.pipeline_stage!=="blocked"));
-      setClips(data?.clips || []);
+      const nextClips:Clip[] = data?.clips || [];
+      setClips(nextClips);
       setPublications(data?.publications || []);
+      const clipIds=nextClips.filter(clip=>clip.source_video_id).map(clip=>clip.id);
+      if(clipIds.length){
+        const [variantResult,revisionResult,feedbackResult]=await Promise.all([
+          db.from("clip_variants").select("*").in("clip_id",clipIds).order("created_at",{ascending:true}),
+          db.from("clip_revisions").select("*").in("clip_id",clipIds).order("created_at",{ascending:false}),
+          db.from("clip_feedback").select("*").in("clip_id",clipIds).order("created_at",{ascending:false}),
+        ]);
+        if(variantResult.error)throw variantResult.error;if(revisionResult.error)throw revisionResult.error;if(feedbackResult.error)throw feedbackResult.error;
+        setVariants(variantResult.data||[]);setRevisions(revisionResult.data||[]);setFeedback(feedbackResult.data||[]);
+      }else{setVariants([]);setRevisions([]);setFeedback([]);}
     } catch(e:any) { setError(e.message || String(e)); }
     finally { if(showLoading) setLoading(false); }
   };
@@ -248,12 +270,25 @@ export default function ClipNetworkPage() {
 
   const approve = async (clip:Clip) => {
     setBusy(`approve:${clip.id}`); setError(null);
-    try{await clipApi("approve_clip",{clip_id:clip.id});await load();}
+    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"approve",payload:{clip_id:clip.id}}});if(e)throw e;if(data?.error)throw new Error(data.error);setReviewMessage("Momento aprovado. Criando as três variantes v1…");await load();}
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
   const reject = async (clip:Clip) => {
+    if(!window.confirm("Descartar este momento? Ele não será regenerado automaticamente."))return;
     setBusy(`reject:${clip.id}`); setError(null);
-    try{await clipApi("reject_clip",{clip_id:clip.id});await load();}
+    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"discard",payload:{clip_id:clip.id}}});if(e)throw e;if(data?.error)throw new Error(data.error);setReviewMessage("Momento descartado. Ele não será regenerado automaticamente.");await load();}
+    catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
+  };
+
+  const submitFeedback = async (clip:Clip,text:string,variant?:ClipVariant) => {
+    setBusy(`feedback:${clip.id}`);setError(null);setReviewMessage("Interpretando o pedido…");
+    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"submit_feedback",payload:{clip_id:clip.id,clip_variant_id:variant?.id,feedback:text}}});if(e)throw e;if(data?.error)throw new Error(data.error);const understood=data?.interpreted_action?.summary||"ajuste solicitado";const revisionLabels=(data?.revisions||[]).map((item:any)=>`${item.label} v${item.revision_number}`).join(", ");setReviewMessage(`Entendido: ${understood}.${revisionLabels?` Gerando ${revisionLabels}…`:""}`);await load();}
+    catch(e:any){setError(e.message||String(e));setReviewMessage(null);}finally{setBusy(null);}
+  };
+
+  const retryRevision = async (clip:Clip,revision:ClipRevision) => {
+    setBusy(`retry-revision:${revision.id}`);setError(null);
+    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"retry_revision",payload:{clip_id:clip.id,revision_id:revision.id}}});if(e)throw e;if(data?.error)throw new Error(data.error);setReviewMessage(`v${revision.revision_number} voltou para a fila de render.`);await load();}
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
@@ -261,6 +296,19 @@ export default function ClipNetworkPage() {
     const data=await clipApi("sign_media",{clip_id:clip.id,download});
     if(!data?.url) throw new Error("Mídia não disponível");
     return data.url as string;
+  };
+
+  const signVariantMedia = async (item:ClipVariant|ClipRevision,download=false,isRevision=false) => {
+    const {data,error:e}=await supabase.functions.invoke("clip-network-sign-media",{body:isRevision?{revision_id:item.id,download}:{variant_id:item.id,download}});
+    if(e)throw e;if(data?.error)throw new Error(data.error);if(!data?.url)throw new Error("Mídia não disponível");return data.url as string;
+  };
+
+  const watchVariant = async (item:ClipVariant|ClipRevision,isRevision=false) => {
+    setBusy(`watch:${item.id}`);setError(null);try{const url=await signVariantMedia(item,false,isRevision);setPlaying(current=>({...current,[item.id]:url}));}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
+  };
+
+  const downloadVariant = async (item:ClipVariant|ClipRevision,isRevision=false) => {
+    setBusy(`download:${item.id}`);setError(null);try{const url=await signVariantMedia(item,true,isRevision);window.open(url,"_blank","noopener");}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
   useEffect(()=>{
@@ -285,7 +333,15 @@ export default function ClipNetworkPage() {
     });
 
     return ()=>{ cancelled = true; };
-  },[clips]);
+  },[clips,playing,readyClips]);
+
+  useEffect(()=>{
+    const missing=variants.filter(variant=>variant.render_status==="ready"&&!playing[variant.id]).slice(0,12);
+    if(!missing.length)return;
+    let cancelled=false;
+    Promise.all(missing.map(async variant=>{try{return [variant.id,await signVariantMedia(variant)] as const;}catch{return null;}})).then(entries=>{if(cancelled)return;const valid=entries.filter(Boolean) as [string,string][];if(valid.length)setPlaying(current=>({...current,...Object.fromEntries(valid)}));});
+    return()=>{cancelled=true;};
+  },[variants,playing]);
 
   const watch = async (clip:Clip) => {
     setBusy(`watch:${clip.id}`); setError(null);
@@ -343,6 +399,26 @@ export default function ClipNetworkPage() {
       {[['Processando agora',running,'vídeos na máquina'],['Clips prontos',ready,'renderizados'],['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}
     </div>
 
+    <ReviewDesk
+      clips={editorialClips}
+      variants={variants}
+      revisions={revisions}
+      feedback={feedback}
+      videos={videos}
+      sources={sources}
+      accounts={accounts}
+      mediaUrls={playing}
+      busy={busy}
+      message={reviewMessage}
+      onApprove={clip=>approve(clip as Clip)}
+      onDiscard={clip=>reject(clip as Clip)}
+      onFeedback={(clip,text,variant)=>submitFeedback(clip as Clip,text,variant)}
+      onWatchVariant={variant=>watchVariant(variant)}
+      onWatchRevision={revision=>watchVariant(revision,true)}
+      onDownload={(item,isRevision)=>downloadVariant(item,isRevision)}
+      onRetry={(clip,revision)=>retryRevision(clip as Clip,revision)}
+    />
+
     {readyClips.length>0&&<section className="rounded-3xl border border-emerald-500/15 bg-emerald-500/[.035] p-5">
       <div className="flex items-center justify-between">
         <div>
@@ -393,10 +469,10 @@ export default function ClipNetworkPage() {
 
     <div className="grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
       <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
-        <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Fila de conteúdo</h2><p className="mt-1 text-xs text-white/40">IA escolhe, você revisa — ou deixa o autopilot assumir depois.</p></div><Pill>{clips.length} clips</Pill></div>
+        <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Uploads manuais</h2><p className="mt-1 text-xs text-white/40">Compatibilidade com MP4s enviados diretamente para publicação.</p></div><Pill>{legacyClips.length} clips</Pill></div>
         <div className="mt-5 space-y-3">
-          {clips.length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">Nenhum corte ainda. Adicione uma fonte autorizada ou envie um clip de teste.</div>}
-          {clips.slice(0,30).map(clip=>{
+          {legacyClips.length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">Nenhum upload manual. Os cortes editoriais aparecem na mesa de revisão acima.</div>}
+          {legacyClips.slice(0,30).map(clip=>{
             const pub=publicationByClip.get(clip.id);
             const editorial=accountById.get(clip.clip_account_id)?.label;
             const hasVideo=!!(clip.rendered_storage_path||clip.rendered_url);

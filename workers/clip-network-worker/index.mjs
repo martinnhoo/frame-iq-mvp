@@ -27,6 +27,9 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promis
 import { join } from "node:path";
 import { resolveMedia, probeDuration, MediaResolverError } from "./mediaResolver.mjs";
 import { call, storageShim, uploadBytes } from "./gateway.mjs";
+import { normalizeRenderSettings, revisionStoragePath } from "./render/config.mjs";
+import { writeAssCaptions } from "./render/captions.mjs";
+import { buildAudioFilter, buildVideoFilter } from "./render/filters.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const WORKER_SECRET = process.env.CLIP_WORKER_SECRET;
@@ -50,20 +53,22 @@ process.on("SIGINT", () => { shuttingDown = true; });
 
 function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(bin, args, { stdio: ["ignore", "ignore", "pipe"] });
+    const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new Error(`${bin} excedeu o tempo limite`)); }, timeoutMs);
+    child.stdout.on("data", (d) => { stdout += d.toString(); });
     child.stderr.on("data", (d) => { stderr += d.toString(); });
     child.on("error", (e) => { clearTimeout(timer); reject(e); });
     child.on("close", (code) => {
       clearTimeout(timer);
-      code === 0 ? resolve() : reject(new Error(`${bin} saiu com ${code}: ${stderr.slice(-1500)}`));
+      code === 0 ? resolve({ stdout, stderr }) : reject(new Error(`${bin} saiu com ${code}: ${stderr.slice(-1500)}`));
     });
   });
 }
 
 const updateVideo = (videoId, patch) => call("update_video", { video_id: videoId, patch });
-const updateClip = (clipId, patch) => call("update_clip", { clip_id: clipId, patch });
+const updateRevision = (revisionId, patch) => call("update_revision", { revision_id: revisionId, patch });
 
 // â”€â”€ Estado do pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -214,20 +219,62 @@ async function writeSrt(transcript, start, end, file) {
   await writeFile(file, rows || "1\n00:00:00,000 --> 00:00:03,000\n \n");
 }
 
-async function renderClip(master, clip, transcript, dir) {
-  const out = join(dir, `${clip.id}.mp4`);
-  const srt = join(dir, `${clip.id}.srt`);
-  const start = Number(clip.start_seconds);
-  const duration = Number(clip.end_seconds) - start;
-  await writeSrt(transcript, start, Number(clip.end_seconds), srt);
-  const escapedSrt = srt.replace(/\\/g, "\\\\").replace(/:/g, "\\:").replace(/'/g, "\\'");
-  const filter = `[0:v]split=2[bg0][fg0];[bg0]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=24:2[bg];[fg0]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,subtitles='${escapedSrt}':force_style='FontName=DejaVu Sans,FontSize=8,Bold=1,Outline=0.8,Shadow=0,Alignment=2,MarginV=65,MarginL=24,MarginR=24'[v]`;
+async function probeMedia(file) {
+  const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file], { timeoutMs: 60_000 });
+  const parsed = JSON.parse(stdout || "{}");
+  const video = (parsed.streams || []).find((stream) => stream.codec_type === "video");
+  const rate = String(video?.r_frame_rate || "30/1").split("/").map(Number);
+  const fps = rate[1] ? rate[0] / rate[1] : rate[0];
+  return {
+    width: Number(video?.width || 0), height: Number(video?.height || 0),
+    fps: Number.isFinite(fps) && fps > 0 && fps <= 120 ? fps : 30,
+    duration: Number(parsed.format?.duration || 0), hasVideo: Boolean(video),
+    hasAudio: (parsed.streams || []).some((stream) => stream.codec_type === "audio"),
+  };
+}
 
-  await run("ffmpeg", ["-y", "-ss", String(start), "-i", master, "-t", String(duration),
+async function detectConservativeEdges(master, start, end, hasAudio) {
+  if (!hasAudio || end - start < 2) return { start, end };
+  try {
+    const { stderr } = await run("ffmpeg", ["-hide_banner", "-ss", String(start), "-i", master, "-t", String(end - start), "-af", "silencedetect=noise=-42dB:d=0.18", "-f", "null", "-"], { timeoutMs: 120_000 });
+    const starts = [...stderr.matchAll(/silence_start:\s*([0-9.]+)/g)].map((match) => Number(match[1]));
+    const ends = [...stderr.matchAll(/silence_end:\s*([0-9.]+)/g)].map((match) => Number(match[1]));
+    const leading = starts[0] <= 0.05 && ends.length ? Math.min(0.75, ends[0]) : 0;
+    const trailingStart = starts.at(-1);
+    const trailing = Number.isFinite(trailingStart) && trailingStart > (end - start) - 1.5
+      ? Math.min(0.75, end - start - trailingStart) : 0;
+    return { start: start + Math.max(0, leading), end: end - Math.max(0, trailing) };
+  } catch (error) {
+    log("análise conservadora de silêncio ignorada", error?.message || error);
+    return { start, end };
+  }
+}
+
+async function renderRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds) {
+  const settings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
+  settings.startSeconds = effectiveBounds?.start ?? settings.startSeconds;
+  settings.endSeconds = effectiveBounds?.end ?? settings.endSeconds;
+  const duration = settings.endSeconds - settings.startSeconds;
+  if (duration <= 0) throw new Error("Janela de render inválida");
+
+  const out = join(dir, `${revision.id}.mp4`);
+  const ass = settings.captions.enabled ? join(dir, `${revision.id}.ass`) : null;
+  if (ass) await writeAssCaptions(transcript, settings, ass);
+  const filter = buildVideoFilter({ variantKey: variant.variant_key, settings, assPath: ass, fps: sourceMeta.fps, source: sourceMeta });
+  const args = ["-y", "-ss", String(settings.startSeconds), "-i", master, "-t", String(duration),
     "-filter_complex", filter, "-map", "[v]", "-map", "0:a?",
-    "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
-    "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", out]);
-  return out;
+    "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p",
+    "-c:a", "aac", "-b:a", "128k"];
+  if (sourceMeta.hasAudio) args.push("-af", buildAudioFilter(duration));
+  args.push("-movflags", "+faststart", out);
+  await run("ffmpeg", args);
+
+  const output = await probeMedia(out);
+  if (!output.hasVideo || output.width !== 1080 || output.height !== 1920 || output.duration <= 0) {
+    throw new Error(`MP4 inválido: ${output.width}x${output.height}, duração ${output.duration || 0}`);
+  }
+  if (sourceMeta.hasAudio && !output.hasAudio) throw new Error("MP4 inválido: faixa de áudio ausente");
+  return { out, settings };
 }
 
 /**
@@ -235,30 +282,40 @@ async function renderClip(master, clip, transcript, dir) {
  * e o dashboard pede uma signed URL na hora de assistir/baixar. Persistir uma
  * URL assinada no banco criaria um link que expira e vira erro silencioso.
  */
-async function renderAndUpload(master, clip, transcript, dir) {
-  await updateClip(clip.id, {
+async function renderAndUploadRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds) {
+  const label = `${variant.variant_key} v${revision.revision_number}`;
+  log(`[clip ${clip.id}] rendering ${label}`);
+  await updateRevision(revision.id, {
     render_status: "rendering", locked_by: WORKER_ID,
     lease_expires_at: new Date(Date.now() + LEASE_SECS * 1000).toISOString(),
-    render_attempts: Number(clip.render_attempts || 0) + 1,
+    render_attempts: Number(revision.render_attempts || 0) + 1,
   });
   try {
-    const rendered = await renderClip(master, clip, transcript, dir);
-    const bytes = await readFile(rendered);
-    const path = `${clip.user_id}/${clip.id}.mp4`;
-    await uploadBytes(path, bytes, "video/mp4");
-    await updateClip(clip.id, {
+    const { out, settings } = await renderRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds);
+    const path = revisionStoragePath(clip.user_id, clip.id, variant.variant_key, revision.revision_number);
+    await uploadBytes(path, await readFile(out), "video/mp4");
+    const parameters = {
+      ...(revision.parameters || {}),
+      start_seconds: Number(revision.parameters?.start_seconds ?? clip.start_seconds),
+      end_seconds: Number(revision.parameters?.end_seconds ?? clip.end_seconds),
+      effective_start_seconds: settings.startSeconds,
+      effective_end_seconds: settings.endSeconds,
+      captions: settings.captions, framing: settings.framing, audio: settings.audio,
+    };
+    const response = await updateRevision(revision.id, {
       render_status: "ready", rendered_storage_path: path, rendered_url: null,
-      last_error: null, locked_by: null, lease_expires_at: null,
+      parameters, last_error: null, locked_by: null, lease_expires_at: null,
     });
-    await rm(rendered, { force: true });
-    return true;
-  } catch (e) {
-    await updateClip(clip.id, {
-      render_status: "error", last_error: String(e?.message || e).slice(0, 1500),
+    await rm(out, { force: true });
+    log(`[clip ${clip.id}] ${label} ready`);
+    return { ok: true, clipRenderStatus: response.clip_render_status };
+  } catch (error) {
+    await updateRevision(revision.id, {
+      render_status: "error", last_error: String(error?.message || error).slice(0, 1500),
       locked_by: null, lease_expires_at: null,
     });
-    log("render falhou", clip.id, e?.message || e);
-    return false;
+    log(`[clip ${clip.id}] ${label} failed`, error?.message || error);
+    return { ok: false };
   }
 }
 
@@ -337,24 +394,39 @@ async function processJob(job) {
     // IA e a service role moram.
     stage = "analyzing";
     await setStage(job.id, "analyzing", "IA escolhendo os melhores momentos");
-    const { clips = [], approved = [] } = await call("analyze_and_save", { job, transcript }, { timeoutMs: 300_000 });
+    const { clips = [], approved = [], variants = [], revisions = [] } = await call("analyze_and_save", { job, transcript }, { timeoutMs: 300_000 });
 
     // 5. Render dos aprovados, usando o master que jÃ¡ estÃ¡ em disco.
     const approvedClips = [...new Map(
       [...clips.filter((c) => c.status === "approved"), ...approved].map((clip) => [clip.id, clip]),
     ).values()];
-    const toRender = approvedClips
-      .filter((c) => c.render_status === "pending" || c.render_status === "error");
+    const approvedIds = new Set(approvedClips.map((clip) => clip.id));
+    const clipById = new Map(approvedClips.map((clip) => [clip.id, clip]));
+    const variantById = new Map(variants.map((variant) => [variant.id, variant]));
+    const toRender = revisions.filter((revision) => approvedIds.has(revision.clip_id)
+      && ["pending", "error"].includes(revision.render_status)
+      && Number(revision.render_attempts || 0) < 4);
     stage = "rendering";
     let rendered = 0;
-    for (const [i, clip] of toRender.entries()) {
+    const sourceMeta = await probeMedia(master);
+    const boundsByClip = new Map();
+    for (const [i, revision] of toRender.entries()) {
       if (shuttingDown) break;
-      await setStage(job.id, "rendering", `renderizando ${i + 1}/${toRender.length}`);
-      if (await renderAndUpload(master, clip, transcript, dir)) rendered += 1;
+      const clip = clipById.get(revision.clip_id);
+      const variant = variantById.get(revision.clip_variant_id);
+      if (!clip || !variant) continue;
+      await setStage(job.id, "rendering", `renderizando variante ${i + 1}/${toRender.length}`);
+      const baseSettings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
+      const boundsKey = `${clip.id}:${baseSettings.startSeconds}:${baseSettings.endSeconds}`;
+      if (!boundsByClip.has(boundsKey)) {
+        boundsByClip.set(boundsKey, await detectConservativeEdges(master, baseSettings.startSeconds, baseSettings.endSeconds, sourceMeta.hasAudio));
+      }
+      const result = await renderAndUploadRevision(master, clip, variant, revision, transcript, dir, sourceMeta, boundsByClip.get(boundsKey));
+      if (result.ok) rendered += 1;
     }
 
     if (toRender.length > 0 && rendered === 0) {
-      throw new Error(`Todos os ${toRender.length} cortes aprovados falharam no render`);
+      throw new Error(`Todas as ${toRender.length} variantes aprovadas falharam no render`);
     }
 
     await call("finish_job", {
@@ -363,7 +435,7 @@ async function processJob(job) {
       candidates_count: clips.length,
       approved_count: approvedClips.length,
     });
-    log(`concluÃ­do "${job.title}": ${clips.length} candidatos, ${rendered} renderizados`);
+    log(`concluÃ­do "${job.title}": ${clips.length} candidatos, ${rendered} variantes renderizadas`);
   } catch (e) {
     await failJob(job, e);
   } finally {
@@ -378,15 +450,27 @@ async function processJob(job) {
  * roda sÃ³ quando nÃ£o hÃ¡ vÃ­deo novo na fila.
  */
 async function processApprovedBacklog() {
-  const { clip, video, source } = await call("next_render_backlog");
+  const { clip, variants = [], revisions = [], video, source } = await call("next_render_backlog");
   if (!clip) return false;
 
   await mkdir(TMP_ROOT, { recursive: true });
   const dir = await mkdtemp(join(TMP_ROOT, "clip-render-"));
   try {
     const { path: master } = await resolveMedia({ video, source, dir, supabase: storageShim, bucket: BUCKET });
-    const rendered = await renderAndUpload(master, clip, video.transcript, dir);
-    if (rendered) {
+    const sourceMeta = await probeMedia(master);
+    const variantById = new Map(variants.map((variant) => [variant.id, variant]));
+    let clipReady = false;
+    const boundsByKey = new Map();
+    for (const revision of revisions) {
+      const variant = variantById.get(revision.clip_variant_id);
+      if (!variant) continue;
+      const settings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
+      const boundsKey = `${settings.startSeconds}:${settings.endSeconds}`;
+      if (!boundsByKey.has(boundsKey)) boundsByKey.set(boundsKey, await detectConservativeEdges(master, settings.startSeconds, settings.endSeconds, sourceMeta.hasAudio));
+      const result = await renderAndUploadRevision(master, clip, variant, revision, video.transcript, dir, sourceMeta, boundsByKey.get(boundsKey));
+      if (result.clipRenderStatus === "ready") clipReady = true;
+    }
+    if (clipReady) {
       // CompatÃ­vel tambÃ©m com a versÃ£o anterior do gateway: incrementa a
       // mÃ©trica apÃ³s aprovaÃ§Ã£o manual. O gateway novo reconta pelo banco.
       await call("finish_job", {
@@ -398,9 +482,11 @@ async function processApprovedBacklog() {
     }
     return true;
   } catch (e) {
-    await updateClip(clip.id, {
-      render_status: "error", last_error: String(e?.message || e).slice(0, 1500),
-    });
+    for (const revision of revisions) {
+      if (["pending", "rendering"].includes(revision.render_status)) {
+        await updateRevision(revision.id, { render_status: "error", last_error: String(e?.message || e).slice(0, 1500), locked_by: null, lease_expires_at: null }).catch(() => {});
+      }
+    }
     return true;
   } finally {
     await rm(dir, { recursive: true, force: true });

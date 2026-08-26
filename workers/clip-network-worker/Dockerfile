@@ -25,6 +25,7 @@ COPY package.json ./
 RUN npm install --omit=dev --no-audit --no-fund
 
 COPY index.mjs mediaResolver.mjs gateway.mjs ./
+COPY render ./render
 
 # Volume do Fly. O master do vídeo vive aqui só durante o job e é apagado no
 # final — nada persistente mora neste diretório.
