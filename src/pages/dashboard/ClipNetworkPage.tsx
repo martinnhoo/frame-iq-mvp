@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertTriangle, CheckCircle2, Clapperboard, Clock3, Copy, Download, ExternalLink,
-  Instagram, Link2, Loader2, PlayCircle, RefreshCw, Sparkles, Upload, Youtube, Zap,
+  Instagram, Link2, Loader2, Plus, Power, PowerOff, RefreshCw, Sparkles, Trash2, Upload, Youtube, Zap,
 } from "lucide-react";
 
 const db = supabase as any;
@@ -38,9 +38,10 @@ export default function ClipNetworkPage() {
   const [videos,setVideos] = useState<SourceVideo[]>([]);
   const [clips,setClips] = useState<Clip[]>([]);
   const [publications,setPublications] = useState<Publication[]>([]);
-  const [sourceUrl,setSourceUrl] = useState("https://www.youtube.com/@renatocariani");
-  const [sourceLabel,setSourceLabel] = useState("Renato Cariani");
+  const [sourceUrl,setSourceUrl] = useState("");
+  const [sourceLabel,setSourceLabel] = useState("");
   const [rightsConfirmed,setRightsConfirmed] = useState(false);
+  const [showSourceForm,setShowSourceForm] = useState(false);
   const [testCaption,setTestCaption] = useState("Treino de verdade é consistência. #fitness #treino");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -93,11 +94,18 @@ export default function ClipNetworkPage() {
   };
 
   const addSource = async () => {
-    if(!network) return; setBusy("source"); setError(null);
+    if(!network) return;
+    const label=sourceLabel.trim(); const url=sourceUrl.trim();
+    if(!label||!url){setError("Informe o nome e a URL do canal do YouTube.");return;}
+    const normalizedUrl=url.replace(/\/+$/,"").toLowerCase();
+    if(sources.some(source=>source.provider_url?.replace(/\/+$/,"").toLowerCase()===normalizedUrl)){setError("Este canal já está cadastrado nas fontes monitoradas.");return;}
+    setBusy("source"); setError(null);
     try {
       const {data:{user}}=await supabase.auth.getUser(); if(!user) throw new Error("Faça login novamente");
-      const {error:e}=await db.from("clip_sources").insert({ user_id:user.id,network_id:network.id,provider:"youtube",label:sourceLabel.trim()||"YouTube",provider_url:sourceUrl.trim(),rights_confirmed:rightsConfirmed,active:true });
-      if(e) throw e; await load();
+      const {error:e}=await db.from("clip_sources").insert({ user_id:user.id,network_id:network.id,provider:"youtube",label,provider_url:url,rights_confirmed:rightsConfirmed,active:true });
+      if(e) throw e;
+      setSourceLabel(""); setSourceUrl(""); setRightsConfirmed(false); setShowSourceForm(false);
+      await load();
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
@@ -105,7 +113,39 @@ export default function ClipNetworkPage() {
     setBusy(`discover:${sourceId}`); setError(null);
     try {
       const {data,error:e}=await supabase.functions.invoke("clip-network-discover-youtube",{body:{source_id:sourceId}});
-      if(e) throw e; if(data?.error) throw new Error(data.error); await load();
+      if(e) throw e; if(data?.error) throw new Error(data.error);
+      const failure=data?.results?.find((result:any)=>result.source_id===sourceId&&result.error);
+      if(failure){await load();throw new Error(failure.error);}
+      if(!data?.results?.length) throw new Error("A fonte precisa estar ativa para executar a busca.");
+      await load();
+    }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
+  };
+
+  const discoverAll = async () => {
+    if(!network) return; setBusy("discover:all"); setError(null);
+    try {
+      const {data,error:e}=await supabase.functions.invoke("clip-network-discover-youtube",{body:{network_id:network.id}});
+      if(e) throw e; if(data?.error) throw new Error(data.error);
+      const failures=(data?.results||[]).filter((result:any)=>result.error);
+      await load();
+      if(failures.length) setError(`${failures.length} fonte(s) falharam na busca. Consulte o último erro em cada fonte.`);
+    }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
+  };
+
+  const toggleSource = async (source:Source) => {
+    setBusy(`toggle:${source.id}`); setError(null);
+    try {
+      const {error:e}=await db.from("clip_sources").update({active:!source.active,updated_at:new Date().toISOString()}).eq("id",source.id);
+      if(e) throw e; await load();
+    }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
+  };
+
+  const removeSource = async (source:Source) => {
+    if(!window.confirm(`Remover a fonte “${source.label}”? Os vídeos descobertos por ela serão removidos do pool; cortes já criados serão preservados.`)) return;
+    setBusy(`remove:${source.id}`); setError(null);
+    try {
+      const {error:e}=await db.from("clip_sources").delete().eq("id",source.id);
+      if(e) throw e; await load();
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
@@ -203,12 +243,47 @@ export default function ClipNetworkPage() {
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
-          <div className="flex items-center gap-2"><Youtube className="h-4 w-4 text-red-400"/><h2 className="text-sm font-semibold text-white">Fontes automáticas</h2></div>
-          <input value={sourceLabel} onChange={e=>setSourceLabel(e.target.value)} placeholder="Nome da fonte" className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-white outline-none placeholder:text-white/25"/>
-          <input value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)} placeholder="URL ou @handle do YouTube" className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-white outline-none placeholder:text-white/25"/>
-          <label className="mt-3 flex cursor-pointer items-start gap-2 text-[11px] leading-4 text-white/45"><input type="checkbox" checked={rightsConfirmed} onChange={e=>setRightsConfirmed(e.target.checked)} className="mt-0.5"/><span>Tenho autorização para reutilizar/processar a mídia desta fonte. Sem isso, o AdBrief apenas monitora novos uploads.</span></label>
-          <button onClick={addSource} disabled={busy==='source'||!sourceUrl} className="mt-4 inline-flex items-center rounded-xl bg-white/10 px-3 py-2 text-xs text-white hover:bg-white/15"><Link2 className="mr-2 h-3.5 w-3.5"/>Adicionar fonte</button>
-          <div className="mt-4 space-y-2">{sources.map(s=><div key={s.id} className="rounded-xl border border-white/10 bg-black/20 p-3"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><div className="truncate text-xs font-medium text-white">{s.label}</div><div className="mt-1 text-[10px] text-white/30">última busca {fmt(s.last_checked_at)}</div></div><button onClick={()=>discover(s.id)} disabled={busy===`discover:${s.id}`} className="rounded-lg border border-white/10 p-2 text-white/50">{busy===`discover:${s.id}`?<Loader2 className="h-3.5 w-3.5 animate-spin"/>:<RefreshCw className="h-3.5 w-3.5"/>}</button></div><div className="mt-2"><Pill tone={s.rights_confirmed?'good':'warn'}>{s.rights_confirmed?'processamento autorizado':'somente monitorar'}</Pill></div>{s.last_error&&<div className="mt-2 text-[10px] text-red-300">{s.last_error}</div>}</div>)}</div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2"><Youtube className="h-4 w-4 text-red-400"/><h2 className="text-sm font-semibold text-white">Fontes monitoradas ({sources.length})</h2></div>
+              <p className="mt-1 text-[11px] leading-4 text-white/35">Todos os vídeos entram no mesmo pool da rede para o routing editorial.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={discoverAll} disabled={!!busy||!sources.some(s=>s.active)} className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-medium text-white/65 hover:bg-white/10 disabled:opacity-40">{busy==='discover:all'?<Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>:<RefreshCw className="mr-1.5 h-3.5 w-3.5"/>}Buscar todas</button>
+              <button onClick={()=>setShowSourceForm(true)} disabled={showSourceForm} className="inline-flex items-center rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black disabled:opacity-50"><Plus className="mr-1.5 h-3.5 w-3.5"/>Adicionar fonte</button>
+            </div>
+          </div>
+
+          {(showSourceForm||sources.length===0)&&<div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="text-xs font-medium text-white">Nova fonte do YouTube</div>
+            <label className="mt-3 block text-[11px] text-white/45">Nome da fonte<input value={sourceLabel} onChange={e=>setSourceLabel(e.target.value)} placeholder="Ex.: Renato Cariani" className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-xs text-white outline-none placeholder:text-white/25"/></label>
+            <label className="mt-3 block text-[11px] text-white/45">URL do canal<input value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)} placeholder="https://www.youtube.com/@canal" className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-xs text-white outline-none placeholder:text-white/25"/></label>
+            <label className="mt-3 flex cursor-pointer items-start gap-2 text-[11px] leading-4 text-white/45"><input type="checkbox" checked={rightsConfirmed} onChange={e=>setRightsConfirmed(e.target.checked)} className="mt-0.5"/><span>Tenho autorização para reutilizar/processar a mídia desta fonte. Sem isso, o AdBrief apenas monitora novos uploads.</span></label>
+            <div className="mt-4 flex gap-2">
+              <button onClick={addSource} disabled={busy==='source'||!sourceLabel.trim()||!sourceUrl.trim()} className="inline-flex items-center rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">{busy==='source'?<Loader2 className="mr-2 h-3.5 w-3.5 animate-spin"/>:<Link2 className="mr-2 h-3.5 w-3.5"/>}Adicionar fonte</button>
+              {sources.length>0&&<button onClick={()=>setShowSourceForm(false)} disabled={busy==='source'} className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/55">Cancelar</button>}
+            </div>
+          </div>}
+
+          <div className="mt-4 space-y-3">
+            {sources.length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-6 text-center text-xs text-white/35">Nenhuma fonte monitorada ainda.</div>}
+            {sources.map(s=><div key={s.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2"><div className="text-xs font-medium text-white">{s.label}</div><Pill tone={s.active?'good':'neutral'}>{s.active?'ativo':'inativo'}</Pill></div>
+                  {s.provider_url?<a href={s.provider_url} target="_blank" rel="noreferrer" className="mt-1.5 flex items-center gap-1 truncate text-[10px] text-sky-300/70 hover:text-sky-300"><span className="truncate">{s.provider_url}</span><ExternalLink className="h-3 w-3 shrink-0"/></a>:<div className="mt-1.5 text-[10px] text-white/25">Canal não informado</div>}
+                </div>
+                <Pill tone={s.rights_confirmed?'good':'warn'}>{s.rights_confirmed?'autorizada':'somente monitorar'}</Pill>
+              </div>
+              <div className="mt-3 text-[10px] text-white/35">Último scan: {fmt(s.last_checked_at)}</div>
+              {s.last_error&&<div className="mt-2 rounded-lg border border-red-500/15 bg-red-500/10 px-2.5 py-2 text-[10px] leading-4 text-red-300">Último erro: {s.last_error}</div>}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button onClick={()=>discover(s.id)} disabled={!!busy||!s.active} className="inline-flex items-center rounded-lg bg-white/10 px-2.5 py-2 text-[10px] font-medium text-white/70 hover:bg-white/15 disabled:opacity-35">{busy===`discover:${s.id}`?<Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>:<RefreshCw className="mr-1.5 h-3.5 w-3.5"/>}Buscar agora</button>
+                <button onClick={()=>toggleSource(s)} disabled={!!busy} className="inline-flex items-center rounded-lg border border-white/10 px-2.5 py-2 text-[10px] text-white/55 hover:bg-white/5 disabled:opacity-35">{busy===`toggle:${s.id}`?<Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>:s.active?<PowerOff className="mr-1.5 h-3.5 w-3.5"/>:<Power className="mr-1.5 h-3.5 w-3.5"/>}{s.active?'Desativar':'Ativar'}</button>
+                <button onClick={()=>removeSource(s)} disabled={!!busy} className="ml-auto inline-flex items-center rounded-lg border border-red-500/15 px-2.5 py-2 text-[10px] text-red-300/70 hover:bg-red-500/10 disabled:opacity-35">{busy===`remove:${s.id}`?<Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>:<Trash2 className="mr-1.5 h-3.5 w-3.5"/>}Remover</button>
+              </div>
+            </div>)}
+          </div>
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">

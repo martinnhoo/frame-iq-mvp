@@ -35,18 +35,15 @@ async function resolveChannel(apiKey: string, sourceUrl: string) {
 async function discoverForSource(supabase: any, source: any, apiKey: string) {
   let channelId = source.provider_channel_id;
   let uploadsPlaylistId = source.uploads_playlist_id;
-  let channelTitle = source.label;
 
   if (!channelId || !uploadsPlaylistId) {
     const channel = await resolveChannel(apiKey, source.provider_url || source.provider_channel_id || "");
     channelId = channel.id;
     uploadsPlaylistId = channel.contentDetails?.relatedPlaylists?.uploads;
-    channelTitle = channel.snippet?.title || source.label;
     if (!uploadsPlaylistId) throw new Error("Uploads playlist not available");
     await supabase.from("clip_sources").update({
       provider_channel_id: channelId,
       uploads_playlist_id: uploadsPlaylistId,
-      label: channelTitle,
       last_error: null,
       updated_at: new Date().toISOString(),
     }).eq("id", source.id);
@@ -93,6 +90,23 @@ async function discoverForSource(supabase: any, source: any, apiKey: string) {
   return { source_id: source.id, channel_id: channelId, discovered: rows.length };
 }
 
+async function discoverSources(supabase: any, sources: any[], apiKey: string) {
+  const results = [];
+  for (const source of sources) {
+    try {
+      results.push(await discoverForSource(supabase, source, apiKey));
+    } catch (e) {
+      await supabase.from("clip_sources").update({
+        last_error: String(e),
+        last_checked_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq("id", source.id);
+      results.push({ source_id: source.id, error: String(e) });
+    }
+  }
+  return results;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: clipCors });
   try {
@@ -109,13 +123,13 @@ Deno.serve(async (req) => {
     // User-triggered mode. Cron is checked first because scheduled calls also carry a Bearer token.
     if (!isCron && authHeader.startsWith("Bearer ")) {
       const { supabase, user } = await requireClipUser(req);
-      const { source_id } = await req.json().catch(() => ({}));
+      const { source_id, network_id } = await req.json().catch(() => ({}));
       let q = supabase.from("clip_sources").select("*").eq("user_id", user.id).eq("provider", "youtube").eq("active", true);
       if (source_id) q = q.eq("id", source_id);
+      else if (network_id) q = q.eq("network_id", network_id);
       const { data: sources, error } = await q;
       if (error) throw error;
-      const results = [];
-      for (const source of sources || []) results.push(await discoverForSource(supabase, source, apiKey));
+      const results = await discoverSources(supabase, sources || [], apiKey);
       return json({ success: true, results });
     }
 
@@ -124,14 +138,7 @@ Deno.serve(async (req) => {
     const supabase = serviceClient();
     const { data: sources, error } = await supabase.from("clip_sources").select("*").eq("provider", "youtube").eq("active", true);
     if (error) throw error;
-    const results = [];
-    for (const source of sources || []) {
-      try { results.push(await discoverForSource(supabase, source, apiKey)); }
-      catch (e) {
-        await supabase.from("clip_sources").update({ last_error: String(e), last_checked_at: new Date().toISOString() }).eq("id", source.id);
-        results.push({ source_id: source.id, error: String(e) });
-      }
-    }
+    const results = await discoverSources(supabase, sources || [], apiKey);
     return json({ success: true, results });
   } catch (e) {
     return json({ error: String(e) }, String(e).includes("unauthorized") ? 401 : 400);
