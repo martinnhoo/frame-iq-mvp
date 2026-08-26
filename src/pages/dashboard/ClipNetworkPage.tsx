@@ -72,7 +72,7 @@ export default function ClipNetworkPage() {
   },[clips]);
   const today = new Date().toISOString().slice(0,10);
   const publishedToday = publications.filter(p => p.status === "published" && p.published_at?.startsWith(today)).length;
-  const queued = publications.filter(p => ["queued","processing","publishing"].includes(p.status)).length;
+  
   const ready = clips.filter(c => c.render_status === "ready" || c.render_status === "not_needed").length;
   const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length;
 
