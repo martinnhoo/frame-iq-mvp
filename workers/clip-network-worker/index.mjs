@@ -133,7 +133,7 @@ function srtTime(seconds) {
 // Legenda estilo Reels/Shorts: blocos curtos, no máximo 2 linhas, sem custo de IA.
 const CAPTION_TARGET_WORDS = 4;   // alvo por bloco
 const CAPTION_MAX_WORDS = 5;      // teto duro por bloco
-const CAPTION_MAX_LINE_CHARS = 21; // largura confortável no 1080x1920
+const CAPTION_MAX_LINE_CHARS = 24; // largura confortável no 1080x1920
 
 /** Limpa espaços/quebras que vêm da transcrição sem tocar na pontuação. */
 function normalizeCaptionText(text) {
