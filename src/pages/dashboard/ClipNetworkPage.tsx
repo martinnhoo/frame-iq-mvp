@@ -600,7 +600,6 @@ export default function ClipNetworkPage() {
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{videos.slice(0,12).map(v=>{
         const stage=v.pipeline_stage||"discovered";
         const idx=STAGES.indexOf(stage as typeof STAGES[number]);
-        const pct=idx>=0?Math.round(((idx+1)/STAGES.length)*100):stage==="error"?100:0;
         const clipStats=clipStatsByVideo.get(v.id)||{candidates:0,ready:0};
         const candidates=clipStats.candidates;
         const readyCuts=clipStats.ready;
@@ -618,10 +617,95 @@ export default function ClipNetworkPage() {
               {v.duration_seconds!=null&&<Pill>{mmss(v.duration_seconds)}</Pill>}
               {!v.rights_confirmed&&<Pill tone="warn">sem autorização</Pill>}
             </div>
-            <div className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-white/8"><div className={`h-full rounded-full transition-all ${stage==="error"?"bg-red-400/70":doneWithoutClips?"bg-amber-400/70":stage==="done"?"bg-emerald-400/70":"bg-sky-400/70"}`} style={{width:`${pct}%`}}/></div>
-            <div className="mt-2 flex items-center justify-between text-[10px] text-white/30">
-              <span>{v.stage_detail||fmt(v.updated_at)}</span>
-              {(v.attempts||0)>0&&<span>tentativa {v.attempts}</span>}
+            <div className="mt-4 rounded-xl border border-white/[.07] bg-white/[.025] px-3 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    {stage!=="done"&&stage!=="error"&&
+                      <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-40"/>
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-400"/>
+                      </span>
+                    }
+                    {stage==="done"&&<span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400"/>}
+                    {stage==="error"&&<span className="h-2 w-2 shrink-0 rounded-full bg-red-400"/>}
+                    <span className="truncate text-[11px] font-medium text-white/80">
+                      {doneWithoutClips
+                        ?"Processamento concluído"
+                        :stage==="done"
+                          ?"Processamento concluído"
+                          :stage==="error"
+                            ?"Processamento interrompido"
+                            :stageLabel[stage]||stage}
+                    </span>
+                  </div>
+
+                  <div className="mt-1 truncate text-[10px] text-white/35">
+                    {v.stage_detail||(
+                      stage==="discovered" ? "Aguardando processamento"
+                      : stage==="downloading" ? "Preparando mídia original"
+                      : stage==="transcribing" ? "Convertendo fala em transcrição"
+                      : stage==="analyzing" ? "Selecionando oportunidades editoriais"
+                      : stage==="rendering" ? "Gerando versões finais"
+                      : stage==="done" ? "Tudo finalizado"
+                      : fmt(v.updated_at)
+                    )}
+                  </div>
+                </div>
+
+                {stage!=="error"&&
+                  <div className="shrink-0 text-right">
+                    <div className="text-[10px] font-medium text-white/55">
+                      {stage==="done" ? "6/6" : `${Math.max(1,idx+1)}/6`}
+                    </div>
+                    <div className="mt-0.5 text-[9px] text-white/25">etapas</div>
+                  </div>
+                }
+              </div>
+
+              <div className="mt-3 grid grid-cols-6 gap-1">
+                {STAGES.map((step,stepIndex)=>{
+                  const active=step===stage;
+                  const completed=stage==="done"||idx>stepIndex;
+                  const failed=stage==="error"&&stepIndex===Math.max(0,idx);
+
+                  return <div key={step} className="relative">
+                    <div className={`h-1.5 overflow-hidden rounded-full transition-all duration-500 ${
+                      failed
+                        ?"bg-red-400/70"
+                        :completed
+                          ?"bg-emerald-400/75"
+                          :active
+                            ?"bg-sky-400/25"
+                            :"bg-white/[.07]"
+                    }`}>
+                      {active&&stage!=="done"&&stage!=="error"&&
+                        <div className="h-full w-2/3 animate-pulse rounded-full bg-sky-300/90"/>
+                      }
+                    </div>
+                  </div>;
+                })}
+              </div>
+
+              <div className="mt-2.5 flex justify-between text-[8px] text-white/20">
+                <span>Descoberto</span>
+                <span>Download</span>
+                <span>Transcrição</span>
+                <span>Análise</span>
+                <span>Render</span>
+                <span>Pronto</span>
+              </div>
+
+              <div className="mt-2.5 flex items-center justify-between border-t border-white/[.05] pt-2 text-[9px] text-white/25">
+                <span>
+                  {stage==="done"
+                    ?"Finalizado"
+                    :stage==="error"
+                      ?"Requer atenção"
+                      :"Atualização automática"}
+                </span>
+                {(v.attempts||0)>0&&<span>tentativa {v.attempts}</span>}
+              </div>
             </div>
             {v.last_error&&<div className="mt-2 rounded-lg border border-red-500/15 bg-red-500/10 px-2 py-1.5 text-[10px] leading-4 text-red-300">{v.last_error}</div>}
             {canRetry&&<button onClick={()=>retryVideo(v)} disabled={busy===`retry:${v.id}`} className="mt-2.5 inline-flex items-center rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] text-white/60 hover:bg-white/5 disabled:opacity-40">{busy===`retry:${v.id}`?<Loader2 className="mr-1.5 h-3 w-3 animate-spin"/>:<RotateCcw className="mr-1.5 h-3 w-3"/>}Reprocessar</button>}
