@@ -15,7 +15,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const WORKER_SECRET = Deno.env.get("CLIP_WORKER_SECRET") ?? "";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const GEMINI_MODEL = Deno.env.get("CLIP_GEMINI_MODEL") || "gemini-2.5-flash";
+const GATEWAY_MODEL = Deno.env.get("CLIP_GATEWAY_MODEL") || "google/gemini-2.5-flash";
+
 const BUCKET = Deno.env.get("CLIP_BUCKET") || "clip-network";
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
