@@ -2,9 +2,12 @@
   "name": "adbrief-clip-network-worker",
   "private": true,
   "type": "module",
-  "scripts": { "start": "node index.mjs", "once": "node index.mjs --once" },
+  "scripts": {
+    "start": "node index.mjs",
+    "once": "node index.mjs --once",
+    "check": "node --check index.mjs && node --check mediaResolver.mjs"
+  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.4",
-    "luxon": "^3.7.2"
+    "@supabase/supabase-js": "^2.57.4"
   }
 }
