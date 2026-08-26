@@ -172,13 +172,27 @@ export default function ClipNetworkPage() {
       setAccounts(data?.accounts || []);
       setSocials(data?.socials || []);
       setSources(data?.sources || []);
-      setVideos((data?.videos || []).filter((video:SourceVideo)=>
-        video.pipeline_stage!=="blocked" || video.stage_detail==="Pausado manualmente"
-      ));
+      const baseVideos:SourceVideo[]=(data?.videos || []).filter(
+        (video:SourceVideo)=>video.pipeline_stage!=="blocked"
+      );
+
       const nextClips:Clip[] = data?.clips || [];
       setClips(nextClips);
       setPublications(data?.publications || []);
-      const reviewData=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"bootstrap",payload:{}});
+
+      const reviewData=await clipBridge(
+        CLIP_NETWORK_REVIEW_URL,
+        {action:"bootstrap",payload:{}}
+      );
+
+      const pausedVideos:SourceVideo[]=reviewData?.paused_videos||[];
+      const videosById=new Map<string,SourceVideo>();
+
+      for(const video of [...baseVideos,...pausedVideos]){
+        videosById.set(video.id,video);
+      }
+
+      setVideos([...videosById.values()]);
       setVariants(reviewData?.variants||[]);
       setRevisions(reviewData?.revisions||[]);
       setFeedback(reviewData?.feedback||[]);

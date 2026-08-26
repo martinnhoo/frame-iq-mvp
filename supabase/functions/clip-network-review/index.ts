@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     const { action, payload = {} } = await req.json().catch(() => ({}));
 
     if (action === "bootstrap") {
-      const [variantResult, revisionResult, feedbackResult] = await Promise.all([
+      const [variantResult, revisionResult, feedbackResult, pausedVideoResult] = await Promise.all([
         supabase.from("clip_variants")
           .select("*")
           .eq("user_id", user.id)
@@ -81,16 +81,24 @@ Deno.serve(async (req) => {
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
+        supabase.from("clip_source_videos")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("pipeline_stage", "blocked")
+          .eq("stage_detail", "Pausado manualmente")
+          .order("updated_at", { ascending: false }),
       ]);
 
       if (variantResult.error) throw variantResult.error;
       if (revisionResult.error) throw revisionResult.error;
       if (feedbackResult.error) throw feedbackResult.error;
+      if (pausedVideoResult.error) throw pausedVideoResult.error;
 
       return json({
         variants: variantResult.data || [],
         revisions: revisionResult.data || [],
         feedback: feedbackResult.data || [],
+        paused_videos: pausedVideoResult.data || [],
       });
     }
 
