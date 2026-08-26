@@ -7,7 +7,7 @@ export default function ClipNetworkOAuthCallback(){
   const {platform}=useParams<{platform:string}>(); const navigate=useNavigate(); const [state,setState]=useState<"loading"|"ok"|"error">("loading"); const [message,setMessage]=useState("Conectando conta…");
   useEffect(()=>{const timers: ReturnType<typeof setTimeout>[]=[];(async()=>{try{
     if(platform!=="instagram") throw new Error("Integração não habilitada para esta plataforma");
-    const q=new URLSearchParams(window.location.search); const code=q.get("code"), oauthState=q.get("state"), err=q.get("error"); if(err)throw new Error("Conexão cancelada"); if(!code||!oauthState)throw new Error("Callback OAuth incompleto");
+    const q=new URLSearchParams(window.location.search); const code=q.get("code"), oauthState=q.get("state"), err=q.get("error")||q.get("error_reason"); if(err)throw new Error(q.get("error_description")||"Conexão cancelada"); if(!code||!oauthState)throw new Error("Callback OAuth incompleto");
     const {data,error}=await supabase.functions.invoke("clip-network-instagram-oauth",{body:{action:"exchange_code",code,state:oauthState}}); if(error)throw error;if(data?.error)throw new Error(data.error);
     setState("ok");setMessage(`Instagram conectado${data?.connected?.username?` como @${data.connected.username}`:""}.`);timers.push(setTimeout(()=>navigate("/dashboard/clips"),1200));
   }catch(e){setState("error");setMessage(e instanceof Error?e.message:String(e));timers.push(setTimeout(()=>navigate("/dashboard/clips"),3500));}})();return()=>timers.forEach(clearTimeout);},[navigate,platform]);

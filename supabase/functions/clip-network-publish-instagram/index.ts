@@ -3,6 +3,12 @@ import { clipCors, json, requireClipUser, serviceClient } from "../_shared/clip-
 
 const GRAPH_VERSION = Deno.env.get("META_GRAPH_VERSION") || "v25.0";
 
+function graphOrigin(pub: any) {
+  return pub.clip_social_accounts?.capabilities?.auth_mode === "instagram_login"
+    ? "https://graph.instagram.com"
+    : "https://graph.facebook.com";
+}
+
 async function authorize(req: Request, publicationId: string) {
   const supabase = serviceClient();
   const secret = Deno.env.get("CLIP_NETWORK_CRON_SECRET");
@@ -39,7 +45,8 @@ async function loadPublication(supabase: any, publicationId: string) {
 }
 
 async function publishContainer(supabase: any, pub: any, token: any, creationId: string) {
-  const statusUrl = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/${creationId}`);
+  const origin = graphOrigin(pub);
+  const statusUrl = new URL(`${origin}/${GRAPH_VERSION}/${creationId}`);
   statusUrl.searchParams.set("fields", "status_code,status");
   statusUrl.searchParams.set("access_token", token.access_token);
   const statusRes = await fetch(statusUrl);
@@ -58,7 +65,7 @@ async function publishContainer(supabase: any, pub: any, token: any, creationId:
     return { processing: true, status };
   }
 
-  const publishUrl = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/${pub.clip_social_accounts.external_user_id}/media_publish`);
+  const publishUrl = new URL(`${origin}/${GRAPH_VERSION}/${pub.clip_social_accounts.external_user_id}/media_publish`);
   publishUrl.searchParams.set("creation_id", creationId);
   publishUrl.searchParams.set("access_token", token.access_token);
   const publishRes = await fetch(publishUrl, { method: "POST" });
@@ -96,7 +103,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("clip_publications").update({ status: "publishing", updated_at: new Date().toISOString() }).eq("id", pub.id);
 
-    const createUrl = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/${pub.clip_social_accounts.external_user_id}/media`);
+    const createUrl = new URL(`${graphOrigin(pub)}/${GRAPH_VERSION}/${pub.clip_social_accounts.external_user_id}/media`);
     createUrl.searchParams.set("media_type", "REELS");
     createUrl.searchParams.set("video_url", videoUrl);
     createUrl.searchParams.set("caption", caption);
