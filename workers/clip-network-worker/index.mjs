@@ -130,10 +130,86 @@ function srtTime(seconds) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")},${String(x).padStart(3, "0")}`;
 }
 
+// Legenda estilo Reels/Shorts: blocos curtos, no máximo 2 linhas, sem custo de IA.
+const CAPTION_TARGET_WORDS = 4;   // alvo por bloco
+const CAPTION_MAX_WORDS = 5;      // teto duro por bloco
+const CAPTION_MAX_LINE_CHARS = 24; // largura confortável no 1080x1920
+
+/** Limpa espaços/quebras que vêm da transcrição sem tocar na pontuação. */
+function normalizeCaptionText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+/** Quebra por frases/pausas primeiro: pontuação manda mais que contagem de palavras. */
+function splitBySentences(text) {
+  return text
+    .split(/(?<=[.!?…]|[,;:])\s+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+/** Agrupa palavras em blocos curtos, evitando bloco final com 1 palavra solta. */
+function buildChunks(text) {
+  const chunks = [];
+  for (const phrase of splitBySentences(normalizeCaptionText(text))) {
+    const words = phrase.split(" ").filter(Boolean);
+    if (!words.length) continue;
+    // Distribui de forma equilibrada em vez de encher e deixar sobra.
+    const parts = Math.max(1, Math.ceil(words.length / CAPTION_TARGET_WORDS));
+    const per = Math.min(CAPTION_MAX_WORDS, Math.ceil(words.length / parts));
+    let i = 0;
+    while (i < words.length) {
+      let take = Math.min(per, words.length - i);
+      // Sobraria uma palavra solta no próximo bloco? Puxa uma para trás.
+      if (words.length - (i + take) === 1 && take > 1) take -= 1;
+      chunks.push(words.slice(i, i + take));
+      i += take;
+    }
+  }
+  return chunks;
+}
+
+/** No máximo 2 linhas, balanceadas para não deixar uma palavra sozinha embaixo. */
+function layoutLines(words) {
+  const single = words.join(" ");
+  if (single.length <= CAPTION_MAX_LINE_CHARS || words.length < 2) return single;
+  let best = null;
+  for (let cut = 1; cut < words.length; cut++) {
+    const a = words.slice(0, cut).join(" ");
+    const b = words.slice(cut).join(" ");
+    const cost = Math.abs(a.length - b.length) + Math.max(0, a.length - CAPTION_MAX_LINE_CHARS) * 4
+      + Math.max(0, b.length - CAPTION_MAX_LINE_CHARS) * 4;
+    if (!best || cost < best.cost) best = { cost, text: `${a}\n${b}` };
+  }
+  return best.text;
+}
+
+/** Reparte o tempo do segmento entre os blocos proporcionalmente às palavras, sem gap/overlap. */
+function chunkSegment(segment) {
+  const chunks = buildChunks(segment.text);
+  if (!chunks.length) return [];
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const segStart = Number(segment.start) || 0;
+  const segEnd = Math.max(segStart, Number(segment.end) || segStart);
+  const span = segEnd - segStart;
+  const cues = [];
+  let acc = 0;
+  for (const chunk of chunks) {
+    const from = segStart + (span * acc) / total;
+    acc += chunk.length;
+    const to = segStart + (span * acc) / total;
+    cues.push({ start: from, end: to, text: layoutLines(chunk) });
+  }
+  return cues;
+}
+
 async function writeSrt(transcript, start, end, file) {
-  const rows = (transcript?.segments || [])
+  const cues = (transcript?.segments || [])
     .filter((s) => s.end > start && s.start < end)
-    .map((s, i) => `${i + 1}\n${srtTime(Math.max(0, s.start - start))} --> ${srtTime(Math.min(end - start, s.end - start))}\n${s.text}\n`)
+    .flatMap(chunkSegment)
+    .filter((c) => c.end > start && c.start < end && c.text);
+  const rows = cues
+    .map((c, i) => `${i + 1}\n${srtTime(Math.max(0, c.start - start))} --> ${srtTime(Math.min(end - start, c.end - start))}\n${c.text}\n`)
     .join("\n");
   await writeFile(file, rows || "1\n00:00:00,000 --> 00:00:03,000\n \n");
 }
@@ -145,7 +221,8 @@ async function renderClip(master, clip, transcript, dir) {
   const duration = Number(clip.end_seconds) - start;
   await writeSrt(transcript, start, Number(clip.end_seconds), srt);
   const escapedSrt = srt.replace(/\\/g, "\\\\").replace(/:/g, "\\:").replace(/'/g, "\\'");
-  const filter = `[0:v]split=2[bg0][fg0];[bg0]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=24:2[bg];[fg0]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,subtitles='${escapedSrt}':force_style='FontName=DejaVu Sans,FontSize=18,Bold=1,Outline=2,Shadow=0,Alignment=2,MarginV=115'[v]`;
+  const filter = `[0:v]split=2[bg0][fg0];[bg0]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=24:2[bg];[fg0]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,subtitles='${escapedSrt}':force_style='FontName=DejaVu Sans,FontSize=15,Bold=1,Outline=1.4,Shadow=0.4,Alignment=2,MarginV=150,MarginL=80,MarginR=80'[v]`;
+
   await run("ffmpeg", ["-y", "-ss", String(start), "-i", master, "-t", String(duration),
     "-filter_complex", filter, "-map", "[v]", "-map", "0:a?",
     "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
