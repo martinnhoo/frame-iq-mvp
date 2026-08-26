@@ -31,8 +31,8 @@ const stageLabel: Record<string,string> = {
   analyzing:"Analisando", rendering:"Renderizando", done:"Concluído",
   error:"Erro", blocked:"Sem autorização",
 };
-const stageTone = (s:string):"neutral"|"good"|"warn"|"bad"|"blue" =>
-  s==="done" ? "good" : s==="error" ? "bad" : s==="blocked" ? "warn" : s==="discovered" ? "neutral" : "blue";
+const stageTone = (s:string, readyClips=0):"neutral"|"good"|"warn"|"bad"|"blue" =>
+  s==="done" ? readyClips>0 ? "good" : "warn" : s==="error" ? "bad" : s==="blocked" ? "warn" : s==="discovered" ? "neutral" : "blue";
 const mmss = (s?:number) => s==null ? "—" : `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}`;
 
 
@@ -65,9 +65,14 @@ export default function ClipNetworkPage() {
   const publicationByClip = useMemo(() => new Map(publications.map(p => [p.clip_id,p])),[publications]);
   const accountById = useMemo(() => new Map(accounts.map(a => [a.id,a])),[accounts]);
   const sourceById = useMemo(() => new Map(sources.map(s => [s.id,s])),[sources]);
-  const clipsByVideo = useMemo(() => {
-    const map = new Map<string,number>();
-    for (const c of clips) if (c.source_video_id) map.set(c.source_video_id,(map.get(c.source_video_id)||0)+1);
+  const clipStatsByVideo = useMemo(() => {
+    const map = new Map<string,{candidates:number;ready:number}>();
+    for (const c of clips) if (c.source_video_id) {
+      const stats=map.get(c.source_video_id)||{candidates:0,ready:0};
+      stats.candidates+=1;
+      if(c.render_status==="ready"&&(c.rendered_storage_path||c.rendered_url)) stats.ready+=1;
+      map.set(c.source_video_id,stats);
+    }
     return map;
   },[clips]);
   const today = new Date().toISOString().slice(0,10);
@@ -381,7 +386,10 @@ export default function ClipNetworkPage() {
         const stage=v.pipeline_stage||"discovered";
         const idx=STAGES.indexOf(stage as typeof STAGES[number]);
         const pct=idx>=0?Math.round(((idx+1)/STAGES.length)*100):stage==="error"?100:0;
-        const cuts=clipsByVideo.get(v.id)||0;
+        const clipStats=clipStatsByVideo.get(v.id)||{candidates:0,ready:0};
+        const candidates=clipStats.candidates;
+        const readyCuts=clipStats.ready;
+        const doneWithoutClips=stage==="done"&&readyCuts===0;
         const canRetry=stage==="error"||(v.attempts||0)>0;
         return <div key={v.id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
           {v.thumbnail_url?<img src={v.thumbnail_url} alt={v.title} className="aspect-video w-full object-cover opacity-80"/>:<div className="aspect-video bg-white/5"/>}
@@ -389,12 +397,13 @@ export default function ClipNetworkPage() {
             <div className="text-[10px] text-white/30">{sourceById.get(v.source_id)?.label||"fonte"}</div>
             <a href={v.source_url} target="_blank" rel="noreferrer" className="mt-1 line-clamp-2 block text-xs font-medium leading-5 text-white hover:text-sky-300">{v.title}</a>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Pill tone={stageTone(stage)}>{stageLabel[stage]||stage}</Pill>
-              {cuts>0&&<Pill tone="good">{cuts} {cuts===1?"corte":"cortes"}</Pill>}
+              <Pill tone={stageTone(stage,readyCuts)}>{doneWithoutClips?"Concluído sem clips prontos":stageLabel[stage]||stage}</Pill>
+              {readyCuts>0&&<Pill tone="good">{readyCuts} {readyCuts===1?"corte pronto":"cortes prontos"}</Pill>}
+              {readyCuts===0&&candidates>0&&<Pill>{candidates} {candidates===1?"candidato":"candidatos"}</Pill>}
               {v.duration_seconds!=null&&<Pill>{mmss(v.duration_seconds)}</Pill>}
               {!v.rights_confirmed&&<Pill tone="warn">sem autorização</Pill>}
             </div>
-            <div className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-white/8"><div className={`h-full rounded-full transition-all ${stage==="error"?"bg-red-400/70":stage==="done"?"bg-emerald-400/70":"bg-sky-400/70"}`} style={{width:`${pct}%`}}/></div>
+            <div className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-white/8"><div className={`h-full rounded-full transition-all ${stage==="error"?"bg-red-400/70":doneWithoutClips?"bg-amber-400/70":stage==="done"?"bg-emerald-400/70":"bg-sky-400/70"}`} style={{width:`${pct}%`}}/></div>
             <div className="mt-2 flex items-center justify-between text-[10px] text-white/30">
               <span>{v.stage_detail||fmt(v.updated_at)}</span>
               {(v.attempts||0)>0&&<span>tentativa {v.attempts}</span>}

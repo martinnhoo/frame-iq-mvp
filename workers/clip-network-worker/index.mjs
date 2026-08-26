@@ -311,7 +311,10 @@ async function processJob(job) {
     const { clips = [], approved = [] } = await call("analyze_and_save", { job, transcript }, { timeoutMs: 300_000 });
 
     // 5. Render dos aprovados, usando o master que já está em disco.
-    const toRender = (approved.length ? approved : clips.filter((c) => c.status === "approved"))
+    const approvedClips = [...new Map(
+      [...clips.filter((c) => c.status === "approved"), ...approved].map((clip) => [clip.id, clip]),
+    ).values()];
+    const toRender = approvedClips
       .filter((c) => c.render_status === "pending" || c.render_status === "error");
     stage = "rendering";
     let rendered = 0;
@@ -321,7 +324,16 @@ async function processJob(job) {
       if (await renderAndUpload(master, clip, transcript, dir)) rendered += 1;
     }
 
-    await call("finish_job", { video_id: job.id, clips_generated: clips.length });
+    if (toRender.length > 0 && rendered === 0) {
+      throw new Error(`Todos os ${toRender.length} cortes aprovados falharam no render`);
+    }
+
+    await call("finish_job", {
+      video_id: job.id,
+      clips_generated: rendered,
+      candidates_count: clips.length,
+      approved_count: approvedClips.length,
+    });
     log(`concluído "${job.title}": ${clips.length} candidatos, ${rendered} renderizados`);
   } catch (e) {
     await failJob(job, e);
@@ -344,7 +356,17 @@ async function processApprovedBacklog() {
   const dir = await mkdtemp(join(TMP_ROOT, "clip-render-"));
   try {
     const { path: master } = await resolveMedia({ video, source, dir, supabase: storageShim, bucket: BUCKET });
-    await renderAndUpload(master, clip, video.transcript, dir);
+    const rendered = await renderAndUpload(master, clip, video.transcript, dir);
+    if (rendered) {
+      // Compatível também com a versão anterior do gateway: incrementa a
+      // métrica após aprovação manual. O gateway novo reconta pelo banco.
+      await call("finish_job", {
+        video_id: video.id,
+        clips_generated: Number(video.clips_generated || 0) + 1,
+        candidates_count: 1,
+        approved_count: 1,
+      });
+    }
     return true;
   } catch (e) {
     await updateClip(clip.id, {

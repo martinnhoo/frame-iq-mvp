@@ -73,6 +73,24 @@ function classifyDownloadError(raw) {
   return new MediaResolverError(String(raw).slice(0, 1200), { code: "download_failed", retryable: true });
 }
 
+function minimumSourceDuration() {
+  const configured = Number(process.env.CLIP_MIN_SOURCE_DURATION_SECONDS || 181);
+  return Number.isFinite(configured) && configured > 0 ? configured : 181;
+}
+
+/** Validação pura para o guard long-form; metadata sem duração segue o fluxo normal. */
+export function enforceMinimumDuration(metadata, threshold = minimumSourceDuration()) {
+  const duration = Number(metadata?.duration);
+  if (!Number.isFinite(duration) || duration <= 0) return null;
+  if (duration < threshold) {
+    throw new MediaResolverError(
+      `Fonte ignorada por ser curta: ${Math.round(duration)}s (mínimo ${threshold}s para conteúdo long-form).`,
+      { code: "source_too_short", retryable: false },
+    );
+  }
+  return duration;
+}
+
 async function pickDownloadedFile(dir) {
   const files = (await readdir(dir)).filter((f) => f.startsWith("master."));
   if (!files.length) throw new MediaResolverError("Download terminou sem produzir arquivo", { code: "empty_output" });
@@ -94,6 +112,25 @@ const youtubeStrategy = {
     const url = video.source_url || (video.provider_video_id ? `https://www.youtube.com/watch?v=${video.provider_video_id}` : null);
     if (!url) throw new MediaResolverError("Vídeo sem URL de origem", { code: "missing_url", retryable: false });
     const maxHeight = Number(process.env.CLIP_MAX_HEIGHT || 1080);
+
+    onProgress?.("verificando duração da fonte");
+    let metadata;
+    try {
+      const { stdout } = await run("yt-dlp", [
+        "--skip-download",
+        "--dump-single-json",
+        "--no-playlist",
+        url,
+      ], { timeoutMs: 120_000 });
+      metadata = JSON.parse(stdout);
+    } catch (e) {
+      throw classifyDownloadError(e?.message || e);
+    }
+    const metadataDuration = enforceMinimumDuration(metadata);
+    if (metadataDuration == null) {
+      onProgress?.("duração indisponível na metadata; seguindo obtenção normal");
+    }
+
     onProgress?.("baixando master do YouTube");
     try {
       await run("yt-dlp", [

@@ -24,6 +24,7 @@ primary_region = "gru"
   # de verdade que a máquina morreu.
   CLIP_LEASE_SECONDS = "900"
   CLIP_MAX_HEIGHT = "1080"
+  CLIP_MIN_SOURCE_DURATION_SECONDS = "181"
 
 # Sem [http_service]: o worker não escuta porta. Nada da internet fala com ele.
 

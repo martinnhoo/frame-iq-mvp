@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Worker payloads are allowlisted before persistence. */
 /**
  * clip-worker-gateway — ponte privilegiada entre o worker do Fly e o Supabase.
  *
@@ -207,6 +208,25 @@ async function loadContext(sourceId: string) {
   return { source, network, accounts };
 }
 
+/** Conta somente cortes de fato reproduzíveis; candidatos não entram nesta métrica. */
+async function countPlayableClips(sourceVideoId: string) {
+  const { data, error } = await admin.from("clips")
+    .select("rendered_storage_path,rendered_url")
+    .eq("source_video_id", sourceVideoId)
+    .eq("render_status", "ready");
+  if (error) throw error;
+  return (data || []).filter((clip) => clip.rendered_storage_path || clip.rendered_url).length;
+}
+
+async function syncPlayableClipCount(sourceVideoId: string) {
+  const count = await countPlayableClips(sourceVideoId);
+  const { error } = await admin.from("clip_source_videos")
+    .update({ clips_generated: count, updated_at: nowIso() })
+    .eq("id", sourceVideoId);
+  if (error) throw error;
+  return count;
+}
+
 /** Seleção editorial com Gemini. Mesmas regras do orquestrador anterior. */
 async function orchestrate(
   network: Record<string, any>,
@@ -349,8 +369,13 @@ Deno.serve(async (req) => {
 
       case "update_clip": {
         const patch = { ...pick(payload.patch, CLIP_FIELDS), updated_at: nowIso() };
-        const { error } = await admin.from("clips").update(patch).eq("id", payload.clip_id);
+        const { data: clip, error } = await admin.from("clips")
+          .update(patch).eq("id", payload.clip_id)
+          .select("source_video_id").maybeSingle();
         if (error) throw error;
+        if (clip?.source_video_id && ["ready", "error"].includes(String(patch.render_status || ""))) {
+          await syncPlayableClipCount(clip.source_video_id);
+        }
         return json({ ok: true });
       }
 
@@ -476,14 +501,27 @@ Deno.serve(async (req) => {
       }
 
       case "finish_job": {
+        const playable = await countPlayableClips(payload.video_id);
+        const candidates = Math.max(0, Number(payload.candidates_count || 0));
+        const approved = Math.max(0, Number(payload.approved_count || 0));
+        const renderFailed = approved > 0 && playable === 0;
+        const detail = playable > 0
+          ? `${playable} ${playable === 1 ? "corte pronto" : "cortes prontos"}`
+          : candidates > 0
+            ? `${candidates} ${candidates === 1 ? "candidato aguardando aprovação" : "candidatos aguardando aprovação"}`
+            : "análise concluída: nenhum corte selecionado";
         const { error } = await admin.from("clip_source_videos").update({
-          pipeline_stage: "done", media_status: "processed", stage_detail: null,
-          clips_generated: Number(payload.clips_generated || 0), last_error: null,
+          pipeline_stage: renderFailed ? "error" : "done",
+          media_status: renderFailed ? "error" : "processed",
+          stage_detail: renderFailed ? null : detail,
+          clips_generated: playable,
+          last_error: renderFailed ? "Havia cortes aprovados, mas nenhum MP4 foi renderizado." : null,
           locked_by: null, locked_at: null, lease_expires_at: null,
+          next_retry_at: renderFailed ? new Date(Date.now() + 2 * 60_000).toISOString() : null,
           processing_finished_at: nowIso(), updated_at: nowIso(),
         }).eq("id", payload.video_id);
         if (error) throw error;
-        return json({ ok: true });
+        return json({ ok: true, clips_generated: playable, outcome: renderFailed ? "render_failed" : playable > 0 ? "clips_ready" : "no_clips_ready" });
       }
 
       default:
