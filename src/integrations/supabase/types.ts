@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -1828,11 +1828,11 @@ export type Database = {
           },
         ]
       }
-        ci_ad_taxonomy: {
-          Row: {
-            ad_asset_id: string | null
-            ad_id: string
-            analysis_contract_version: string
+      ci_ad_taxonomy: {
+        Row: {
+          ad_asset_id: string | null
+          ad_id: string
+          analysis_contract_version: string
           analysis_result_id: string | null
           assertion_version_key: string | null
           asset_id: string | null
@@ -1848,11 +1848,10 @@ export type Database = {
           is_current: boolean
           is_primary: boolean
           keyframe_id: string | null
-            model_version: string | null
-            onscreen_text_id: string | null
-            provenance_class: string
-            claim_scope: string
-            scene_id: string | null
+          model_version: string | null
+          onscreen_text_id: string | null
+          provenance_class: string
+          scene_id: string | null
           semantic_target_key: string | null
           source: string
           superseded_at: string | null
@@ -1862,10 +1861,10 @@ export type Database = {
           transcript_segment_id: string | null
           user_id: string
         }
-          Insert: {
-            ad_asset_id?: string | null
-            ad_id: string
-            analysis_contract_version?: string
+        Insert: {
+          ad_asset_id?: string | null
+          ad_id: string
+          analysis_contract_version?: string
           analysis_result_id?: string | null
           assertion_version_key?: string | null
           asset_id?: string | null
@@ -1881,11 +1880,10 @@ export type Database = {
           is_current?: boolean
           is_primary?: boolean
           keyframe_id?: string | null
-            model_version?: string | null
-            onscreen_text_id?: string | null
-            provenance_class?: string
-            claim_scope?: string
-            scene_id?: string | null
+          model_version?: string | null
+          onscreen_text_id?: string | null
+          provenance_class?: string
+          scene_id?: string | null
           semantic_target_key?: string | null
           source: string
           superseded_at?: string | null
@@ -1895,10 +1893,10 @@ export type Database = {
           transcript_segment_id?: string | null
           user_id: string
         }
-          Update: {
-            ad_asset_id?: string | null
-            ad_id?: string
-            analysis_contract_version?: string
+        Update: {
+          ad_asset_id?: string | null
+          ad_id?: string
+          analysis_contract_version?: string
           analysis_result_id?: string | null
           assertion_version_key?: string | null
           asset_id?: string | null
@@ -1914,11 +1912,10 @@ export type Database = {
           is_current?: boolean
           is_primary?: boolean
           keyframe_id?: string | null
-            model_version?: string | null
-            onscreen_text_id?: string | null
-            provenance_class?: string
-            claim_scope?: string
-            scene_id?: string | null
+          model_version?: string | null
+          onscreen_text_id?: string | null
+          provenance_class?: string
+          scene_id?: string | null
           semantic_target_key?: string | null
           source?: string
           superseded_at?: string | null
@@ -2170,7 +2167,7 @@ export type Database = {
           body_text?: string | null
           brand_id: string
           concept_id?: string | null
-            context_hash: string
+          context_hash: string
           context_hash_version?: string
           context_updated_at?: string | null
           countries?: string[] | null
@@ -2276,12 +2273,10 @@ export type Database = {
           created_at: string
           error: string | null
           error_code: string | null
-            finished_at: string | null
-            id: string
-            claim_token: string | null
-            context_hash: string | null
-            lease_expires_at: string | null
-            lease_generation: number
+          finished_at: string | null
+          id: string
+          lease_expires_at: string | null
+          lease_generation: number
           llm_input_tokens: number | null
           llm_model: string | null
           llm_output_tokens: number | null
@@ -2315,12 +2310,10 @@ export type Database = {
           created_at?: string
           error?: string | null
           error_code?: string | null
-            finished_at?: string | null
-            id?: string
-            claim_token?: string | null
-            context_hash?: string | null
-            lease_expires_at?: string | null
-            lease_generation?: number
+          finished_at?: string | null
+          id?: string
+          lease_expires_at?: string | null
+          lease_generation?: number
           llm_input_tokens?: number | null
           llm_model?: string | null
           llm_output_tokens?: number | null
@@ -2354,12 +2347,10 @@ export type Database = {
           created_at?: string
           error?: string | null
           error_code?: string | null
-            finished_at?: string | null
-            id?: string
-            claim_token?: string | null
-            context_hash?: string | null
-            lease_expires_at?: string | null
-            lease_generation?: number
+          finished_at?: string | null
+          id?: string
+          lease_expires_at?: string | null
+          lease_generation?: number
           llm_input_tokens?: number | null
           llm_model?: string | null
           llm_output_tokens?: number | null
@@ -2432,11 +2423,11 @@ export type Database = {
           },
         ]
       }
-        ci_analysis_results: {
-          Row: {
-            ad_asset_id: string | null
-            ad_id: string | null
-            analysis_contract_version: string
+      ci_analysis_results: {
+        Row: {
+          ad_asset_id: string | null
+          ad_id: string | null
+          analysis_contract_version: string
           asset_id: string
           brand_id: string
           confidence: number | null
@@ -2459,11 +2450,10 @@ export type Database = {
           model_run_id: string | null
           normalized_output: Json
           prompt_version: string | null
-            provider: string | null
-            raw_output: Json
-            scope: string
-            context_hash: string | null
-            superseded_at: string | null
+          provider: string | null
+          raw_output: Json
+          scope: string
+          superseded_at: string | null
           superseded_by_id: string | null
           text_per_second: number | null
           time_to_cta_s: number | null
@@ -2472,10 +2462,10 @@ export type Database = {
           user_id: string
           warnings: Json
         }
-          Insert: {
-            ad_asset_id?: string | null
-            ad_id?: string | null
-            analysis_contract_version?: string
+        Insert: {
+          ad_asset_id?: string | null
+          ad_id?: string | null
+          analysis_contract_version?: string
           asset_id: string
           brand_id: string
           confidence?: number | null
@@ -2498,11 +2488,10 @@ export type Database = {
           model_run_id?: string | null
           normalized_output: Json
           prompt_version?: string | null
-            provider?: string | null
-            raw_output: Json
-            scope?: string
-            context_hash?: string | null
-            superseded_at?: string | null
+          provider?: string | null
+          raw_output: Json
+          scope?: string
+          superseded_at?: string | null
           superseded_by_id?: string | null
           text_per_second?: number | null
           time_to_cta_s?: number | null
@@ -2511,10 +2500,10 @@ export type Database = {
           user_id: string
           warnings?: Json
         }
-          Update: {
-            ad_asset_id?: string | null
-            ad_id?: string | null
-            analysis_contract_version?: string
+        Update: {
+          ad_asset_id?: string | null
+          ad_id?: string | null
+          analysis_contract_version?: string
           asset_id?: string
           brand_id?: string
           confidence?: number | null
@@ -2537,11 +2526,10 @@ export type Database = {
           model_run_id?: string | null
           normalized_output?: Json
           prompt_version?: string | null
-            provider?: string | null
-            raw_output?: Json
-            scope?: string
-            context_hash?: string | null
-            superseded_at?: string | null
+          provider?: string | null
+          raw_output?: Json
+          scope?: string
+          superseded_at?: string | null
           superseded_by_id?: string | null
           text_per_second?: number | null
           time_to_cta_s?: number | null
@@ -3852,11 +3840,11 @@ export type Database = {
           has_more?: boolean
           id?: string
           import_run_id: string
-            page_index: number
-            provider_request_id?: string | null
-            request_fingerprint: string
-            response_hash: string
-            response_payload: Json
+          page_index: number
+          provider_request_id?: string | null
+          request_fingerprint: string
+          response_hash: string
+          response_payload: Json
           transform_error?: string | null
           transform_status?: string
           transform_version?: string
@@ -3886,28 +3874,28 @@ export type Database = {
           transformed_at?: string | null
           user_id?: string
         }
-          Relationships: [
-            {
-              foreignKeyName: "ci_import_pages_brand_id_fkey"
-              columns: ["brand_id"]
-              isOneToOne: false
-              referencedRelation: "ci_brands"
-              referencedColumns: ["id"]
-            },
-            {
-              foreignKeyName: "ci_import_pages_import_run_id_fkey"
+        Relationships: [
+          {
+            foreignKeyName: "ci_import_pages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "ci_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ci_import_pages_import_run_id_fkey"
             columns: ["import_run_id"]
             isOneToOne: false
             referencedRelation: "ci_import_runs"
             referencedColumns: ["id"]
-            },
-            {
-              foreignKeyName: "fk_ci_import_pages_run_tenant"
-              columns: ["import_run_id", "brand_id", "user_id"]
-              isOneToOne: false
-              referencedRelation: "ci_import_runs"
-              referencedColumns: ["id", "brand_id", "user_id"]
-            },
+          },
+          {
+            foreignKeyName: "fk_ci_import_pages_run_tenant"
+            columns: ["import_run_id", "brand_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "ci_import_runs"
+            referencedColumns: ["id", "brand_id", "user_id"]
+          },
         ]
       }
       ci_import_runs: {
@@ -3933,11 +3921,9 @@ export type Database = {
           max_credits: number
           media_urls_found: number
           next_cursor: string | null
-            cursor_in: string | null
-            cursor_context_hash: string | null
-            pages_persisted: number
-            pages_fetched: number
-            replay_of_run_id: string | null
+          pages_fetched: number
+          pages_persisted: number
+          replay_of_run_id: string | null
           request_fingerprint: string | null
           resume_of_run_id: string | null
           source: string
@@ -3969,11 +3955,9 @@ export type Database = {
           max_credits?: number
           media_urls_found?: number
           next_cursor?: string | null
-            cursor_in?: string | null
-            cursor_context_hash?: string | null
-            pages_persisted?: number
-            pages_fetched?: number
-            replay_of_run_id?: string | null
+          pages_fetched?: number
+          pages_persisted?: number
+          replay_of_run_id?: string | null
           request_fingerprint?: string | null
           resume_of_run_id?: string | null
           source?: string
@@ -4005,11 +3989,9 @@ export type Database = {
           max_credits?: number
           media_urls_found?: number
           next_cursor?: string | null
-            cursor_in?: string | null
-            cursor_context_hash?: string | null
-            pages_persisted?: number
-            pages_fetched?: number
-            replay_of_run_id?: string | null
+          pages_fetched?: number
+          pages_persisted?: number
+          replay_of_run_id?: string | null
           request_fingerprint?: string | null
           resume_of_run_id?: string | null
           source?: string
@@ -4236,30 +4218,30 @@ export type Database = {
           },
         ]
       }
-        ci_model_runs: {
-          Row: {
-            ad_asset_id: string | null
-            ad_id: string | null
-            analysis_contract_version: string
-            analysis_job_id: string | null
-            asset_id: string | null
-            attempt_number: number
-            brand_id: string
-            context_hash: string | null
+      ci_model_runs: {
+        Row: {
+          ad_asset_id: string | null
+          ad_id: string | null
+          analysis_contract_version: string
+          analysis_job_id: string | null
+          asset_id: string | null
+          attempt_number: number
+          brand_id: string
+          context_hash: string | null
           cost_usd: number | null
           created_at: string
-            error: string | null
-            finished_at: string | null
-            id: string
-            input_schema_version: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          input_schema_version: string
           input_summary: Json
           input_tokens: number | null
           input_version: string | null
-            latency_ms: number | null
-            model: string
-            output_schema_version: string
-            output_tokens: number | null
-            prompt_version: string
+          latency_ms: number | null
+          model: string
+          output_schema_version: string
+          output_tokens: number | null
+          prompt_version: string
           provider: string
           provider_request_id: string | null
           purpose: string
@@ -4267,29 +4249,29 @@ export type Database = {
           status: string
           user_id: string
         }
-          Insert: {
-            ad_asset_id?: string | null
-            ad_id?: string | null
-            analysis_contract_version?: string
-            analysis_job_id?: string | null
-            asset_id?: string | null
-            attempt_number?: number
+        Insert: {
+          ad_asset_id?: string | null
+          ad_id?: string | null
+          analysis_contract_version?: string
+          analysis_job_id?: string | null
+          asset_id?: string | null
+          attempt_number?: number
           brand_id: string
           context_hash?: string | null
           cost_usd?: number | null
           created_at?: string
-            error?: string | null
-            finished_at?: string | null
-            id?: string
-            input_schema_version?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_schema_version?: string
           input_summary?: Json
           input_tokens?: number | null
           input_version?: string | null
-            latency_ms?: number | null
-            model: string
-            output_schema_version?: string
-            output_tokens?: number | null
-            prompt_version: string
+          latency_ms?: number | null
+          model: string
+          output_schema_version?: string
+          output_tokens?: number | null
+          prompt_version: string
           provider: string
           provider_request_id?: string | null
           purpose: string
@@ -4297,29 +4279,29 @@ export type Database = {
           status?: string
           user_id: string
         }
-          Update: {
-            ad_asset_id?: string | null
-            ad_id?: string | null
-            analysis_contract_version?: string
-            analysis_job_id?: string | null
-            asset_id?: string | null
-            attempt_number?: number
+        Update: {
+          ad_asset_id?: string | null
+          ad_id?: string | null
+          analysis_contract_version?: string
+          analysis_job_id?: string | null
+          asset_id?: string | null
+          attempt_number?: number
           brand_id?: string
           context_hash?: string | null
           cost_usd?: number | null
           created_at?: string
-            error?: string | null
-            finished_at?: string | null
-            id?: string
-            input_schema_version?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_schema_version?: string
           input_summary?: Json
           input_tokens?: number | null
           input_version?: string | null
-            latency_ms?: number | null
-            model?: string
-            output_schema_version?: string
-            output_tokens?: number | null
-            prompt_version?: string
+          latency_ms?: number | null
+          model?: string
+          output_schema_version?: string
+          output_tokens?: number | null
+          prompt_version?: string
           provider?: string
           provider_request_id?: string | null
           purpose?: string
@@ -4675,28 +4657,28 @@ export type Database = {
           },
         ]
       }
-        ci_quality_reviews: {
-          Row: {
-            ad_asset_id: string | null
-            ad_id: string
-            analysis_contract_version: string
+      ci_quality_reviews: {
+        Row: {
+          ad_asset_id: string | null
+          ad_id: string
+          analysis_contract_version: string
           analysis_result_id: string | null
           asset_id: string | null
           brand_id: string
           campo: string
           carry_forward_allowed: boolean
-            corrected_term_id: string | null
-            corrected_value: Json | null
-            created_at: string
-            effective_at: string
+          corrected_term_id: string | null
+          corrected_value: Json | null
+          created_at: string
+          effective_at: string
           evidence_identity_hash: string | null
           id: string
           is_current: boolean
           observacao: string | null
-            override_action: string
-            reviewer_user_id: string | null
-            revisado_por: string
-            semantic_target_key: string | null
+          override_action: string
+          reviewer_user_id: string | null
+          revisado_por: string
+          semantic_target_key: string | null
           superseded_at: string | null
           superseded_by_id: string | null
           target_assertion_id: string | null
@@ -4705,27 +4687,27 @@ export type Database = {
           valor_sistema: string | null
           veredito: string
         }
-          Insert: {
-            ad_asset_id?: string | null
-            ad_id: string
-            analysis_contract_version?: string
+        Insert: {
+          ad_asset_id?: string | null
+          ad_id: string
+          analysis_contract_version?: string
           analysis_result_id?: string | null
           asset_id?: string | null
           brand_id: string
           campo: string
           carry_forward_allowed?: boolean
-            corrected_term_id?: string | null
-            corrected_value?: Json | null
-            created_at?: string
-            effective_at?: string
+          corrected_term_id?: string | null
+          corrected_value?: Json | null
+          created_at?: string
+          effective_at?: string
           evidence_identity_hash?: string | null
           id?: string
           is_current?: boolean
           observacao?: string | null
-            override_action?: string
-            reviewer_user_id?: string | null
-            revisado_por?: string
-            semantic_target_key?: string | null
+          override_action?: string
+          reviewer_user_id?: string | null
+          revisado_por?: string
+          semantic_target_key?: string | null
           superseded_at?: string | null
           superseded_by_id?: string | null
           target_assertion_id?: string | null
@@ -4734,27 +4716,27 @@ export type Database = {
           valor_sistema?: string | null
           veredito: string
         }
-          Update: {
-            ad_asset_id?: string | null
-            ad_id?: string
-            analysis_contract_version?: string
+        Update: {
+          ad_asset_id?: string | null
+          ad_id?: string
+          analysis_contract_version?: string
           analysis_result_id?: string | null
           asset_id?: string | null
           brand_id?: string
           campo?: string
           carry_forward_allowed?: boolean
-            corrected_term_id?: string | null
-            corrected_value?: Json | null
-            created_at?: string
-            effective_at?: string
+          corrected_term_id?: string | null
+          corrected_value?: Json | null
+          created_at?: string
+          effective_at?: string
           evidence_identity_hash?: string | null
           id?: string
           is_current?: boolean
           observacao?: string | null
-            override_action?: string
-            reviewer_user_id?: string | null
-            revisado_por?: string
-            semantic_target_key?: string | null
+          override_action?: string
+          reviewer_user_id?: string | null
+          revisado_por?: string
+          semantic_target_key?: string | null
           superseded_at?: string | null
           superseded_by_id?: string | null
           target_assertion_id?: string | null
@@ -5509,6 +5491,534 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ci_brands"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      clip_accounts: {
+        Row: {
+          active: boolean
+          created_at: string
+          daily_limit: number
+          id: string
+          label: string
+          network_id: string
+          niche: string
+          rules: Json
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          label: string
+          network_id: string
+          niche: string
+          rules?: Json
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          label?: string
+          network_id?: string
+          niche?: string
+          rules?: Json
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_accounts_network_id_user_id_fkey"
+            columns: ["network_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_networks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_networks: {
+        Row: {
+          active: boolean
+          approval_mode: string
+          created_at: string
+          daily_limit: number
+          id: string
+          min_score: number
+          name: string
+          posting_slots: string[]
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          approval_mode?: string
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          min_score?: number
+          name?: string
+          posting_slots?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          approval_mode?: string
+          created_at?: string
+          daily_limit?: number
+          id?: string
+          min_score?: number
+          name?: string
+          posting_slots?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clip_publication_metrics: {
+        Row: {
+          captured_at: string
+          comments: number | null
+          id: number
+          likes: number | null
+          publication_id: string
+          raw: Json
+          saves: number | null
+          shares: number | null
+          user_id: string
+          views: number | null
+          watch_time_seconds: number | null
+        }
+        Insert: {
+          captured_at?: string
+          comments?: number | null
+          id?: number
+          likes?: number | null
+          publication_id: string
+          raw?: Json
+          saves?: number | null
+          shares?: number | null
+          user_id: string
+          views?: number | null
+          watch_time_seconds?: number | null
+        }
+        Update: {
+          captured_at?: string
+          comments?: number | null
+          id?: number
+          likes?: number | null
+          publication_id?: string
+          raw?: Json
+          saves?: number | null
+          shares?: number | null
+          user_id?: string
+          views?: number | null
+          watch_time_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_publication_metrics_publication_id_user_id_fkey"
+            columns: ["publication_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_publications"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_publications: {
+        Row: {
+          clip_id: string
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          last_checked_at: string | null
+          platform: string
+          provider_media_id: string | null
+          provider_payload: Json
+          provider_publish_id: string | null
+          published_at: string | null
+          scheduled_at: string | null
+          social_account_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clip_id: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          last_checked_at?: string | null
+          platform: string
+          provider_media_id?: string | null
+          provider_payload?: Json
+          provider_publish_id?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          social_account_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clip_id?: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          last_checked_at?: string | null
+          platform?: string
+          provider_media_id?: string | null
+          provider_payload?: Json
+          provider_publish_id?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          social_account_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_publications_clip_id_user_id_fkey"
+            columns: ["clip_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clips"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "clip_publications_social_account_id_user_id_fkey"
+            columns: ["social_account_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_social_accounts"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_social_accounts: {
+        Row: {
+          capabilities: Json
+          clip_account_id: string
+          connected_at: string
+          display_name: string | null
+          external_user_id: string
+          id: string
+          platform: string
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          capabilities?: Json
+          clip_account_id: string
+          connected_at?: string
+          display_name?: string | null
+          external_user_id: string
+          id?: string
+          platform: string
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          capabilities?: Json
+          clip_account_id?: string
+          connected_at?: string
+          display_name?: string | null
+          external_user_id?: string
+          id?: string
+          platform?: string
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_social_accounts_clip_account_id_user_id_fkey"
+            columns: ["clip_account_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_accounts"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_social_tokens: {
+        Row: {
+          access_token: string
+          expires_at: string | null
+          provider_payload: Json
+          refresh_expires_at: string | null
+          refresh_token: string | null
+          scopes: string | null
+          social_account_id: string
+          token_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          expires_at?: string | null
+          provider_payload?: Json
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          scopes?: string | null
+          social_account_id: string
+          token_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string | null
+          provider_payload?: Json
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          scopes?: string | null
+          social_account_id?: string
+          token_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_social_tokens_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: true
+            referencedRelation: "clip_social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clip_source_videos: {
+        Row: {
+          created_at: string
+          discovered_at: string
+          duration_seconds: number | null
+          id: string
+          last_error: string | null
+          media_status: string
+          media_storage_path: string | null
+          media_url: string | null
+          provider_video_id: string | null
+          rights_confirmed: boolean
+          source_id: string
+          source_published_at: string | null
+          source_url: string | null
+          thumbnail_url: string | null
+          title: string
+          transcript: Json | null
+          transcript_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discovered_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_error?: string | null
+          media_status?: string
+          media_storage_path?: string | null
+          media_url?: string | null
+          provider_video_id?: string | null
+          rights_confirmed?: boolean
+          source_id: string
+          source_published_at?: string | null
+          source_url?: string | null
+          thumbnail_url?: string | null
+          title: string
+          transcript?: Json | null
+          transcript_status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discovered_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_error?: string | null
+          media_status?: string
+          media_storage_path?: string | null
+          media_url?: string | null
+          provider_video_id?: string | null
+          rights_confirmed?: boolean
+          source_id?: string
+          source_published_at?: string | null
+          source_url?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          transcript?: Json | null
+          transcript_status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_source_videos_source_id_user_id_fkey"
+            columns: ["source_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_sources"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clip_sources: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          label: string
+          last_checked_at: string | null
+          last_error: string | null
+          network_id: string
+          provider: string
+          provider_channel_id: string | null
+          provider_url: string | null
+          rights_confirmed: boolean
+          updated_at: string
+          uploads_playlist_id: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          network_id: string
+          provider?: string
+          provider_channel_id?: string | null
+          provider_url?: string | null
+          rights_confirmed?: boolean
+          updated_at?: string
+          uploads_playlist_id?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          network_id?: string
+          provider?: string
+          provider_channel_id?: string | null
+          provider_url?: string | null
+          rights_confirmed?: boolean
+          updated_at?: string
+          uploads_playlist_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_sources_network_id_user_id_fkey"
+            columns: ["network_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_networks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      clips: {
+        Row: {
+          ai_reason: string | null
+          caption: string | null
+          clip_account_id: string
+          created_at: string
+          end_seconds: number | null
+          hook: string | null
+          id: string
+          on_screen_title: string | null
+          render_status: string
+          rendered_storage_path: string | null
+          rendered_url: string | null
+          scheduled_at: string | null
+          score: number
+          source_video_id: string | null
+          start_seconds: number | null
+          status: string
+          topic: string | null
+          transcript_excerpt: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_reason?: string | null
+          caption?: string | null
+          clip_account_id: string
+          created_at?: string
+          end_seconds?: number | null
+          hook?: string | null
+          id?: string
+          on_screen_title?: string | null
+          render_status?: string
+          rendered_storage_path?: string | null
+          rendered_url?: string | null
+          scheduled_at?: string | null
+          score?: number
+          source_video_id?: string | null
+          start_seconds?: number | null
+          status?: string
+          topic?: string | null
+          transcript_excerpt?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_reason?: string | null
+          caption?: string | null
+          clip_account_id?: string
+          created_at?: string
+          end_seconds?: number | null
+          hook?: string | null
+          id?: string
+          on_screen_title?: string | null
+          render_status?: string
+          rendered_storage_path?: string | null
+          rendered_url?: string | null
+          scheduled_at?: string | null
+          score?: number
+          source_video_id?: string | null
+          start_seconds?: number | null
+          status?: string
+          topic?: string | null
+          transcript_excerpt?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clips_clip_account_id_user_id_fkey"
+            columns: ["clip_account_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_accounts"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "clips_source_video_id_user_id_fkey"
+            columns: ["source_video_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "clip_source_videos"
+            referencedColumns: ["id", "user_id"]
           },
         ]
       }
@@ -6705,7 +7215,7 @@ export type Database = {
           pattern_key: string
           persona_id: string | null
           sample_size: number | null
-          scope: "tenant" | "global_benchmark"
+          scope: string
           user_id: string | null
           variables: Json
         }
@@ -6723,7 +7233,7 @@ export type Database = {
           pattern_key: string
           persona_id?: string | null
           sample_size?: number | null
-          scope?: "tenant" | "global_benchmark"
+          scope?: string
           user_id?: string | null
           variables?: Json
         }
@@ -6741,7 +7251,7 @@ export type Database = {
           pattern_key?: string
           persona_id?: string | null
           sample_size?: number | null
-          scope?: "tenant" | "global_benchmark"
+          scope?: string
           user_id?: string | null
           variables?: Json
         }
@@ -8030,38 +8540,6 @@ export type Database = {
       }
     }
     Views: {
-      ci_current_ad_taxonomy: {
-        Row: Database["public"]["Tables"]["ci_ad_taxonomy"]["Row"]
-        Relationships: []
-      }
-      ci_effective_ad_taxonomy: {
-        Row: Database["public"]["Tables"]["ci_ad_taxonomy"]["Row"] & {
-          corrected_value: Json | null
-          effective_term_id: string
-          has_human_override: boolean
-          human_review_id: string | null
-        }
-        Relationships: []
-      }
-      ci_legacy_context_classification: {
-        Row: {
-          ad_count: number | null
-          analysis_status: string | null
-          asset_id: string | null
-          brand_id: string | null
-          contaminated: boolean | null
-          context_count: number | null
-          has_observations: boolean | null
-          late_duplicate: boolean | null
-          legacy_mixed: boolean | null
-          media_type: string | null
-          missing_observations: boolean | null
-          primary_classification: string | null
-          static_unanalysed: boolean | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
       ci_angles: {
         Row: {
           ad_count: number | null
@@ -9241,19 +9719,6 @@ export type Database = {
         Returns: string
       }
       ci_compute_scale_signal: { Args: { p_brand_id: string }; Returns: number }
-      ci_canonical_ad_context: {
-        Args: {
-          body_text: string
-          cta: string
-          description: string
-          display_format: string
-          headline: string
-          landing_page: string
-          languages: string[]
-        }
-        Returns: string
-      }
-      ci_context_hash_component: { Args: { value: string }; Returns: string }
       ci_concept_variation: {
         Args: { p_concept_id: string }
         Returns: {
