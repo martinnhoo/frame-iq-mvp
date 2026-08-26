@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertTriangle, CheckCircle2, Clapperboard, Clock3, Copy, Download, ExternalLink,
-  Instagram, Link2, Loader2, Plus, Power, PowerOff, RefreshCw, Sparkles, Trash2, Upload, Youtube, Zap,
+  Instagram, Link2, Loader2, Play, Plus, Power, PowerOff, RefreshCw, RotateCcw, Sparkles, Trash2, Upload, Youtube, Zap,
+
 } from "lucide-react";
 
 const db = supabase as any;
