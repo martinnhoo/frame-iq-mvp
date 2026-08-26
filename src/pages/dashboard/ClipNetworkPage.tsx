@@ -57,14 +57,24 @@ export default function ClipNetworkPage() {
   const [showSourceForm,setShowSourceForm] = useState(false);
   const [testCaption,setTestCaption] = useState("Treino de verdade é consistência. #fitness #treino");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [playing,setPlaying] = useState<Record<string,string>>({});
 
   const primaryAccount = accounts[0];
   const instagram = socials.find(s => s.clip_account_id === primaryAccount?.id && s.platform === "instagram" && s.status === "active");
   const publicationByClip = useMemo(() => new Map(publications.map(p => [p.clip_id,p])),[publications]);
+  const accountById = useMemo(() => new Map(accounts.map(a => [a.id,a])),[accounts]);
+  const sourceById = useMemo(() => new Map(sources.map(s => [s.id,s])),[sources]);
+  const clipsByVideo = useMemo(() => {
+    const map = new Map<string,number>();
+    for (const c of clips) if (c.source_video_id) map.set(c.source_video_id,(map.get(c.source_video_id)||0)+1);
+    return map;
+  },[clips]);
   const today = new Date().toISOString().slice(0,10);
   const publishedToday = publications.filter(p => p.status === "published" && p.published_at?.startsWith(today)).length;
   const queued = publications.filter(p => ["queued","processing","publishing"].includes(p.status)).length;
   const ready = clips.filter(c => c.render_status === "ready" || c.render_status === "not_needed").length;
+  const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length;
+
 
   const load = async () => {
     setLoading(true); setError(null);
