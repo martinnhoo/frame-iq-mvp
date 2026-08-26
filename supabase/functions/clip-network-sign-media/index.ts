@@ -10,7 +10,7 @@
  * A checagem de dono é feita aqui, com o service role, comparando o user_id da
  * linha com o dono do JWT — o cliente não escolhe o caminho do arquivo.
  */
-import { clipCors, json, requireClipUser } from "../_shared/clip-network.ts";
+import { clipCors, json, requireClipBridgeUser } from "../_shared/clip-network-bridge.ts";
 
 const BUCKET = "clip-network";
 const DEFAULT_TTL = 60 * 60; // 1 hora: cobre assistir e baixar sem virar link permanente.
@@ -18,7 +18,7 @@ const DEFAULT_TTL = 60 * 60; // 1 hora: cobre assistir e baixar sem virar link p
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: clipCors });
   try {
-    const { supabase, user } = await requireClipUser(req);
+    const { supabase, user } = await requireClipBridgeUser(req);
     const { clip_id, variant_id, revision_id, source_video_id, download } = await req.json().catch(() => ({}));
 
     let path: string | null = null;

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Supabase JSON/transcript payloads are validated before persistence. */
-import { clipCors, json, requireClipUser } from "../_shared/clip-network.ts";
+import { clipCors, json, requireClipBridgeUser } from "../_shared/clip-network-bridge.ts";
 import { applyFeedbackChanges, isSemanticRegeneration, parseDeterministicFeedback } from "../_shared/clip-feedback.ts";
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
-const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") || "gpt-4.1-mini";
+const OPENAI_MODEL = Deno.env.get("CLIP_OPENAI_MODEL") || "gpt-5.4-mini";
 const VARIANT_KEYS = ["blur_caption", "zoom_caption", "zoom_clean"] as const;
 
 const nowIso = () => new Date().toISOString();
@@ -64,8 +64,36 @@ function semanticSettings(raw: Record<string, any>, semantic: Record<string, any
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: clipCors });
   try {
-    const { supabase, user } = await requireClipUser(req);
+    const { supabase, user } = await requireClipBridgeUser(req);
     const { action, payload = {} } = await req.json().catch(() => ({}));
+
+    if (action === "bootstrap") {
+      const [variantResult, revisionResult, feedbackResult] = await Promise.all([
+        supabase.from("clip_variants")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true }),
+        supabase.from("clip_revisions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
+        supabase.from("clip_feedback")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      if (variantResult.error) throw variantResult.error;
+      if (revisionResult.error) throw revisionResult.error;
+      if (feedbackResult.error) throw feedbackResult.error;
+
+      return json({
+        variants: variantResult.data || [],
+        revisions: revisionResult.data || [],
+        feedback: feedbackResult.data || [],
+      });
+    }
+
     const clipId = String(payload.clip_id || "");
     if (!clipId) return json({ error: "clip_id required" }, 400);
     const { data: clip, error: clipError } = await supabase.from("clips")

@@ -81,7 +81,6 @@ alter table public.clip_feedback enable row level security;
 alter table public.clip_revisions enable row level security;
 
 revoke all on table public.clip_variants, public.clip_feedback, public.clip_revisions from anon, authenticated;
-grant select on table public.clip_variants, public.clip_feedback, public.clip_revisions to authenticated;
 grant all on table public.clip_variants, public.clip_feedback, public.clip_revisions to service_role;
 
 create policy clip_variants_own_select on public.clip_variants for select to authenticated

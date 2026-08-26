@@ -11,6 +11,8 @@ import {
 const db = supabase as any;
 
 const CLIP_NETWORK_API_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-api";
+const CLIP_NETWORK_REVIEW_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-review";
+const CLIP_NETWORK_SIGN_MEDIA_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-sign-media";
 
 async function clipApi(action:string, payload:Record<string,unknown> = {}) {
   const { data:{ session }, error } = await supabase.auth.getSession();
@@ -38,6 +40,38 @@ async function clipApi(action:string, payload:Record<string,unknown> = {}) {
   if (!response.ok || data?.error) {
     throw new Error(data?.error || `Clip Network API falhou (${response.status})`);
   }
+  return data;
+}
+
+async function clipBridge(url:string, body:Record<string,unknown>) {
+  const { data:{ session }, error } = await supabase.auth.getSession();
+  if(error) throw error;
+
+  const accessToken=session?.access_token;
+  if(!accessToken) throw new Error("Sessão expirada");
+
+  const response=await fetch(url,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:`Bearer ${accessToken}`,
+    },
+    body:JSON.stringify(body),
+  });
+
+  const text=await response.text();
+  let data:any={};
+
+  try{
+    data=text?JSON.parse(text):{};
+  }catch{
+    throw new Error(`Resposta inválida do Clip Network (${response.status})`);
+  }
+
+  if(!response.ok||data?.error){
+    throw new Error(data?.error||`Clip Network falhou (${response.status})`);
+  }
+
   return data;
 }
 
@@ -142,16 +176,10 @@ export default function ClipNetworkPage() {
       const nextClips:Clip[] = data?.clips || [];
       setClips(nextClips);
       setPublications(data?.publications || []);
-      const clipIds=nextClips.filter(clip=>clip.source_video_id).map(clip=>clip.id);
-      if(clipIds.length){
-        const [variantResult,revisionResult,feedbackResult]=await Promise.all([
-          db.from("clip_variants").select("*").in("clip_id",clipIds).order("created_at",{ascending:true}),
-          db.from("clip_revisions").select("*").in("clip_id",clipIds).order("created_at",{ascending:false}),
-          db.from("clip_feedback").select("*").in("clip_id",clipIds).order("created_at",{ascending:false}),
-        ]);
-        if(variantResult.error)throw variantResult.error;if(revisionResult.error)throw revisionResult.error;if(feedbackResult.error)throw feedbackResult.error;
-        setVariants(variantResult.data||[]);setRevisions(revisionResult.data||[]);setFeedback(feedbackResult.data||[]);
-      }else{setVariants([]);setRevisions([]);setFeedback([]);}
+      const reviewData=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"bootstrap",payload:{}});
+      setVariants(reviewData?.variants||[]);
+      setRevisions(reviewData?.revisions||[]);
+      setFeedback(reviewData?.feedback||[]);
     } catch(e:any) { setError(e.message || String(e)); }
     finally { if(showLoading) setLoading(false); }
   };
@@ -270,25 +298,25 @@ export default function ClipNetworkPage() {
 
   const approve = async (clip:Clip) => {
     setBusy(`approve:${clip.id}`); setError(null);
-    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"approve",payload:{clip_id:clip.id}}});if(e)throw e;if(data?.error)throw new Error(data.error);setReviewMessage("Momento aprovado. Criando as três variantes v1…");await load();}
+    try{const data=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"approve",payload:{clip_id:clip.id}});setReviewMessage("Momento aprovado. Criando as três variantes v1…");await load();}
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
   const reject = async (clip:Clip) => {
     if(!window.confirm("Descartar este momento? Ele não será regenerado automaticamente."))return;
     setBusy(`reject:${clip.id}`); setError(null);
-    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"discard",payload:{clip_id:clip.id}}});if(e)throw e;if(data?.error)throw new Error(data.error);setReviewMessage("Momento descartado. Ele não será regenerado automaticamente.");await load();}
+    try{const data=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"discard",payload:{clip_id:clip.id}});setReviewMessage("Momento descartado. Ele não será regenerado automaticamente.");await load();}
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
   const submitFeedback = async (clip:Clip,text:string,variant?:ClipVariant) => {
     setBusy(`feedback:${clip.id}`);setError(null);setReviewMessage("Interpretando o pedido…");
-    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"submit_feedback",payload:{clip_id:clip.id,clip_variant_id:variant?.id,feedback:text}}});if(e)throw e;if(data?.error)throw new Error(data.error);const understood=data?.interpreted_action?.summary||"ajuste solicitado";const revisionLabels=(data?.revisions||[]).map((item:any)=>`${item.label} v${item.revision_number}`).join(", ");setReviewMessage(`Entendido: ${understood}.${revisionLabels?` Gerando ${revisionLabels}…`:""}`);await load();}
+    try{const data=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"submit_feedback",payload:{clip_id:clip.id,clip_variant_id:variant?.id,feedback:text}});const understood=data?.interpreted_action?.summary||"ajuste solicitado";const revisionLabels=(data?.revisions||[]).map((item:any)=>`${item.label} v${item.revision_number}`).join(", ");setReviewMessage(`Entendido: ${understood}.${revisionLabels?` Gerando ${revisionLabels}…`:""}`);await load();}
     catch(e:any){setError(e.message||String(e));setReviewMessage(null);}finally{setBusy(null);}
   };
 
   const retryRevision = async (clip:Clip,revision:ClipRevision) => {
     setBusy(`retry-revision:${revision.id}`);setError(null);
-    try{const {data,error:e}=await supabase.functions.invoke("clip-network-review",{body:{action:"retry_revision",payload:{clip_id:clip.id,revision_id:revision.id}}});if(e)throw e;if(data?.error)throw new Error(data.error);setReviewMessage(`v${revision.revision_number} voltou para a fila de render.`);await load();}
+    try{const data=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"retry_revision",payload:{clip_id:clip.id,revision_id:revision.id}});setReviewMessage(`v${revision.revision_number} voltou para a fila de render.`);await load();}
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
@@ -299,8 +327,12 @@ export default function ClipNetworkPage() {
   };
 
   const signVariantMedia = async (item:ClipVariant|ClipRevision,download=false,isRevision=false) => {
-    const {data,error:e}=await supabase.functions.invoke("clip-network-sign-media",{body:isRevision?{revision_id:item.id,download}:{variant_id:item.id,download}});
-    if(e)throw e;if(data?.error)throw new Error(data.error);if(!data?.url)throw new Error("Mídia não disponível");return data.url as string;
+    const data=await clipBridge(
+      CLIP_NETWORK_SIGN_MEDIA_URL,
+      isRevision?{revision_id:item.id,download}:{variant_id:item.id,download}
+    );
+    if(!data?.url)throw new Error("Mídia não disponível");
+    return data.url as string;
   };
 
   const watchVariant = async (item:ClipVariant|ClipRevision,isRevision=false) => {
