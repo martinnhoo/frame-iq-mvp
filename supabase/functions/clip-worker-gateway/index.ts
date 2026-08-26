@@ -12,6 +12,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { InvalidAiJsonError, RecoverableAiError, parseJsonLoose } from "./ai-json.ts";
+import {
+  chooseFallbackAccount,
+  hasTemporalConflict,
+  selectDistinctOpportunities,
+} from "./clip-opportunities.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -264,9 +269,9 @@ async function syncPlayableClipCount(sourceVideoId: string) {
   return count;
 }
 
-/** Seleção editorial com Gemini. Mesmas regras do orquestrador anterior. */
+/** Descobre oportunidades primeiro e só então decide a conta editorial. */
 async function orchestrate(
-  network: Record<string, any>,
+  _network: Record<string, any>,
   accounts: Record<string, any>[],
   transcript: { segments?: { start: number; end: number; text: string }[]; duration?: number },
 ) {
@@ -274,59 +279,74 @@ async function orchestrate(
     .map((s) => `[${Number(s.start).toFixed(1)}-${Number(s.end).toFixed(1)}] ${s.text}`)
     .join("\n").slice(0, 240_000);
 
-  const prompt = [
-    `Você e um Creative Strategist especializado em short-form e editor-chefe de uma rede de cortes verticais. Escolha no máximo ${Math.min(12, Number(network.daily_limit) || 10)} cortes realmente bons deste conteúdo.`,
-    "",
-    "CONTAS EDITORIAIS DISPONÍVEIS:",
-    ...accounts.map((a) => `- id=${a.id} | ${a.label} | nicho=${a.niche} | tom=${a.tone || "natural"} | regras=${JSON.stringify(a.rules || {})}`),
+  const opportunityPrompt = [
+    "Você é um Creative Strategist especializado em encontrar oportunidades de short-form em vídeos long-form.",
+    "Nesta etapa IGNORE contas, nichos e routing. Analise o vídeo por mérito editorial próprio.",
+    "Crie um pool exploratório de até 20 momentos para que o sistema selecione os 10 melhores e realmente distintos.",
+    "Em um vídeo rico de 30–60 minutos, procure ativamente várias oportunidades ao longo de toda a duração; não retorne zero apenas porque os momentos não são perfeitos ou não chegam a 90/100.",
     "",
     "REGRAS:",
-    "- Pense como Creative Strategist, nao como resumidor. Procure momentos que fazem alguem parar o scroll.",
-    "- Os PRIMEIROS 1-3 SEGUNDOS sao o criterio mais importante.",
-    "- O inicio precisa ter uma fala real que gere curiosidade, conflito, surpresa, opiniao forte, pergunta, revelacao, tensao, reacao ou punchline.",
-    "- Nao comece com saudacao, introducao morna, preparacao desnecessaria ou segundos mortos.",
-    "- Nao comece no meio de uma frase.",
-    "- Pode avancar o start_seconds ate uma fala mais forte se o trecho continuar compreensivel.",
-    "- Curiosidade e boa; confusao nao. Quem nunca viu o video original precisa entender o essencial.",
-    "- Cada corte deve funcionar sozinho sem depender do contexto anterior do video.",
-    "- Duracao permitida: de 5 a 90 segundos.",
-    "- Use somente o tempo necessario. Um corte excelente de 8 segundos e melhor que um corte mediano de 45 segundos.",
-    "- Comece EXATAMENTE onde o hook forte comeca, sem carregar contexto desnecessario antes.",
-    "- Depois do hook, mantenha apenas o desenvolvimento necessario para sustentar a curiosidade.",
-    "- O corte deve terminar em payoff: resposta, conclusao, punchline, consequencia, revelacao, reacao ou resolucao.",
-    "- Nunca termine no meio de uma frase, explicacao ou raciocinio.",
-    "- Se existe hook forte mas nao existe conclusao, descarte o corte.",
-    "- Se existe conclusao mas os primeiros 1-3 segundos sao fracos, procure outro inicio ou descarte.",
-    "- Nao invente, reescreva ou reorganize falas. Apenas escolha start_seconds e end_seconds existentes no conteudo.",
-    "- Nunca devolva cortes sobrepostos ou repetidos.",
-    "- Roteie cada corte para a UNICA conta cujo nicho e tom realmente combinam. Se nenhuma combina, nao crie o corte.",
-    "- Score 0-100 deve considerar principalmente: hook nos primeiros 1-3s, retencao provavel, clareza sem contexto, payoff e potencial de compartilhamento.",
-    "- Nao aumente score para preencher cota. Pode devolver poucos cortes ou nenhum.",
+    "- Procure conflito, reação, história, revelação, opinião, humor, tensão, curiosidade, transformação, bastidor, informação forte e interação entre pessoas.",
+    "- Não limite a busca a fitness ou ao tema aparente de uma conta editorial.",
+    "- Os primeiros 1–3 segundos precisam conter um hook real e forte, sem saudação, introdução morna ou segundos mortos.",
+    "- O corte precisa funcionar sozinho: hook → desenvolvimento necessário → payoff/conclusão.",
+    "- Nunca comece ou termine no meio de uma frase, explicação ou pensamento.",
+    "- Duração permitida: 5–90 segundos. Use somente o tempo necessário.",
+    "- Não invente, reescreva ou reorganize falas; use timestamps existentes.",
+    "- Cada candidato deve representar um acontecimento diferente. Não repita a mesma conversa com início ou final alternativo.",
+    "- Prefira oportunidades distribuídas pelo vídeo quando houver qualidade.",
+    "- Score real de 0–100 considera hook, retenção provável, clareza standalone, payoff e compartilhamento.",
+    "- Qualidade continua acima de quantidade, mas este pool serve para avaliação manual: seja exploratório, não excessivamente conservador.",
     "- Caption curta e natural, sem inventar fatos.",
-    "- on_screen_title com no maximo 9 palavras.",
+    "- on_screen_title com no máximo 9 palavras.",
     "",
-    "TRANSCRICAO COM TIMESTAMPS:",
+    "TRANSCRIÇÃO COM TIMESTAMPS:",
     timestamped,
     "",
-    'Responda SOMENTE JSON: {"clips":[{"account_id":"uuid","start_seconds":0,"end_seconds":40,"topic":"","hook":"","on_screen_title":"","caption":"","score":85,"reason":""}]}',
+    'Responda SOMENTE JSON: {"clips":[{"start_seconds":0,"end_seconds":40,"topic":"","hook":"","on_screen_title":"","caption":"","score":85,"reason":""}]}',
   ].join("\n");
 
-  const parsed = await gemini([{ text: prompt }], "Pense como um Creative Strategist de short-form obcecado pelos primeiros 1-3 segundos, retencao e payoff. Qualidade acima de quantidade. E melhor devolver poucos cortes excelentes ou nenhum do que preencher cota. Responda apenas JSON.");
+  const parsed = await gemini(
+    [{ text: opportunityPrompt }],
+    "Encontre oportunidades de short-form antes de pensar em conta editorial. Explore o vídeo inteiro, preserve falas e responda apenas JSON.",
+  );
+  const opportunities = selectDistinctOpportunities(parsed.clips || [], transcript.duration, 10);
+  if (!opportunities.length) return [];
+
+  const fallbackAccount = chooseFallbackAccount(accounts);
   const accountIds = new Set(accounts.map((a) => a.id));
-  const seen: any[] = [];
-  return (parsed.clips || [])
-    .map((c: any) => ({ ...c, start_seconds: Number(c.start_seconds), end_seconds: Number(c.end_seconds), score: Number(c.score) || 0 }))
-    .filter((c: any) => accountIds.has(c.account_id))
-    .filter((c: any) => Number.isFinite(c.start_seconds) && Number.isFinite(c.end_seconds))
-    .filter((c: any) => c.end_seconds - c.start_seconds >= 5 && c.end_seconds - c.start_seconds <= 90)
-    .filter((c: any) => c.start_seconds >= 0 && c.end_seconds <= (transcript.duration || Infinity) + 2)
-    .sort((a: any, b: any) => b.score - a.score)
-    .filter((c: any) => {
-      const overlaps = seen.some((s) => s.account_id === c.account_id && c.start_seconds < s.end_seconds - 3 && c.end_seconds > s.start_seconds + 3);
-      if (overlaps) return false;
-      seen.push(c);
-      return true;
-    });
+  const routingPrompt = [
+    "Roteie cada momento abaixo para exatamente uma conta editorial ativa.",
+    "Não descarte nenhum momento. Se não houver encaixe perfeito, indique a conta mais ampla/próxima; o sistema possui fallback seguro.",
+    "",
+    "CONTAS ATIVAS:",
+    ...accounts.map((account) => `- id=${account.id} | ${account.label} | nicho=${account.niche} | tom=${account.tone || "natural"} | regras=${JSON.stringify(account.rules || {})}`),
+    "",
+    "MOMENTOS:",
+    ...opportunities.map((clip, index) => `${index}: ${JSON.stringify({
+      start_seconds: clip.start_seconds,
+      end_seconds: clip.end_seconds,
+      topic: clip.topic,
+      hook: clip.hook,
+      reason: clip.reason,
+    })}`),
+    "",
+    'Responda SOMENTE JSON: {"routes":[{"moment_index":0,"account_id":"uuid"}]}',
+  ].join("\n");
+  const routed = await gemini(
+    [{ text: routingPrompt }],
+    "Você faz routing editorial depois que os momentos já foram escolhidos. Roteie todos, sem removê-los, e responda apenas JSON.",
+  );
+  const routes = new Map<number, string>();
+  for (const route of routed.routes || []) {
+    const index = Number(route.moment_index);
+    if (Number.isInteger(index) && accountIds.has(route.account_id)) routes.set(index, route.account_id);
+  }
+
+  return opportunities.map((clip, index) => ({
+    ...clip,
+    account_id: routes.get(index) || fallbackAccount.id,
+  }));
 }
 
 async function autoApprove(network: Record<string, any>, accounts: Record<string, any>[], clips: any[]) {
@@ -452,7 +472,7 @@ Deno.serve(async (req) => {
             user_id: job.user_id,
             source_video_id: job.id,
             clip_account_id: c.account_id,
-            dedupe_key: `${c.account_id}:${Math.round(c.start_seconds)}`,
+            dedupe_key: `moment:${Math.round(c.start_seconds)}:${Math.round(c.end_seconds)}`,
             start_seconds: c.start_seconds,
             end_seconds: c.end_seconds,
             transcript_excerpt: (transcript.segments || [])
@@ -468,16 +488,20 @@ Deno.serve(async (req) => {
             render_status: "pending",
             updated_at: nowIso(),
           }));
-          // Idempotência sem depender de unique constraint: lê as dedupe_key já
-          // existentes deste vídeo e insere apenas as novas.
+          // Idempotência global por momento: conta diferente nunca autoriza
+          // repetir o mesmo acontecimento no mesmo vídeo.
           const { data: existing, error: readError } = await admin.from("clips")
-            .select("dedupe_key").eq("source_video_id", job.id);
+            .select("dedupe_key,start_seconds,end_seconds").eq("source_video_id", job.id);
           if (readError) throw readError;
           const known = new Set((existing || []).map((r: any) => r.dedupe_key));
+          const knownRanges = (existing || [])
+            .map((row: any) => ({ start_seconds: Number(row.start_seconds), end_seconds: Number(row.end_seconds) }))
+            .filter((row: any) => Number.isFinite(row.start_seconds) && Number.isFinite(row.end_seconds));
           const fresh: any[] = [];
           for (const row of rows) {
-            if (known.has(row.dedupe_key)) continue;
+            if (known.has(row.dedupe_key) || knownRanges.some((range: any) => hasTemporalConflict(row, range))) continue;
             known.add(row.dedupe_key);
+            knownRanges.push(row);
             fresh.push(row);
           }
           if (fresh.length) {
