@@ -1,24 +1,24 @@
 /**
- * AdBrief Clip Network — worker da máquina de cortes.
+ * AdBrief Clip Network â€” worker da mÃ¡quina de cortes.
  *
- * Um vídeo por vez, do começo ao fim, sem clique humano:
+ * Um vÃ­deo por vez, do comeÃ§o ao fim, sem clique humano:
  *
- *   descoberto → baixando → transcrevendo → analisando → renderizando → concluído
+ *   descoberto â†’ baixando â†’ transcrevendo â†’ analisando â†’ renderizando â†’ concluÃ­do
  *
- * Divisão de responsabilidade (mudou de propósito):
- * - Fly: yt-dlp, ffmpeg, disco temporário. Nada mais.
- * - Lovable/Supabase: banco, storage privilegiado e IA (Gemini), atrás da edge
+ * DivisÃ£o de responsabilidade (mudou de propÃ³sito):
+ * - Fly: yt-dlp, ffmpeg, disco temporÃ¡rio. Nada mais.
+ * - Lovable/Supabase: banco, storage privilegiado e IA (Gemini), atrÃ¡s da edge
  *   function clip-worker-gateway.
- * O worker conhece apenas SUPABASE_URL e CLIP_WORKER_SECRET — nem service role
- * nem chave de IA existem nesta máquina.
+ * O worker conhece apenas SUPABASE_URL e CLIP_WORKER_SECRET â€” nem service role
+ * nem chave de IA existem nesta mÃ¡quina.
  *
- * Regras que o código respeita e que não são negociáveis:
- * - Só processa vídeo cuja FONTE está marcada como autorizada (rights_confirmed).
- * - O master vive apenas no filesystem temporário do worker e é apagado no fim.
- * - Nada é publicado em rede social aqui. Autopilot nesta fase significa
+ * Regras que o cÃ³digo respeita e que nÃ£o sÃ£o negociÃ¡veis:
+ * - SÃ³ processa vÃ­deo cuja FONTE estÃ¡ marcada como autorizada (rights_confirmed).
+ * - O master vive apenas no filesystem temporÃ¡rio do worker e Ã© apagado no fim.
+ * - Nada Ã© publicado em rede social aqui. Autopilot nesta fase significa
  *   "deixar os cortes prontos sozinho".
- * - O bucket é privado: o worker grava o caminho, não uma URL pública.
- * - Idempotência: candidato tem dedupe_key, vídeo concluído não volta para a
+ * - O bucket Ã© privado: o worker grava o caminho, nÃ£o uma URL pÃºblica.
+ * - IdempotÃªncia: candidato tem dedupe_key, vÃ­deo concluÃ­do nÃ£o volta para a
  *   fila, e o lock com lease permite recuperar job abandonado.
  */
 import { spawn } from "node:child_process";
@@ -45,7 +45,7 @@ const log = (...a) => console.log(`[clip-worker ${new Date().toISOString()}]`, .
 const nowIso = () => new Date().toISOString();
 
 let shuttingDown = false;
-process.on("SIGTERM", () => { shuttingDown = true; log("SIGTERM: encerrando após o job atual"); });
+process.on("SIGTERM", () => { shuttingDown = true; log("SIGTERM: encerrando apÃ³s o job atual"); });
 process.on("SIGINT", () => { shuttingDown = true; });
 
 function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
@@ -65,7 +65,7 @@ function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
 const updateVideo = (videoId, patch) => call("update_video", { video_id: videoId, patch });
 const updateClip = (clipId, patch) => call("update_clip", { clip_id: clipId, patch });
 
-// ── Estado do pipeline ───────────────────────────────────────────────────────
+// â”€â”€ Estado do pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function setStage(videoId, stage, detail) {
   await call("touch_lease", {
@@ -74,7 +74,7 @@ async function setStage(videoId, stage, detail) {
   });
 }
 
-/** Heartbeat: renova o lease a 1/3 do tempo para o reaper não roubar o job em curso. */
+/** Heartbeat: renova o lease a 1/3 do tempo para o reaper nÃ£o roubar o job em curso. */
 function startHeartbeat(videoId, getStage) {
   const interval = setInterval(() => {
     setStage(videoId, getStage(), null).catch((e) => log("heartbeat falhou", e?.message));
@@ -87,18 +87,18 @@ async function claimJob() {
   return job || null;
 }
 
-// ── Transcrição (Gemini, via gateway) ────────────────────────────────────────
+// â”€â”€ TranscriÃ§Ã£o (Gemini, via gateway) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function transcribe(input, dir) {
   const audioDir = join(dir, "audio");
   await mkdir(audioDir, { recursive: true });
-  // Blocos de 10 min em mono 32k: o áudio viaja em base64 dentro do corpo da
-  // requisição ao gateway, então o bloco precisa caber com folga no limite de
-  // payload da edge function — e ainda assim cobre vídeo de horas.
+  // Blocos de 10 min em mono 32k: o Ã¡udio viaja em base64 dentro do corpo da
+  // requisiÃ§Ã£o ao gateway, entÃ£o o bloco precisa caber com folga no limite de
+  // payload da edge function â€” e ainda assim cobre vÃ­deo de horas.
   await run("ffmpeg", ["-y", "-i", input, "-vn", "-ac", "1", "-ar", "16000", "-b:a", "32k",
     "-f", "segment", "-segment_time", "600", "-reset_timestamps", "1", join(audioDir, "chunk_%03d.mp3")]);
   const files = (await readdir(audioDir)).filter((x) => x.endsWith(".mp3")).sort();
-  if (!files.length) throw new Error("Nenhum áudio extraído do master");
+  if (!files.length) throw new Error("Nenhum Ã¡udio extraÃ­do do master");
 
   let offset = 0;
   const segments = [];
@@ -114,7 +114,7 @@ async function transcribe(input, dir) {
         text: String(seg.text || "").trim(),
       });
     }
-    // O bloco tem no máximo 600s; usar o fim real evita empilhar erro de offset.
+    // O bloco tem no mÃ¡ximo 600s; usar o fim real evita empilhar erro de offset.
     offset += Math.max(Number(chunk.at(-1)?.end || 0), 0) || 600;
     await rm(join(audioDir, file), { force: true });
   }
@@ -122,7 +122,7 @@ async function transcribe(input, dir) {
   return { text, segments, duration: segments.at(-1)?.end || offset };
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
+// â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function srtTime(seconds) {
   const ms = Math.max(0, Math.round(seconds * 1000));
@@ -130,20 +130,20 @@ function srtTime(seconds) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")},${String(x).padStart(3, "0")}`;
 }
 
-// Legenda estilo Reels/Shorts: blocos curtos, no máximo 2 linhas, sem custo de IA.
+// Legenda estilo Reels/Shorts: blocos curtos, no mÃ¡ximo 2 linhas, sem custo de IA.
 const CAPTION_TARGET_WORDS = 4;   // alvo por bloco
 const CAPTION_MAX_WORDS = 5;      // teto duro por bloco
-const CAPTION_MAX_LINE_CHARS = 24; // largura confortável no 1080x1920
+const CAPTION_MAX_LINE_CHARS = 24; // largura confortÃ¡vel no 1080x1920
 
-/** Limpa espaços/quebras que vêm da transcrição sem tocar na pontuação. */
+/** Limpa espaÃ§os/quebras que vÃªm da transcriÃ§Ã£o sem tocar na pontuaÃ§Ã£o. */
 function normalizeCaptionText(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
-/** Quebra por frases/pausas primeiro: pontuação manda mais que contagem de palavras. */
+/** Quebra por frases/pausas primeiro: pontuaÃ§Ã£o manda mais que contagem de palavras. */
 function splitBySentences(text) {
   return text
-    .split(/(?<=[.!?…]|[,;:])\s+/)
+    .split(/(?<=[.!?â€¦]|[,;:])\s+/)
     .map((p) => p.trim())
     .filter(Boolean);
 }
@@ -160,7 +160,7 @@ function buildChunks(text) {
     let i = 0;
     while (i < words.length) {
       let take = Math.min(per, words.length - i);
-      // Sobraria uma palavra solta no próximo bloco? Puxa uma para trás.
+      // Sobraria uma palavra solta no prÃ³ximo bloco? Puxa uma para trÃ¡s.
       if (words.length - (i + take) === 1 && take > 1) take -= 1;
       chunks.push(words.slice(i, i + take));
       i += take;
@@ -169,7 +169,7 @@ function buildChunks(text) {
   return chunks;
 }
 
-/** No máximo 2 linhas, balanceadas para não deixar uma palavra sozinha embaixo. */
+/** No mÃ¡ximo 2 linhas, balanceadas para nÃ£o deixar uma palavra sozinha embaixo. */
 function layoutLines(words) {
   const single = words.join(" ");
   if (single.length <= CAPTION_MAX_LINE_CHARS || words.length < 2) return single;
@@ -184,7 +184,7 @@ function layoutLines(words) {
   return best.text;
 }
 
-/** Reparte o tempo do segmento entre os blocos proporcionalmente às palavras, sem gap/overlap. */
+/** Reparte o tempo do segmento entre os blocos proporcionalmente Ã s palavras, sem gap/overlap. */
 function chunkSegment(segment) {
   const chunks = buildChunks(segment.text);
   if (!chunks.length) return [];
@@ -221,7 +221,7 @@ async function renderClip(master, clip, transcript, dir) {
   const duration = Number(clip.end_seconds) - start;
   await writeSrt(transcript, start, Number(clip.end_seconds), srt);
   const escapedSrt = srt.replace(/\\/g, "\\\\").replace(/:/g, "\\:").replace(/'/g, "\\'");
-  const filter = `[0:v]split=2[bg0][fg0];[bg0]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=24:2[bg];[fg0]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,subtitles='${escapedSrt}':force_style='FontName=DejaVu Sans,FontSize=15,Bold=1,Outline=1.4,Shadow=0.4,Alignment=2,MarginV=150,MarginL=80,MarginR=80'[v]`;
+  const filter = `[0:v]split=2[bg0][fg0];[bg0]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=24:2[bg];[fg0]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,subtitles='${escapedSrt}':force_style='FontName=DejaVu Sans,FontSize=8,Bold=1,Outline=0.8,Shadow=0,Alignment=2,MarginV=65,MarginL=24,MarginR=24'[v]`;
 
   await run("ffmpeg", ["-y", "-ss", String(start), "-i", master, "-t", String(duration),
     "-filter_complex", filter, "-map", "[v]", "-map", "0:a?",
@@ -231,7 +231,7 @@ async function renderClip(master, clip, transcript, dir) {
 }
 
 /**
- * Renderiza e sobe. O bucket é privado de propósito: gravamos apenas o caminho
+ * Renderiza e sobe. O bucket Ã© privado de propÃ³sito: gravamos apenas o caminho
  * e o dashboard pede uma signed URL na hora de assistir/baixar. Persistir uma
  * URL assinada no banco criaria um link que expira e vira erro silencioso.
  */
@@ -262,7 +262,7 @@ async function renderAndUpload(master, clip, transcript, dir) {
   }
 }
 
-// ── Job completo ─────────────────────────────────────────────────────────────
+// â”€â”€ Job completo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function failJob(job, error) {
   const retryable = !(error instanceof MediaResolverError) || error.retryable !== false;
@@ -275,7 +275,7 @@ async function failJob(job, error) {
         media_status: "blocked",
         stage_detail: error?.code === "source_too_short"
           ? "fonte curta ignorada"
-          : "fonte bloqueada: erro não retentável",
+          : "fonte bloqueada: erro nÃ£o retentÃ¡vel",
         last_error: message.slice(0, 2000),
         locked_by: null,
         locked_at: null,
@@ -284,19 +284,19 @@ async function failJob(job, error) {
         processing_finished_at: nowIso(),
       });
     } catch (updateError) {
-      log("não consegui registrar o bloqueio terminal", updateError?.message);
+      log("nÃ£o consegui registrar o bloqueio terminal", updateError?.message);
       await call("fail_job", {
         video_id: job.id,
         attempts: Number(job.attempts || 0),
         retryable,
         error: message,
-      }).catch((e) => log("não consegui registrar a falha", e?.message));
+      }).catch((e) => log("nÃ£o consegui registrar a falha", e?.message));
     }
   } else {
     await call("fail_job", {
       video_id: job.id, attempts: Number(job.attempts || 0),
       retryable, error: message,
-    }).catch((e) => log("não consegui registrar a falha", e?.message));
+    }).catch((e) => log("nÃ£o consegui registrar a falha", e?.message));
   }
 
   log("job falhou", job.id, message);
@@ -310,7 +310,7 @@ async function processJob(job) {
   try {
     const ctx = await call("context", { source_id: job.source_id });
 
-    // 1. Mídia
+    // 1. MÃ­dia
     const { path: master, strategy } = await resolveMedia({
       video: job, source: ctx.source, dir, supabase: storageShim, bucket: BUCKET,
       onProgress: (detail) => setStage(job.id, "downloading", detail),
@@ -321,11 +321,11 @@ async function processJob(job) {
       stage_detail: `master obtido via ${strategy}`,
     });
 
-    // 2. Transcrição — reaproveitada se já existe (retry não repaga a IA).
+    // 2. TranscriÃ§Ã£o â€” reaproveitada se jÃ¡ existe (retry nÃ£o repaga a IA).
     stage = "transcribing";
     let transcript = job.transcript;
     if (!transcript?.segments?.length) {
-      await setStage(job.id, "transcribing", "transcrevendo áudio");
+      await setStage(job.id, "transcribing", "transcrevendo Ã¡udio");
       transcript = await transcribe(master, dir);
       await updateVideo(job.id, {
         transcript, transcript_status: "ready",
@@ -333,13 +333,13 @@ async function processJob(job) {
       });
     }
 
-    // 3. Seleção editorial + 4. autopilot — ambos no gateway, onde a chave de
+    // 3. SeleÃ§Ã£o editorial + 4. autopilot â€” ambos no gateway, onde a chave de
     // IA e a service role moram.
     stage = "analyzing";
     await setStage(job.id, "analyzing", "IA escolhendo os melhores momentos");
     const { clips = [], approved = [] } = await call("analyze_and_save", { job, transcript }, { timeoutMs: 300_000 });
 
-    // 5. Render dos aprovados, usando o master que já está em disco.
+    // 5. Render dos aprovados, usando o master que jÃ¡ estÃ¡ em disco.
     const approvedClips = [...new Map(
       [...clips.filter((c) => c.status === "approved"), ...approved].map((clip) => [clip.id, clip]),
     ).values()];
@@ -363,7 +363,7 @@ async function processJob(job) {
       candidates_count: clips.length,
       approved_count: approvedClips.length,
     });
-    log(`concluído "${job.title}": ${clips.length} candidatos, ${rendered} renderizados`);
+    log(`concluÃ­do "${job.title}": ${clips.length} candidatos, ${rendered} renderizados`);
   } catch (e) {
     await failJob(job, e);
   } finally {
@@ -374,8 +374,8 @@ async function processJob(job) {
 }
 
 /**
- * Backlog de aprovação manual (modo revisão). Precisa reobter o master, então
- * roda só quando não há vídeo novo na fila.
+ * Backlog de aprovaÃ§Ã£o manual (modo revisÃ£o). Precisa reobter o master, entÃ£o
+ * roda sÃ³ quando nÃ£o hÃ¡ vÃ­deo novo na fila.
  */
 async function processApprovedBacklog() {
   const { clip, video, source } = await call("next_render_backlog");
@@ -387,8 +387,8 @@ async function processApprovedBacklog() {
     const { path: master } = await resolveMedia({ video, source, dir, supabase: storageShim, bucket: BUCKET });
     const rendered = await renderAndUpload(master, clip, video.transcript, dir);
     if (rendered) {
-      // Compatível também com a versão anterior do gateway: incrementa a
-      // métrica após aprovação manual. O gateway novo reconta pelo banco.
+      // CompatÃ­vel tambÃ©m com a versÃ£o anterior do gateway: incrementa a
+      // mÃ©trica apÃ³s aprovaÃ§Ã£o manual. O gateway novo reconta pelo banco.
       await call("finish_job", {
         video_id: video.id,
         clips_generated: Number(video.clips_generated || 0) + 1,
@@ -417,7 +417,7 @@ async function loop() {
       if (job) await processJob(job);
       else if (!(await processApprovedBacklog()) && RUN_ONCE) break;
     } catch (e) {
-      log("erro no laço", e?.message || e);
+      log("erro no laÃ§o", e?.message || e);
     }
     if (RUN_ONCE || shuttingDown) break;
     await new Promise((r) => setTimeout(r, POLL_MS));
