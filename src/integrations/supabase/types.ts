@@ -5807,19 +5807,29 @@ export type Database = {
       }
       clip_source_videos: {
         Row: {
+          attempts: number
+          clips_generated: number
           created_at: string
           discovered_at: string
           duration_seconds: number | null
           id: string
           last_error: string | null
+          lease_expires_at: string | null
+          locked_at: string | null
+          locked_by: string | null
           media_status: string
           media_storage_path: string | null
           media_url: string | null
+          next_retry_at: string | null
+          pipeline_stage: string
+          processing_finished_at: string | null
+          processing_started_at: string | null
           provider_video_id: string | null
           rights_confirmed: boolean
           source_id: string
           source_published_at: string | null
           source_url: string | null
+          stage_detail: string | null
           thumbnail_url: string | null
           title: string
           transcript: Json | null
@@ -5828,19 +5838,29 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempts?: number
+          clips_generated?: number
           created_at?: string
           discovered_at?: string
           duration_seconds?: number | null
           id?: string
           last_error?: string | null
+          lease_expires_at?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
           media_status?: string
           media_storage_path?: string | null
           media_url?: string | null
+          next_retry_at?: string | null
+          pipeline_stage?: string
+          processing_finished_at?: string | null
+          processing_started_at?: string | null
           provider_video_id?: string | null
           rights_confirmed?: boolean
           source_id: string
           source_published_at?: string | null
           source_url?: string | null
+          stage_detail?: string | null
           thumbnail_url?: string | null
           title: string
           transcript?: Json | null
@@ -5849,19 +5869,29 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attempts?: number
+          clips_generated?: number
           created_at?: string
           discovered_at?: string
           duration_seconds?: number | null
           id?: string
           last_error?: string | null
+          lease_expires_at?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
           media_status?: string
           media_storage_path?: string | null
           media_url?: string | null
+          next_retry_at?: string | null
+          pipeline_stage?: string
+          processing_finished_at?: string | null
+          processing_started_at?: string | null
           provider_video_id?: string | null
           rights_confirmed?: boolean
           source_id?: string
           source_published_at?: string | null
           source_url?: string | null
+          stage_detail?: string | null
           thumbnail_url?: string | null
           title?: string
           transcript?: Json | null
@@ -5944,10 +5974,15 @@ export type Database = {
           caption: string | null
           clip_account_id: string
           created_at: string
+          dedupe_key: string | null
           end_seconds: number | null
           hook: string | null
           id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          locked_by: string | null
           on_screen_title: string | null
+          render_attempts: number
           render_status: string
           rendered_storage_path: string | null
           rendered_url: string | null
@@ -5966,10 +6001,15 @@ export type Database = {
           caption?: string | null
           clip_account_id: string
           created_at?: string
+          dedupe_key?: string | null
           end_seconds?: number | null
           hook?: string | null
           id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          locked_by?: string | null
           on_screen_title?: string | null
+          render_attempts?: number
           render_status?: string
           rendered_storage_path?: string | null
           rendered_url?: string | null
@@ -5988,10 +6028,15 @@ export type Database = {
           caption?: string | null
           clip_account_id?: string
           created_at?: string
+          dedupe_key?: string | null
           end_seconds?: number | null
           hook?: string | null
           id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          locked_by?: string | null
           on_screen_title?: string | null
+          render_attempts?: number
           render_status?: string
           rendered_storage_path?: string | null
           rendered_url?: string | null
@@ -9935,6 +9980,61 @@ export type Database = {
       ci_wake_worker_tick: { Args: never; Returns: undefined }
       cleanup_old_error_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      clip_claim_source_video: {
+        Args: { p_lease_secs?: number; p_worker_id: string }
+        Returns: {
+          attempts: number
+          clips_generated: number
+          created_at: string
+          discovered_at: string
+          duration_seconds: number | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          locked_at: string | null
+          locked_by: string | null
+          media_status: string
+          media_storage_path: string | null
+          media_url: string | null
+          next_retry_at: string | null
+          pipeline_stage: string
+          processing_finished_at: string | null
+          processing_started_at: string | null
+          provider_video_id: string | null
+          rights_confirmed: boolean
+          source_id: string
+          source_published_at: string | null
+          source_url: string | null
+          stage_detail: string | null
+          thumbnail_url: string | null
+          title: string
+          transcript: Json | null
+          transcript_status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "clip_source_videos"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      clip_recover_stuck_jobs: { Args: never; Returns: number }
+      clip_retry_source_video: {
+        Args: { p_video_id: string }
+        Returns: boolean
+      }
+      clip_touch_lease: {
+        Args: {
+          p_detail?: string
+          p_lease_secs?: number
+          p_stage: string
+          p_video_id: string
+          p_worker_id: string
+        }
+        Returns: boolean
+      }
       cockpit_dl_by_user: { Args: { days?: number }; Returns: Json }
       cockpit_dl_hit_rate_by_source: { Args: { days?: number }; Returns: Json }
       cockpit_dl_hit_rate_by_type: { Args: { days?: number }; Returns: Json }

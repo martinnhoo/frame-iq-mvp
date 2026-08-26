@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertTriangle, CheckCircle2, Clapperboard, Clock3, Copy, Download, ExternalLink,
-  Instagram, Link2, Loader2, Plus, Power, PowerOff, RefreshCw, Sparkles, Trash2, Upload, Youtube, Zap,
+  Instagram, Link2, Loader2, Play, Plus, Power, PowerOff, RefreshCw, RotateCcw, Sparkles, Trash2, Upload, Youtube, Zap,
+
 } from "lucide-react";
 
 const db = supabase as any;
@@ -12,8 +13,8 @@ type Network = { id:string; user_id:string; name:string; daily_limit:number; min
 type ClipAccount = { id:string; label:string; niche:string; tone?:string; daily_limit:number; active:boolean; rules?:any };
 type Social = { id:string; clip_account_id:string; platform:"instagram"|"tiktok"; username?:string; display_name?:string; status:string; capabilities?:any };
 type Source = { id:string; label:string; provider_url?:string; rights_confirmed:boolean; last_checked_at?:string; last_error?:string; active:boolean };
-type SourceVideo = { id:string; title:string; source_url?:string; thumbnail_url?:string; source_published_at?:string; media_status:string; transcript_status:string; rights_confirmed:boolean };
-type Clip = { id:string; clip_account_id:string; source_video_id?:string; hook?:string; topic?:string; caption?:string; score:number; status:string; render_status:string; rendered_url?:string; scheduled_at?:string; start_seconds?:number; end_seconds?:number; on_screen_title?:string };
+type SourceVideo = { id:string; source_id:string; title:string; source_url?:string; thumbnail_url?:string; source_published_at?:string; media_status:string; transcript_status:string; rights_confirmed:boolean; pipeline_stage:string; stage_detail?:string; last_error?:string; clips_generated?:number; attempts?:number; duration_seconds?:number; updated_at?:string };
+type Clip = { id:string; clip_account_id:string; source_video_id?:string; hook?:string; topic?:string; caption?:string; score:number; status:string; render_status:string; rendered_url?:string; rendered_storage_path?:string; last_error?:string; scheduled_at?:string; start_seconds?:number; end_seconds?:number; on_screen_title?:string };
 type Publication = { id:string; clip_id:string; platform:string; status:string; scheduled_at?:string; published_at?:string; provider_media_id?:string; error_message?:string };
 
 const fmt = (v?:string) => v ? new Intl.DateTimeFormat("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }).format(new Date(v)) : "—";
@@ -21,6 +22,19 @@ const statusLabel: Record<string,string> = {
   candidate:"Revisar", approved:"Aprovado", scheduled:"Agendado", published:"Publicado", error:"Erro",
   pending:"Pendente", rendering:"Renderizando", ready:"Pronto", queued:"Na fila", processing:"Processando", failed:"Falhou",
 };
+
+// Os estágios da máquina, na ordem em que acontecem. O índice serve de barra de
+// progresso: sem isto o painel só sabia dizer "aguardando mídia" para sempre.
+const STAGES = ["discovered","downloading","transcribing","analyzing","rendering","done"] as const;
+const stageLabel: Record<string,string> = {
+  discovered:"Descoberto", downloading:"Baixando", transcribing:"Transcrevendo",
+  analyzing:"Analisando", rendering:"Renderizando", done:"Concluído",
+  error:"Erro", blocked:"Sem autorização",
+};
+const stageTone = (s:string):"neutral"|"good"|"warn"|"bad"|"blue" =>
+  s==="done" ? "good" : s==="error" ? "bad" : s==="blocked" ? "warn" : s==="discovered" ? "neutral" : "blue";
+const mmss = (s?:number) => s==null ? "—" : `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}`;
+
 
 function Pill({ children, tone="neutral" }:{children:any; tone?:"neutral"|"good"|"warn"|"bad"|"blue"}) {
   const tones = { neutral:"border-white/10 bg-white/5 text-white/65", good:"border-emerald-500/20 bg-emerald-500/10 text-emerald-300", warn:"border-amber-500/20 bg-amber-500/10 text-amber-300", bad:"border-red-500/20 bg-red-500/10 text-red-300", blue:"border-sky-500/20 bg-sky-500/10 text-sky-300" };
@@ -44,14 +58,24 @@ export default function ClipNetworkPage() {
   const [showSourceForm,setShowSourceForm] = useState(false);
   const [testCaption,setTestCaption] = useState("Treino de verdade é consistência. #fitness #treino");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [playing,setPlaying] = useState<Record<string,string>>({});
 
   const primaryAccount = accounts[0];
   const instagram = socials.find(s => s.clip_account_id === primaryAccount?.id && s.platform === "instagram" && s.status === "active");
   const publicationByClip = useMemo(() => new Map(publications.map(p => [p.clip_id,p])),[publications]);
+  const accountById = useMemo(() => new Map(accounts.map(a => [a.id,a])),[accounts]);
+  const sourceById = useMemo(() => new Map(sources.map(s => [s.id,s])),[sources]);
+  const clipsByVideo = useMemo(() => {
+    const map = new Map<string,number>();
+    for (const c of clips) if (c.source_video_id) map.set(c.source_video_id,(map.get(c.source_video_id)||0)+1);
+    return map;
+  },[clips]);
   const today = new Date().toISOString().slice(0,10);
   const publishedToday = publications.filter(p => p.status === "published" && p.published_at?.startsWith(today)).length;
   const queued = publications.filter(p => ["queued","processing","publishing"].includes(p.status)).length;
   const ready = clips.filter(c => c.render_status === "ready" || c.render_status === "not_needed").length;
+  const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length;
+
 
   const load = async () => {
     setLoading(true); setError(null);
@@ -189,6 +213,42 @@ export default function ClipNetworkPage() {
   const approve = async (clip:Clip) => { setBusy(`approve:${clip.id}`); try{const {error:e}=await db.from("clips").update({status:"approved",updated_at:new Date().toISOString()}).eq("id",clip.id);if(e)throw e;await load();}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);} };
   const reject = async (clip:Clip) => { setBusy(`reject:${clip.id}`); try{const {error:e}=await db.from("clips").update({status:"rejected",updated_at:new Date().toISOString()}).eq("id",clip.id);if(e)throw e;await load();}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);} };
 
+  // O bucket é privado e continua privado: pedimos uma URL assinada na hora de
+  // assistir ou baixar, em vez de guardar no banco um link que expira.
+  const signMedia = async (clip:Clip, download=false) => {
+    const {data,error:e}=await supabase.functions.invoke("clip-network-sign-media",{body:{clip_id:clip.id,download}});
+    if(e) throw e; if(!data?.url) throw new Error(data?.error||"Mídia não disponível");
+    return data.url as string;
+  };
+
+  const watch = async (clip:Clip) => {
+    setBusy(`watch:${clip.id}`); setError(null);
+    try { const url=await signMedia(clip); setPlaying(p=>({...p,[clip.id]:url})); }
+    catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
+  };
+
+  const downloadClip = async (clip:Clip) => {
+    setBusy(`download:${clip.id}`); setError(null);
+    try { const url=await signMedia(clip,true); window.open(url,"_blank","noopener"); }
+    catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
+  };
+
+  const retryVideo = async (video:SourceVideo) => {
+    setBusy(`retry:${video.id}`); setError(null);
+    try { const {error:e}=await db.rpc("clip_retry_source_video",{p_video_id:video.id}); if(e)throw e; await load(); }
+    catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
+  };
+
+  // Enquanto a máquina está trabalhando, a tela se atualiza sozinha. Pedir para
+  // o usuário apertar "Atualizar" para ver progresso é o oposto de autopilot.
+  useEffect(()=>{
+    if(!running) return;
+    const t=setInterval(()=>{ load(); },15000);
+    return ()=>clearInterval(t);
+  },[running]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+
   if(loading) return <div className="flex min-h-[60vh] items-center justify-center text-white/60"><Loader2 className="mr-2 h-5 w-5 animate-spin"/>Carregando Clip Network…</div>;
 
   if(!network) return <div className="mx-auto max-w-5xl p-6 lg:p-10">
@@ -216,7 +276,7 @@ export default function ClipNetworkPage() {
     {error&&<div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0"/>{error}</div>}
 
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {[['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fila',queued,'agendados/processando'],['Clips prontos',ready,'renderizados'],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}
+      {[['Processando agora',running,'vídeos na máquina'],['Clips prontos',ready,'renderizados'],['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}
     </div>
 
     <div className="grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
@@ -224,13 +284,33 @@ export default function ClipNetworkPage() {
         <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Fila de conteúdo</h2><p className="mt-1 text-xs text-white/40">IA escolhe, você revisa — ou deixa o autopilot assumir depois.</p></div><Pill>{clips.length} clips</Pill></div>
         <div className="mt-5 space-y-3">
           {clips.length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">Nenhum corte ainda. Adicione uma fonte autorizada ou envie um clip de teste.</div>}
-          {clips.slice(0,30).map(clip=>{const pub=publicationByClip.get(clip.id);return <div key={clip.id} className="grid gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 md:grid-cols-[1fr_auto]">
-            <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Pill tone={clip.score>=85?'good':clip.score>=75?'blue':'neutral'}>{Math.round(clip.score)} score</Pill><Pill>{statusLabel[pub?.status||clip.status]||pub?.status||clip.status}</Pill>{clip.render_status==='ready'||clip.render_status==='not_needed'?<Pill tone="good">vídeo pronto</Pill>:<Pill>{statusLabel[clip.render_status]||clip.render_status}</Pill>}</div><div className="mt-3 text-sm font-medium text-white">{clip.on_screen_title||clip.hook||clip.topic||'Clip sem título'}</div><p className="mt-1 line-clamp-2 text-xs leading-5 text-white/45">{clip.caption||'Sem caption'}</p><div className="mt-2 flex gap-3 text-[11px] text-white/30">{clip.start_seconds!=null&&<span>{Math.round(clip.start_seconds)}s → {Math.round(clip.end_seconds||0)}s</span>}{clip.scheduled_at&&<span><Clock3 className="mr-1 inline h-3 w-3"/>{fmt(clip.scheduled_at)}</span>}</div>{pub?.error_message&&<div className="mt-2 text-xs text-red-300">{pub.error_message}</div>}</div>
-            <div className="flex items-center gap-2 md:flex-col md:items-stretch md:justify-center">
+          {clips.slice(0,30).map(clip=>{
+            const pub=publicationByClip.get(clip.id);
+            const editorial=accountById.get(clip.clip_account_id)?.label;
+            const hasVideo=!!(clip.rendered_storage_path||clip.rendered_url);
+            const dur=clip.start_seconds!=null&&clip.end_seconds!=null?Math.round(clip.end_seconds-clip.start_seconds):null;
+            const url=playing[clip.id];
+            return <div key={clip.id} className="grid gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 md:grid-cols-[1fr_auto]">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2"><Pill tone={clip.score>=85?'good':clip.score>=75?'blue':'neutral'}>{Math.round(clip.score)} score</Pill>{editorial&&<Pill tone="blue">{editorial}</Pill>}<Pill>{statusLabel[pub?.status||clip.status]||pub?.status||clip.status}</Pill>{hasVideo?<Pill tone="good">vídeo pronto</Pill>:<Pill>{statusLabel[clip.render_status]||clip.render_status}</Pill>}{dur!=null&&<Pill>{dur}s</Pill>}</div>
+              <div className="mt-3 text-sm font-medium text-white">{clip.on_screen_title||clip.hook||clip.topic||'Clip sem título'}</div>
+              {clip.hook&&clip.hook!==clip.on_screen_title&&<p className="mt-1 text-xs text-white/55">Hook: {clip.hook}</p>}
+              <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/45">{clip.caption||'Sem caption'}</p>
+              <div className="mt-2 flex gap-3 text-[11px] text-white/30">{clip.start_seconds!=null&&<span>{mmss(clip.start_seconds)} → {mmss(clip.end_seconds)}</span>}{clip.scheduled_at&&<span><Clock3 className="mr-1 inline h-3 w-3"/>{fmt(clip.scheduled_at)}</span>}</div>
+              {url&&<video src={url} controls playsInline className="mt-3 max-h-[420px] w-full max-w-[240px] rounded-xl border border-white/10 bg-black"/>}
+              {(clip.last_error||pub?.error_message)&&<div className="mt-2 text-xs text-red-300">{clip.last_error||pub?.error_message}</div>}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 md:flex-col md:items-stretch md:justify-center">
               {clip.status==='candidate'&&<><button onClick={()=>approve(clip)} disabled={busy===`approve:${clip.id}`} className="rounded-lg bg-emerald-500/15 px-3 py-2 text-[11px] font-medium text-emerald-300">Aprovar</button><button onClick={()=>reject(clip)} className="rounded-lg bg-white/5 px-3 py-2 text-[11px] text-white/55">Rejeitar</button></>}
-              {(clip.rendered_url)&&<><button onClick={()=>publishNow(clip)} disabled={!!busy||pub?.status==='published'} className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black disabled:opacity-40"><Instagram className="mr-1.5 h-3.5 w-3.5"/>{pub?.status==='published'?'Publicado':'Publicar IG'}</button><a href={clip.rendered_url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Download className="mr-1.5 h-3.5 w-3.5"/>TikTok</a><button onClick={()=>navigator.clipboard.writeText(clip.caption||'')} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Copy className="mr-1.5 h-3.5 w-3.5"/>Caption</button></>}
+              {hasVideo&&<>
+                <button onClick={()=>watch(clip)} disabled={busy===`watch:${clip.id}`} className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black disabled:opacity-40">{busy===`watch:${clip.id}`?<Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>:<Play className="mr-1.5 h-3.5 w-3.5"/>}Assistir</button>
+                <button onClick={()=>downloadClip(clip)} disabled={busy===`download:${clip.id}`} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Download className="mr-1.5 h-3.5 w-3.5"/>Baixar MP4</button>
+                <button onClick={()=>navigator.clipboard.writeText(clip.caption||'')} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Copy className="mr-1.5 h-3.5 w-3.5"/>Caption</button>
+                {instagram&&<button onClick={()=>publishNow(clip)} disabled={!!busy||pub?.status==='published'} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60 disabled:opacity-40"><Instagram className="mr-1.5 h-3.5 w-3.5"/>{pub?.status==='published'?'Publicado':'Publicar IG'}</button>}
+              </>}
             </div>
           </div>})}
+
         </div>
       </section>
 

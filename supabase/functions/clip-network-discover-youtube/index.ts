@@ -116,9 +116,15 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     const cronSecret = Deno.env.get("CLIP_NETWORK_CRON_SECRET");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const isCron = !!cronSecret
-      && req.headers.get("x-clip-cron-secret") === cronSecret
-      && authHeader === `Bearer ${serviceKey}`;
+    // Duas portas para o modo cron:
+    //  - pg_cron: manda apenas o bearer da service role (vinda do vault). Essa
+    //    chave é o segredo mais forte do projeto; exigir um segundo header aqui
+    //    só serviria para o agendamento não funcionar.
+    //  - chamada externa: bearer da service role + o segredo do módulo.
+    const isServiceCall = !!serviceKey && authHeader === `Bearer ${serviceKey}`;
+    const isCron = isServiceCall
+      && (!cronSecret || !req.headers.get("x-clip-cron-secret") || req.headers.get("x-clip-cron-secret") === cronSecret);
+
 
     // User-triggered mode. Cron is checked first because scheduled calls also carry a Bearer token.
     if (!isCron && authHeader.startsWith("Bearer ")) {
