@@ -375,6 +375,38 @@ export default function ClipNetworkPage() {
       </div>
     </div>
 
-    <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5"><div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Últimos vídeos encontrados</h2><p className="mt-1 text-xs text-white/40">O watcher descobre uploads; processamento só começa quando existe mídia autorizada.</p></div><Pill>{videos.length}</Pill></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{videos.slice(0,8).map(v=><a key={v.id} href={v.source_url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-2xl border border-white/10 bg-black/20">{v.thumbnail_url?<img src={v.thumbnail_url} className="aspect-video w-full object-cover opacity-80 transition group-hover:opacity-100"/>:<div className="aspect-video bg-white/5"/>}<div className="p-3"><div className="line-clamp-2 text-xs font-medium leading-5 text-white">{v.title}</div><div className="mt-2 flex gap-2"><Pill tone={v.media_status==='processed'?'good':v.rights_confirmed?'blue':'warn'}>{v.media_status==='waiting_for_media'?'aguardando mídia':v.media_status}</Pill><ExternalLink className="ml-auto h-3.5 w-3.5 text-white/25"/></div></div></a>)}</div></section>
+    <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
+      <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Máquina de cortes</h2><p className="mt-1 text-xs text-white/40">Descoberto → Baixando → Transcrevendo → Analisando → Renderizando → Concluído. Tudo sem clique quando a fonte está autorizada.</p></div><Pill>{videos.length}</Pill></div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{videos.slice(0,12).map(v=>{
+        const stage=v.pipeline_stage||"discovered";
+        const idx=STAGES.indexOf(stage as typeof STAGES[number]);
+        const pct=idx>=0?Math.round(((idx+1)/STAGES.length)*100):stage==="error"?100:0;
+        const cuts=clipsByVideo.get(v.id)||0;
+        const canRetry=stage==="error"||(v.attempts||0)>0;
+        return <div key={v.id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+          {v.thumbnail_url?<img src={v.thumbnail_url} alt={v.title} className="aspect-video w-full object-cover opacity-80"/>:<div className="aspect-video bg-white/5"/>}
+          <div className="p-3">
+            <div className="text-[10px] text-white/30">{sourceById.get(v.source_id)?.label||"fonte"}</div>
+            <a href={v.source_url} target="_blank" rel="noreferrer" className="mt-1 line-clamp-2 block text-xs font-medium leading-5 text-white hover:text-sky-300">{v.title}</a>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Pill tone={stageTone(stage)}>{stageLabel[stage]||stage}</Pill>
+              {cuts>0&&<Pill tone="good">{cuts} {cuts===1?"corte":"cortes"}</Pill>}
+              {v.duration_seconds!=null&&<Pill>{mmss(v.duration_seconds)}</Pill>}
+              {!v.rights_confirmed&&<Pill tone="warn">sem autorização</Pill>}
+            </div>
+            <div className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-white/8"><div className={`h-full rounded-full transition-all ${stage==="error"?"bg-red-400/70":stage==="done"?"bg-emerald-400/70":"bg-sky-400/70"}`} style={{width:`${pct}%`}}/></div>
+            <div className="mt-2 flex items-center justify-between text-[10px] text-white/30">
+              <span>{v.stage_detail||fmt(v.updated_at)}</span>
+              {(v.attempts||0)>0&&<span>tentativa {v.attempts}</span>}
+            </div>
+            {v.last_error&&<div className="mt-2 rounded-lg border border-red-500/15 bg-red-500/10 px-2 py-1.5 text-[10px] leading-4 text-red-300">{v.last_error}</div>}
+            {canRetry&&<button onClick={()=>retryVideo(v)} disabled={busy===`retry:${v.id}`} className="mt-2.5 inline-flex items-center rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] text-white/60 hover:bg-white/5 disabled:opacity-40">{busy===`retry:${v.id}`?<Loader2 className="mr-1.5 h-3 w-3 animate-spin"/>:<RotateCcw className="mr-1.5 h-3 w-3"/>}Reprocessar</button>}
+          </div>
+        </div>;
+      })}
+      {videos.length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-xs text-white/35 sm:col-span-2 xl:col-span-3">Nenhum vídeo descoberto ainda. O discovery roda a cada 15 minutos.</div>}
+      </div>
+    </section>
+
   </div>;
 }
