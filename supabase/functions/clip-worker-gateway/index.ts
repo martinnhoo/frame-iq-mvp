@@ -218,35 +218,50 @@ async function orchestrate(
     .join("\n").slice(0, 240_000);
 
   const prompt = [
-    `Você é o editor-chefe de uma rede de cortes verticais. Escolha no máximo ${Math.min(12, Number(network.daily_limit) || 10)} cortes realmente bons deste conteúdo.`,
+    `Você e um Creative Strategist especializado em short-form e editor-chefe de uma rede de cortes verticais. Escolha no máximo ${Math.min(12, Number(network.daily_limit) || 10)} cortes realmente bons deste conteúdo.`,
     "",
     "CONTAS EDITORIAIS DISPONÍVEIS:",
     ...accounts.map((a) => `- id=${a.id} | ${a.label} | nicho=${a.niche} | tom=${a.tone || "natural"} | regras=${JSON.stringify(a.rules || {})}`),
     "",
     "REGRAS:",
-    "- Cada corte deve funcionar sozinho, sem depender de contexto externo.",
-    "- Duração entre 25 e 65 segundos. Só passe de 65s se o payoff exigir, nunca acima de 90s.",
-    "- Comece perto de uma frase/hook forte e termine no payoff.",
+    "- Pense como Creative Strategist, nao como resumidor. Procure momentos que fazem alguem parar o scroll.",
+    "- Os PRIMEIROS 1-3 SEGUNDOS sao o criterio mais importante.",
+    "- O inicio precisa ter uma fala real que gere curiosidade, conflito, surpresa, opiniao forte, pergunta, revelacao, tensao, reacao ou punchline.",
+    "- Nao comece com saudacao, introducao morna, preparacao desnecessaria ou segundos mortos.",
+    "- Nao comece no meio de uma frase.",
+    "- Pode avancar o start_seconds ate uma fala mais forte se o trecho continuar compreensivel.",
+    "- Curiosidade e boa; confusao nao. Quem nunca viu o video original precisa entender o essencial.",
+    "- Cada corte deve funcionar sozinho sem depender do contexto anterior do video.",
+    "- Duracao permitida: de 5 a 90 segundos.",
+    "- Use somente o tempo necessario. Um corte excelente de 8 segundos e melhor que um corte mediano de 45 segundos.",
+    "- Comece EXATAMENTE onde o hook forte comeca, sem carregar contexto desnecessario antes.",
+    "- Depois do hook, mantenha apenas o desenvolvimento necessario para sustentar a curiosidade.",
+    "- O corte deve terminar em payoff: resposta, conclusao, punchline, consequencia, revelacao, reacao ou resolucao.",
+    "- Nunca termine no meio de uma frase, explicacao ou raciocinio.",
+    "- Se existe hook forte mas nao existe conclusao, descarte o corte.",
+    "- Se existe conclusao mas os primeiros 1-3 segundos sao fracos, procure outro inicio ou descarte.",
+    "- Nao invente, reescreva ou reorganize falas. Apenas escolha start_seconds e end_seconds existentes no conteudo.",
     "- Nunca devolva cortes sobrepostos ou repetidos.",
-    "- Roteie cada corte para a ÚNICA conta cujo nicho e tom realmente combinam. Se nenhuma combina, não crie o corte.",
-    "- Score 0-100 reflete chance real de retenção e compartilhamento — não sirva para preencher cota.",
-    "- Caption em português natural e curta, sem inventar fatos.",
-    "- on_screen_title com no máximo 9 palavras.",
+    "- Roteie cada corte para a UNICA conta cujo nicho e tom realmente combinam. Se nenhuma combina, nao crie o corte.",
+    "- Score 0-100 deve considerar principalmente: hook nos primeiros 1-3s, retencao provavel, clareza sem contexto, payoff e potencial de compartilhamento.",
+    "- Nao aumente score para preencher cota. Pode devolver poucos cortes ou nenhum.",
+    "- Caption curta e natural, sem inventar fatos.",
+    "- on_screen_title com no maximo 9 palavras.",
     "",
-    "TRANSCRIÇÃO COM TIMESTAMPS:",
+    "TRANSCRICAO COM TIMESTAMPS:",
     timestamped,
     "",
     'Responda SOMENTE JSON: {"clips":[{"account_id":"uuid","start_seconds":0,"end_seconds":40,"topic":"","hook":"","on_screen_title":"","caption":"","score":85,"reason":""}]}',
   ].join("\n");
 
-  const parsed = await gemini([{ text: prompt }], "Seja seletivo. Qualidade acima de quantidade. Responda apenas JSON.");
+  const parsed = await gemini([{ text: prompt }], "Pense como um Creative Strategist de short-form obcecado pelos primeiros 1-3 segundos, retencao e payoff. Qualidade acima de quantidade. E melhor devolver poucos cortes excelentes ou nenhum do que preencher cota. Responda apenas JSON.");
   const accountIds = new Set(accounts.map((a) => a.id));
   const seen: any[] = [];
   return (parsed.clips || [])
     .map((c: any) => ({ ...c, start_seconds: Number(c.start_seconds), end_seconds: Number(c.end_seconds), score: Number(c.score) || 0 }))
     .filter((c: any) => accountIds.has(c.account_id))
     .filter((c: any) => Number.isFinite(c.start_seconds) && Number.isFinite(c.end_seconds))
-    .filter((c: any) => c.end_seconds - c.start_seconds >= 12 && c.end_seconds - c.start_seconds <= 95)
+    .filter((c: any) => c.end_seconds - c.start_seconds >= 5 && c.end_seconds - c.start_seconds <= 90)
     .filter((c: any) => c.start_seconds >= 0 && c.end_seconds <= (transcript.duration || Infinity) + 2)
     .sort((a: any, b: any) => b.score - a.score)
     .filter((c: any) => {

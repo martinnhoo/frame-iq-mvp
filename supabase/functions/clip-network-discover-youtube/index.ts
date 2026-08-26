@@ -3,6 +3,19 @@ import { clipCors, json, requireClipUser, serviceClient } from "../_shared/clip-
 
 const YT = "https://www.googleapis.com/youtube/v3";
 
+function parseYoutubeDuration(value: string) {
+  const m = String(value || "").match(
+    /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/
+  );
+  if (!m) return 0;
+  return (
+    Number(m[1] || 0) * 86400 +
+    Number(m[2] || 0) * 3600 +
+    Number(m[3] || 0) * 60 +
+    Number(m[4] || 0)
+  );
+}
+
 function channelSelector(urlOrId: string) {
   const raw = (urlOrId || "").trim();
   if (/^UC[a-zA-Z0-9_-]{20,}$/.test(raw)) return { key: "id", value: raw };
@@ -58,7 +71,58 @@ async function discoverForSource(supabase: any, source: any, apiKey: string) {
   const body = await res.json();
   if (!res.ok) throw new Error(body?.error?.message || "YouTube playlist lookup failed");
 
-  const rows = (body.items || []).map((item: any) => {
+  // Esta máquina cria cortes a partir de conteúdo long-form.
+  // Ignora Shorts e vídeos com até 3 minutos.
+  const minSourceSeconds = 180;
+  const items = body.items || [];
+
+  const videoIds = items
+    .map((item: any) =>
+      item.contentDetails?.videoId || item.snippet?.resourceId?.videoId
+    )
+    .filter(Boolean);
+
+  const durationById = new Map<string, number>();
+
+  if (videoIds.length) {
+    const videosUrl = new URL(`${YT}/videos`);
+    videosUrl.searchParams.set("part", "contentDetails");
+    videosUrl.searchParams.set("id", videoIds.join(","));
+    videosUrl.searchParams.set("key", apiKey);
+
+    const videosRes = await fetch(videosUrl);
+    const videosBody = await videosRes.json();
+
+    if (!videosRes.ok) {
+      throw new Error(
+        videosBody?.error?.message || "YouTube video details lookup failed"
+      );
+    }
+
+    for (const video of videosBody.items || []) {
+      durationById.set(
+        video.id,
+        parseYoutubeDuration(video.contentDetails?.duration || "")
+      );
+    }
+  }
+
+  const eligibleItems = items.filter((item: any) => {
+    const id =
+      item.contentDetails?.videoId || item.snippet?.resourceId?.videoId;
+    return Number(durationById.get(id) || 0) > minSourceSeconds;
+  });
+
+  const skippedIds = items
+    .map((item: any) =>
+      item.contentDetails?.videoId || item.snippet?.resourceId?.videoId
+    )
+    .filter(
+      (id: string) =>
+        id && Number(durationById.get(id) || 0) <= minSourceSeconds
+    );
+
+  const rows = eligibleItems.map((item: any) => {
     const videoId = item.contentDetails?.videoId || item.snippet?.resourceId?.videoId;
     return {
       user_id: source.user_id,
@@ -75,6 +139,18 @@ async function discoverForSource(supabase: any, source: any, apiKey: string) {
     };
   }).filter((x: any) => x.provider_video_id);
 
+  // Remove da fila vídeos curtos que já tenham sido descobertos.
+  if (skippedIds.length) {
+    const { error: cleanupError } = await supabase
+      .from("clip_source_videos")
+      .delete()
+      .eq("source_id", source.id)
+      .in("provider_video_id", skippedIds)
+      .eq("pipeline_stage", "discovered");
+
+    if (cleanupError) throw cleanupError;
+  }
+
   if (rows.length) {
     const { error } = await supabase.from("clip_source_videos")
       .upsert(rows, { onConflict: "source_id,provider_video_id", ignoreDuplicates: false });
@@ -87,7 +163,12 @@ async function discoverForSource(supabase: any, source: any, apiKey: string) {
     updated_at: new Date().toISOString(),
   }).eq("id", source.id);
 
-  return { source_id: source.id, channel_id: channelId, discovered: rows.length };
+  return {
+    source_id: source.id,
+    channel_id: channelId,
+    discovered: rows.length,
+    ignored_short_or_too_short: skippedIds.length,
+  };
 }
 
 async function discoverSources(supabase: any, sources: any[], apiKey: string) {
