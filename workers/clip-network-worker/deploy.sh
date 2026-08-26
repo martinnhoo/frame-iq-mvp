@@ -58,7 +58,7 @@ EOF
 
 info "Aplicando secrets presentes no ambiente"
 MISSING=()
-for KEY in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY OPENAI_API_KEY; do
+for KEY in SUPABASE_URL CLIP_WORKER_SECRET; do
   VAL="${!KEY:-}"
   if [ -n "$VAL" ]; then set_secret "$KEY" "$VAL"; else MISSING+=("$KEY"); fi
 done

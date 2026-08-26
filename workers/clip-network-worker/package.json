@@ -5,9 +5,6 @@
   "scripts": {
     "start": "node index.mjs",
     "once": "node index.mjs --once",
-    "check": "node --check index.mjs && node --check mediaResolver.mjs"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.57.4"
+    "check": "node --check index.mjs && node --check mediaResolver.mjs && node --check gateway.mjs"
   }
 }
