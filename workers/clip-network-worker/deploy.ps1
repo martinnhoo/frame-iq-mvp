@@ -1,7 +1,7 @@
 # Deploy do worker da Rede de Cortes no Fly.io (Windows / PowerShell).
 # Sem segredo no repositório: os valores vêm das variáveis de ambiente da sessão.
 #
-#   $env:SUPABASE_URL="..."; $env:SUPABASE_SERVICE_ROLE_KEY="..."; $env:OPENAI_API_KEY="..."
+#   $env:SUPABASE_URL="..."; $env:CLIP_WORKER_SECRET="..."
 #   .\deploy.ps1
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
@@ -40,7 +40,7 @@ else { Info "Criando volume $Volume"; & $FLY volumes create $Volume -a $App -r $
 # 5. secrets presentes no ambiente
 Info "Aplicando secrets presentes no ambiente"
 $missing = @()
-foreach ($key in @("SUPABASE_URL","SUPABASE_SERVICE_ROLE_KEY","OPENAI_API_KEY")) {
+foreach ($key in @("SUPABASE_URL","CLIP_WORKER_SECRET")) {
   $val = [Environment]::GetEnvironmentVariable($key)
   if ($val) { & $FLY secrets set "$key=$val" -a $App --stage | Out-Null; Write-Host "  - $key definido" }
   else { $missing += $key }
