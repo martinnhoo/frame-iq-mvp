@@ -245,7 +245,7 @@ export default function ClipNetworkPage() {
     if(!running) return;
     const t=setInterval(()=>{ load(); },15000);
     return ()=>clearInterval(t);
-  },[running]); // eslint-disable-line react-hooks/exhaustive-deps
+  },[running]);
 
 
 
