@@ -388,10 +388,24 @@ Deno.serve(async (req) => {
             render_status: "pending",
             updated_at: nowIso(),
           }));
-          const { error } = await admin.from("clips")
-            .upsert(rows, { onConflict: "source_video_id,dedupe_key", ignoreDuplicates: true });
-          if (error) throw error;
+          // Idempotência sem depender de unique constraint: lê as dedupe_key já
+          // existentes deste vídeo e insere apenas as novas.
+          const { data: existing, error: readError } = await admin.from("clips")
+            .select("dedupe_key").eq("source_video_id", job.id);
+          if (readError) throw readError;
+          const known = new Set((existing || []).map((r: any) => r.dedupe_key));
+          const fresh: any[] = [];
+          for (const row of rows) {
+            if (known.has(row.dedupe_key)) continue;
+            known.add(row.dedupe_key);
+            fresh.push(row);
+          }
+          if (fresh.length) {
+            const { error } = await admin.from("clips").insert(fresh);
+            if (error) throw error;
+          }
         }
+
         const { data: clips } = await admin.from("clips").select("*").eq("source_video_id", job.id);
         const approved = await autoApprove(network, accounts, clips || []);
         return json({ clips: clips || [], approved });
