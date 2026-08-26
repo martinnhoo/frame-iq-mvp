@@ -9,6 +9,37 @@ import {
 
 const db = supabase as any;
 
+const CLIP_NETWORK_API_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-api";
+
+async function clipApi(action:string, payload:Record<string,unknown> = {}) {
+  const { data:{ session }, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  const accessToken = session?.access_token;
+  if (!accessToken) throw new Error("SessÃ£o expirada");
+
+  const response = await fetch(CLIP_NETWORK_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ action, payload }),
+  });
+
+  const text = await response.text();
+  let data:any = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`Resposta invÃ¡lida do Clip Network (${response.status})`);
+  }
+
+  if (!response.ok || data?.error) {
+    throw new Error(data?.error || `Clip Network API falhou (${response.status})`);
+  }
+  return data;
+}
+
 type Network = { id:string; user_id:string; name:string; daily_limit:number; min_score:number; approval_mode:"review"|"auto"; timezone:string; posting_slots:string[]; active:boolean };
 type ClipAccount = { id:string; label:string; niche:string; tone?:string; daily_limit:number; active:boolean; rules?:any };
 type Social = { id:string; clip_account_id:string; platform:"instagram"|"tiktok"; username?:string; display_name?:string; status:string; capabilities?:any };
@@ -85,24 +116,15 @@ export default function ClipNetworkPage() {
   const load = async () => {
     setLoading(true); setError(null);
     try {
-      const { data:{ user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Sessão expirada");
-      const { data:nets } = await db.from("clip_networks").select("*").eq("user_id",user.id).order("created_at",{ascending:true}).limit(1);
-      const net = nets?.[0] || null; setNetwork(net);
-      if (!net) { setAccounts([]); setSocials([]); setSources([]); setVideos([]); setClips([]); setPublications([]); return; }
-      const [{data:acc},{data:soc},{data:src},{data:cls},{data:pub}] = await Promise.all([
-        db.from("clip_accounts").select("*").eq("network_id",net.id).order("created_at"),
-        db.from("clip_social_accounts").select("*").eq("user_id",user.id),
-        db.from("clip_sources").select("*").eq("network_id",net.id).order("created_at"),
-        db.from("clips").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(80),
-        db.from("clip_publications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100),
-      ]);
-      setAccounts(acc||[]); setSocials(soc||[]); setSources(src||[]); setClips(cls||[]); setPublications(pub||[]);
-      const sourceIds = (src||[]).map((s:any)=>s.id);
-      if (sourceIds.length) {
-        const {data:vids} = await db.from("clip_source_videos").select("*").in("source_id",sourceIds).neq("pipeline_stage","blocked").order("source_published_at",{ascending:false}).limit(40);
-        setVideos((vids||[]).filter((video:SourceVideo)=>video.pipeline_stage!=="blocked"));
-      } else setVideos([]);
+      const data = await clipApi("bootstrap");
+      const net = data?.network || null;
+      setNetwork(net);
+      setAccounts(data?.accounts || []);
+      setSocials(data?.socials || []);
+      setSources(data?.sources || []);
+      setVideos((data?.videos || []).filter((video:SourceVideo)=>video.pipeline_stage!=="blocked"));
+      setClips(data?.clips || []);
+      setPublications(data?.publications || []);
     } catch(e:any) { setError(e.message || String(e)); }
     finally { setLoading(false); }
   };
@@ -127,12 +149,15 @@ export default function ClipNetworkPage() {
     const label=sourceLabel.trim(); const url=sourceUrl.trim();
     if(!label||!url){setError("Informe o nome e a URL do canal do YouTube.");return;}
     const normalizedUrl=url.replace(/\/+$/,"").toLowerCase();
-    if(sources.some(source=>source.provider_url?.replace(/\/+$/,"").toLowerCase()===normalizedUrl)){setError("Este canal já está cadastrado nas fontes monitoradas.");return;}
+    if(sources.some(source=>source.provider_url?.replace(/\/+$/,"").toLowerCase()===normalizedUrl)){setError("Este canal jÃ¡ estÃ¡ cadastrado nas fontes monitoradas.");return;}
     setBusy("source"); setError(null);
     try {
-      const {data:{user}}=await supabase.auth.getUser(); if(!user) throw new Error("Faça login novamente");
-      const {error:e}=await db.from("clip_sources").insert({ user_id:user.id,network_id:network.id,provider:"youtube",label,provider_url:url,rights_confirmed:rightsConfirmed,active:true });
-      if(e) throw e;
+      await clipApi("add_source", {
+        network_id: network.id,
+        label,
+        provider_url: url,
+        rights_confirmed: rightsConfirmed,
+      });
       setSourceLabel(""); setSourceUrl(""); setRightsConfirmed(false); setShowSourceForm(false);
       await load();
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
@@ -141,8 +166,7 @@ export default function ClipNetworkPage() {
   const discover = async (sourceId:string) => {
     setBusy(`discover:${sourceId}`); setError(null);
     try {
-      const {data,error:e}=await supabase.functions.invoke("clip-network-discover-youtube",{body:{source_id:sourceId}});
-      if(e) throw e; if(data?.error) throw new Error(data.error);
+      const data=await clipApi("discover",{source_id:sourceId});
       const failure=data?.results?.find((result:any)=>result.source_id===sourceId&&result.error);
       if(failure){await load();throw new Error(failure.error);}
       if(!data?.results?.length) throw new Error("A fonte precisa estar ativa para executar a busca.");
@@ -153,28 +177,27 @@ export default function ClipNetworkPage() {
   const discoverAll = async () => {
     if(!network) return; setBusy("discover:all"); setError(null);
     try {
-      const {data,error:e}=await supabase.functions.invoke("clip-network-discover-youtube",{body:{network_id:network.id}});
-      if(e) throw e; if(data?.error) throw new Error(data.error);
+      const data=await clipApi("discover",{network_id:network.id});
       const failures=(data?.results||[]).filter((result:any)=>result.error);
       await load();
-      if(failures.length) setError(`${failures.length} fonte(s) falharam na busca. Consulte o último erro em cada fonte.`);
+      if(failures.length) setError(`${failures.length} fonte(s) falharam na busca. Consulte o Ãºltimo erro em cada fonte.`);
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
   const toggleSource = async (source:Source) => {
     setBusy(`toggle:${source.id}`); setError(null);
     try {
-      const {error:e}=await db.from("clip_sources").update({active:!source.active,updated_at:new Date().toISOString()}).eq("id",source.id);
-      if(e) throw e; await load();
+      await clipApi("toggle_source",{source_id:source.id});
+      await load();
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
   const removeSource = async (source:Source) => {
-    if(!window.confirm(`Remover a fonte “${source.label}”? Os vídeos descobertos por ela serão removidos do pool; cortes já criados serão preservados.`)) return;
+    if(!window.confirm(`Remover a fonte â€œ${source.label}â€? Os vÃ­deos descobertos por ela serÃ£o removidos do pool; cortes jÃ¡ criados serÃ£o preservados.`)) return;
     setBusy(`remove:${source.id}`); setError(null);
     try {
-      const {error:e}=await db.from("clip_sources").delete().eq("id",source.id);
-      if(e) throw e; await load();
+      await clipApi("remove_source",{source_id:source.id});
+      await load();
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
@@ -187,8 +210,11 @@ export default function ClipNetworkPage() {
   };
 
   const toggleAutopilot = async () => {
-    if(!network) return; setBusy("auto");
-    try { const next=network.approval_mode==="auto"?"review":"auto"; const {error:e}=await db.from("clip_networks").update({approval_mode:next,updated_at:new Date().toISOString()}).eq("id",network.id); if(e)throw e; setNetwork({...network,approval_mode:next}); }
+    if(!network) return; setBusy("auto"); setError(null);
+    try {
+      const data=await clipApi("toggle_autopilot",{network_id:network.id});
+      setNetwork({...network,approval_mode:data.approval_mode});
+    }
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
@@ -215,14 +241,20 @@ export default function ClipNetworkPage() {
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
-  const approve = async (clip:Clip) => { setBusy(`approve:${clip.id}`); try{const {error:e}=await db.from("clips").update({status:"approved",updated_at:new Date().toISOString()}).eq("id",clip.id);if(e)throw e;await load();}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);} };
-  const reject = async (clip:Clip) => { setBusy(`reject:${clip.id}`); try{const {error:e}=await db.from("clips").update({status:"rejected",updated_at:new Date().toISOString()}).eq("id",clip.id);if(e)throw e;await load();}catch(e:any){setError(e.message||String(e));}finally{setBusy(null);} };
+  const approve = async (clip:Clip) => {
+    setBusy(`approve:${clip.id}`); setError(null);
+    try{await clipApi("approve_clip",{clip_id:clip.id});await load();}
+    catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
+  };
+  const reject = async (clip:Clip) => {
+    setBusy(`reject:${clip.id}`); setError(null);
+    try{await clipApi("reject_clip",{clip_id:clip.id});await load();}
+    catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
+  };
 
-  // O bucket é privado e continua privado: pedimos uma URL assinada na hora de
-  // assistir ou baixar, em vez de guardar no banco um link que expira.
   const signMedia = async (clip:Clip, download=false) => {
-    const {data,error:e}=await supabase.functions.invoke("clip-network-sign-media",{body:{clip_id:clip.id,download}});
-    if(e) throw e; if(!data?.url) throw new Error(data?.error||"Mídia não disponível");
+    const data=await clipApi("sign_media",{clip_id:clip.id,download});
+    if(!data?.url) throw new Error("MÃ­dia nÃ£o disponÃ­vel");
     return data.url as string;
   };
 
@@ -240,12 +272,10 @@ export default function ClipNetworkPage() {
 
   const retryVideo = async (video:SourceVideo) => {
     setBusy(`retry:${video.id}`); setError(null);
-    try { const {error:e}=await db.rpc("clip_retry_source_video",{p_video_id:video.id}); if(e)throw e; await load(); }
+    try { await clipApi("retry_video",{video_id:video.id}); await load(); }
     catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
   };
 
-  // Enquanto a máquina está trabalhando, a tela se atualiza sozinha. Pedir para
-  // o usuário apertar "Atualizar" para ver progresso é o oposto de autopilot.
   useEffect(()=>{
     if(!running) return;
     const t=setInterval(()=>{ load(); },15000);
