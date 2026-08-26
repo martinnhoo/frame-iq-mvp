@@ -11,6 +11,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { InvalidAiJsonError, RecoverableAiError, parseJsonLoose } from "./ai-json.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -32,14 +33,6 @@ function json(data: unknown, status = 200) {
   });
 }
 
-function parseJsonLoose(text: string) {
-  try {
-    return JSON.parse(text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim());
-  } catch {
-    throw new Error(`IA devolveu resposta não-JSON: ${text.slice(0, 300)}`);
-  }
-}
-
 /* ---------------------------------------------------------------------------
  * Robustez de IA: 503/429 do Gemini são frequentes e temporários. Em vez de
  * derrubar o job, o gateway absorve o erro com retry (backoff + jitter) e,
@@ -48,11 +41,15 @@ function parseJsonLoose(text: string) {
 const TRANSIENT_STATUS = new Set([408, 429, 500, 502, 503, 504]);
 const MAX_ATTEMPTS = 5;
 
-class TransientAiError extends Error {
+class TransientAiError extends RecoverableAiError {
   constructor(message: string, readonly status: number) {
     super(message);
+    this.name = "TransientAiError";
   }
 }
+
+const isRecoverableAiError = (error: unknown) =>
+  error instanceof RecoverableAiError;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -61,7 +58,7 @@ function backoffDelay(attempt: number) {
   return Math.round(base * (0.75 + Math.random() * 0.5));
 }
 
-/** Executa uma rota de IA com retry apenas para erros transitórios. */
+/** Retry somente para falha transitória ou JSON malformado retornado pela IA. */
 async function withRetry<T>(label: string, fn: () => Promise<T>, tried: string[]): Promise<T> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -69,7 +66,7 @@ async function withRetry<T>(label: string, fn: () => Promise<T>, tried: string[]
       return await fn();
     } catch (e) {
       lastError = e;
-      if (!(e instanceof TransientAiError)) {
+      if (!isRecoverableAiError(e)) {
         tried.push(`${label}: erro permanente`);
         throw e;
       }
@@ -77,8 +74,10 @@ async function withRetry<T>(label: string, fn: () => Promise<T>, tried: string[]
       await sleep(backoffDelay(attempt));
     }
   }
-  const status = lastError instanceof TransientAiError ? lastError.status : "?";
-  tried.push(`${label}: ${MAX_ATTEMPTS} tentativas, último status ${status}`);
+  const detail = lastError instanceof TransientAiError
+    ? `último status ${lastError.status}`
+    : "última resposta com JSON inválido";
+  tried.push(`${label}: ${MAX_ATTEMPTS} tentativas, ${detail}`);
   throw lastError;
 }
 
@@ -112,11 +111,37 @@ async function geminiViaGatewayOnce(parts: any[], systemText: string, model: str
     throw new Error(msg);
   }
   let body: any;
-  try { body = JSON.parse(raw); } catch { throw new Error(`AI Gateway devolveu resposta não-JSON: ${raw.slice(0, 300)}`); }
+  try { body = JSON.parse(raw); } catch { throw new InvalidAiJsonError(`AI Gateway devolveu resposta não-JSON: ${raw.slice(0, 300)}`); }
   return parseJsonLoose(body.choices?.[0]?.message?.content || "{}");
 }
 
-async function geminiDirectOnce(parts: any[], systemText: string, model: string) {
+type GeminiResponseSchema = Record<string, unknown>;
+
+const TRANSCRIPTION_RESPONSE_SCHEMA: GeminiResponseSchema = {
+  type: "OBJECT",
+  properties: {
+    segments: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          start: { type: "NUMBER" },
+          end: { type: "NUMBER" },
+          text: { type: "STRING" },
+        },
+        required: ["start", "end", "text"],
+      },
+    },
+  },
+  required: ["segments"],
+};
+
+async function geminiDirectOnce(
+  parts: any[],
+  systemText: string,
+  model: string,
+  responseSchema?: GeminiResponseSchema,
+) {
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
     {
@@ -125,7 +150,11 @@ async function geminiDirectOnce(parts: any[], systemText: string, model: string)
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemText }] },
         contents: [{ role: "user", parts }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.4,
+          ...(responseSchema ? { responseSchema } : {}),
+        },
       }),
     },
   );
@@ -136,7 +165,7 @@ async function geminiDirectOnce(parts: any[], systemText: string, model: string)
     throw new Error(msg);
   }
   let body: any;
-  try { body = JSON.parse(raw); } catch { throw new Error(`Gemini devolveu resposta não-JSON: ${raw.slice(0, 300)}`); }
+  try { body = JSON.parse(raw); } catch { throw new InvalidAiJsonError(`Gemini devolveu resposta não-JSON: ${raw.slice(0, 300)}`); }
   const text = (body.candidates?.[0]?.content?.parts || [])
     .map((p: { text?: string }) => p.text || "").join("");
   return parseJsonLoose(text);
@@ -147,9 +176,13 @@ async function geminiDirectOnce(parts: any[], systemText: string, model: string)
  * 1. Google direto (GEMINI_MODEL) — se GEMINI_API_KEY existir.
  * 2. Google direto com modelos de fallback (ex.: flash-lite na transcrição).
  * 3. AI Gateway do Lovable.
- * Cada rota tem retry com backoff + jitter; só erros transitórios avançam.
+ * Cada rota tem retry com backoff + jitter; falhas recuperáveis avançam.
  */
-async function gemini(parts: any[], systemText: string, opts: { fallbackModels?: string[] } = {}) {
+async function gemini(
+  parts: any[],
+  systemText: string,
+  opts: { fallbackModels?: string[]; responseSchema?: GeminiResponseSchema } = {},
+) {
   const tried: string[] = [];
   let lastError: unknown;
 
@@ -157,16 +190,20 @@ async function gemini(parts: any[], systemText: string, opts: { fallbackModels?:
     const models = [GEMINI_MODEL, ...(opts.fallbackModels || []).filter((m) => m !== GEMINI_MODEL)];
     for (const model of models) {
       try {
-        return await withRetry(`google:${model}`, () => geminiDirectOnce(parts, systemText, model), tried);
+        return await withRetry(
+          `google:${model}`,
+          () => geminiDirectOnce(parts, systemText, model, opts.responseSchema),
+          tried,
+        );
       } catch (e) {
         lastError = e;
-        if (!(e instanceof TransientAiError)) break;
+        if (!isRecoverableAiError(e)) break;
       }
     }
   }
 
   const canFallbackToGateway = Boolean(LOVABLE_API_KEY) &&
-    (!GEMINI_API_KEY || lastError instanceof TransientAiError);
+    (!GEMINI_API_KEY || isRecoverableAiError(lastError));
 
   if (canFallbackToGateway) {
     try {
@@ -393,7 +430,10 @@ Deno.serve(async (req) => {
             },
           ],
           "Você é um transcritor preciso. Não resuma, não invente, não traduza.",
-          { fallbackModels: ["gemini-2.5-flash-lite"] },
+          {
+            fallbackModels: ["gemini-2.5-flash-lite"],
+            responseSchema: TRANSCRIPTION_RESPONSE_SCHEMA,
+          },
         );
         const segments = (parsed.segments || [])
           .map((s: any) => ({ start: Number(s.start) || 0, end: Number(s.end) || 0, text: String(s.text || "").trim() }))
