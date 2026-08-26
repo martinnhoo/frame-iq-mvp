@@ -47,8 +47,6 @@ export function selectDistinctOpportunities(
 
   if (distinct.length <= target) return distinct;
 
-  // Primeiro reserva o melhor momento de cada faixa do vídeo; depois completa
-  // pela nota. Assim a cobertura temporal melhora sem trocar qualidade por cota.
   const effectiveDuration = duration && duration > 0
     ? duration
     : Math.max(...distinct.map((candidate) => candidate.end_seconds));
@@ -75,13 +73,7 @@ export function chooseFallbackAccount<T extends ClipAccount>(accounts: T[]): T {
   const candidates = accounts.filter((account) => account.active !== false);
   if (!candidates.length) throw new Error("Nenhuma conta editorial ativa disponível para fallback");
 
-  const explicit = candidates.find((account) =>
-    account.rules?.fallback === true || account.rules?.general === true
-  );
-  const general = candidates.find((account) =>
-    /\b(geral|general)\b/i.test(`${account.label || ""} ${account.niche || ""}`)
-  );
-
-  // Fallback temporário e intencional até existir uma conta "Cariani Geral".
+  const explicit = candidates.find((account) => account.rules?.fallback === true || account.rules?.general === true);
+  const general = candidates.find((account) => /\b(geral|general)\b/i.test(`${account.label || ""} ${account.niche || ""}`));
   return explicit || general || candidates[0];
 }
