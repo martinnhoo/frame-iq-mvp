@@ -65,8 +65,9 @@ async function geminiViaGateway(parts: any[], systemText: string) {
   return parseJsonLoose(body.choices?.[0]?.message?.content || "{}");
 }
 
-
+/**
  * Gemini. Duas rotas, mesma família de modelo:
+
  * - GEMINI_API_KEY presente → Google direto.
  * - Caso contrário → AI Gateway do Lovable (LOVABLE_API_KEY, já gerenciada).
  * Assim ninguém precisa copiar chave de IA para o Fly nem criar chave nova.
