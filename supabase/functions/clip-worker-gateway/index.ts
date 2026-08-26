@@ -39,9 +39,50 @@ function parseJsonLoose(text: string) {
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * Robustez de IA: 503/429 do Gemini são frequentes e temporários. Em vez de
+ * derrubar o job, o gateway absorve o erro com retry (backoff + jitter) e,
+ * se preciso, cai para outro modelo e depois para o AI Gateway do Lovable.
+ * ------------------------------------------------------------------------- */
+const TRANSIENT_STATUS = new Set([408, 429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS = 5;
+
+class TransientAiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function backoffDelay(attempt: number) {
+  const base = 1000 * Math.pow(2, attempt - 1); // 1s, 2s, 4s, 8s
+  return Math.round(base * (0.75 + Math.random() * 0.5));
+}
+
+/** Executa uma rota de IA com retry apenas para erros transitórios. */
+async function withRetry<T>(label: string, fn: () => Promise<T>, tried: string[]): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      if (!(e instanceof TransientAiError)) {
+        tried.push(`${label}: erro permanente`);
+        throw e;
+      }
+      if (attempt === MAX_ATTEMPTS) break;
+      await sleep(backoffDelay(attempt));
+    }
+  }
+  const status = lastError instanceof TransientAiError ? lastError.status : "?";
+  tried.push(`${label}: ${MAX_ATTEMPTS} tentativas, último status ${status}`);
+  throw lastError;
+}
+
 /** Mesmo Gemini, servido pelo AI Gateway do Lovable (chave gerenciada). */
-async function geminiViaGateway(parts: any[], systemText: string) {
-  if (!LOVABLE_API_KEY) throw new Error("Nem GEMINI_API_KEY nem LOVABLE_API_KEY disponíveis");
+async function geminiViaGatewayOnce(parts: any[], systemText: string, model: string) {
   const content = parts.map((p) => {
     if (p?.inlineData) {
       return {
@@ -55,7 +96,7 @@ async function geminiViaGateway(parts: any[], systemText: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: GATEWAY_MODEL,
+      model,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemText },
@@ -63,22 +104,20 @@ async function geminiViaGateway(parts: any[], systemText: string) {
       ],
     }),
   });
-  const body = await res.json();
-  if (!res.ok) throw new Error(`AI Gateway falhou (${res.status}): ${JSON.stringify(body).slice(0, 600)}`);
+  const raw = await res.text();
+  if (!res.ok) {
+    const msg = `AI Gateway falhou (${res.status}): ${raw.slice(0, 300)}`;
+    if (TRANSIENT_STATUS.has(res.status)) throw new TransientAiError(msg, res.status);
+    throw new Error(msg);
+  }
+  let body: any;
+  try { body = JSON.parse(raw); } catch { throw new Error(`AI Gateway devolveu resposta não-JSON: ${raw.slice(0, 300)}`); }
   return parseJsonLoose(body.choices?.[0]?.message?.content || "{}");
 }
 
-/**
- * Gemini. Duas rotas, mesma família de modelo:
-
- * - GEMINI_API_KEY presente → Google direto.
- * - Caso contrário → AI Gateway do Lovable (LOVABLE_API_KEY, já gerenciada).
- * Assim ninguém precisa copiar chave de IA para o Fly nem criar chave nova.
- */
-async function gemini(parts: any[], systemText: string) {
-  if (!GEMINI_API_KEY) return await geminiViaGateway(parts, systemText);
+async function geminiDirectOnce(parts: any[], systemText: string, model: string) {
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,17 +128,58 @@ async function gemini(parts: any[], systemText: string) {
       }),
     },
   );
-  const body = await res.json();
-  if (!res.ok) throw new Error(`Gemini falhou: ${JSON.stringify(body).slice(0, 600)}`);
-
+  const raw = await res.text();
+  if (!res.ok) {
+    const msg = `Gemini (${model}) falhou (${res.status}): ${raw.slice(0, 300)}`;
+    if (TRANSIENT_STATUS.has(res.status)) throw new TransientAiError(msg, res.status);
+    throw new Error(msg);
+  }
+  let body: any;
+  try { body = JSON.parse(raw); } catch { throw new Error(`Gemini devolveu resposta não-JSON: ${raw.slice(0, 300)}`); }
   const text = (body.candidates?.[0]?.content?.parts || [])
     .map((p: { text?: string }) => p.text || "").join("");
-  try {
-    return JSON.parse(text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim());
-  } catch {
-    throw new Error(`Gemini devolveu resposta não-JSON: ${text.slice(0, 300)}`);
-  }
+  return parseJsonLoose(text);
 }
+
+/**
+ * Gemini com rotas em cascata:
+ * 1. Google direto (GEMINI_MODEL) — se GEMINI_API_KEY existir.
+ * 2. Google direto com modelos de fallback (ex.: flash-lite na transcrição).
+ * 3. AI Gateway do Lovable.
+ * Cada rota tem retry com backoff + jitter; só erros transitórios avançam.
+ */
+async function gemini(parts: any[], systemText: string, opts: { fallbackModels?: string[] } = {}) {
+  const tried: string[] = [];
+  let lastError: unknown;
+
+  if (GEMINI_API_KEY) {
+    const models = [GEMINI_MODEL, ...(opts.fallbackModels || []).filter((m) => m !== GEMINI_MODEL)];
+    for (const model of models) {
+      try {
+        return await withRetry(`google:${model}`, () => geminiDirectOnce(parts, systemText, model), tried);
+      } catch (e) {
+        lastError = e;
+        if (!(e instanceof TransientAiError)) break;
+      }
+    }
+  }
+
+  const canFallbackToGateway = Boolean(LOVABLE_API_KEY) &&
+    (!GEMINI_API_KEY || lastError instanceof TransientAiError);
+
+  if (canFallbackToGateway) {
+    try {
+      return await withRetry("lovable-gateway", () => geminiViaGatewayOnce(parts, systemText, GATEWAY_MODEL), tried);
+    } catch (e) {
+      lastError = e;
+    }
+  }
+
+  if (!lastError) throw new Error("Nem GEMINI_API_KEY nem LOVABLE_API_KEY disponíveis");
+  const detail = tried.length ? ` [rotas tentadas: ${tried.join(" | ")}]` : "";
+  throw new Error(`${String((lastError as Error)?.message || lastError)}${detail}`);
+}
+
 
 // Campos que o worker pode escrever. Lista fechada: o worker é uma máquina
 // remota, não um cliente confiável para escrever qualquer coluna.
@@ -273,6 +353,7 @@ Deno.serve(async (req) => {
             },
           ],
           "Você é um transcritor preciso. Não resuma, não invente, não traduza.",
+          { fallbackModels: ["gemini-2.5-flash-lite"] },
         );
         const segments = (parsed.segments || [])
           .map((s: any) => ({ start: Number(s.start) || 0, end: Number(s.end) || 0, text: String(s.text || "").trim() }))
