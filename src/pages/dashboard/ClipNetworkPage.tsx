@@ -284,13 +284,33 @@ export default function ClipNetworkPage() {
         <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Fila de conteúdo</h2><p className="mt-1 text-xs text-white/40">IA escolhe, você revisa — ou deixa o autopilot assumir depois.</p></div><Pill>{clips.length} clips</Pill></div>
         <div className="mt-5 space-y-3">
           {clips.length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">Nenhum corte ainda. Adicione uma fonte autorizada ou envie um clip de teste.</div>}
-          {clips.slice(0,30).map(clip=>{const pub=publicationByClip.get(clip.id);return <div key={clip.id} className="grid gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 md:grid-cols-[1fr_auto]">
-            <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Pill tone={clip.score>=85?'good':clip.score>=75?'blue':'neutral'}>{Math.round(clip.score)} score</Pill><Pill>{statusLabel[pub?.status||clip.status]||pub?.status||clip.status}</Pill>{clip.render_status==='ready'||clip.render_status==='not_needed'?<Pill tone="good">vídeo pronto</Pill>:<Pill>{statusLabel[clip.render_status]||clip.render_status}</Pill>}</div><div className="mt-3 text-sm font-medium text-white">{clip.on_screen_title||clip.hook||clip.topic||'Clip sem título'}</div><p className="mt-1 line-clamp-2 text-xs leading-5 text-white/45">{clip.caption||'Sem caption'}</p><div className="mt-2 flex gap-3 text-[11px] text-white/30">{clip.start_seconds!=null&&<span>{Math.round(clip.start_seconds)}s → {Math.round(clip.end_seconds||0)}s</span>}{clip.scheduled_at&&<span><Clock3 className="mr-1 inline h-3 w-3"/>{fmt(clip.scheduled_at)}</span>}</div>{pub?.error_message&&<div className="mt-2 text-xs text-red-300">{pub.error_message}</div>}</div>
-            <div className="flex items-center gap-2 md:flex-col md:items-stretch md:justify-center">
+          {clips.slice(0,30).map(clip=>{
+            const pub=publicationByClip.get(clip.id);
+            const editorial=accountById.get(clip.clip_account_id)?.label;
+            const hasVideo=!!(clip.rendered_storage_path||clip.rendered_url);
+            const dur=clip.start_seconds!=null&&clip.end_seconds!=null?Math.round(clip.end_seconds-clip.start_seconds):null;
+            const url=playing[clip.id];
+            return <div key={clip.id} className="grid gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 md:grid-cols-[1fr_auto]">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2"><Pill tone={clip.score>=85?'good':clip.score>=75?'blue':'neutral'}>{Math.round(clip.score)} score</Pill>{editorial&&<Pill tone="blue">{editorial}</Pill>}<Pill>{statusLabel[pub?.status||clip.status]||pub?.status||clip.status}</Pill>{hasVideo?<Pill tone="good">vídeo pronto</Pill>:<Pill>{statusLabel[clip.render_status]||clip.render_status}</Pill>}{dur!=null&&<Pill>{dur}s</Pill>}</div>
+              <div className="mt-3 text-sm font-medium text-white">{clip.on_screen_title||clip.hook||clip.topic||'Clip sem título'}</div>
+              {clip.hook&&clip.hook!==clip.on_screen_title&&<p className="mt-1 text-xs text-white/55">Hook: {clip.hook}</p>}
+              <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/45">{clip.caption||'Sem caption'}</p>
+              <div className="mt-2 flex gap-3 text-[11px] text-white/30">{clip.start_seconds!=null&&<span>{mmss(clip.start_seconds)} → {mmss(clip.end_seconds)}</span>}{clip.scheduled_at&&<span><Clock3 className="mr-1 inline h-3 w-3"/>{fmt(clip.scheduled_at)}</span>}</div>
+              {url&&<video src={url} controls playsInline className="mt-3 max-h-[420px] w-full max-w-[240px] rounded-xl border border-white/10 bg-black"/>}
+              {(clip.last_error||pub?.error_message)&&<div className="mt-2 text-xs text-red-300">{clip.last_error||pub?.error_message}</div>}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 md:flex-col md:items-stretch md:justify-center">
               {clip.status==='candidate'&&<><button onClick={()=>approve(clip)} disabled={busy===`approve:${clip.id}`} className="rounded-lg bg-emerald-500/15 px-3 py-2 text-[11px] font-medium text-emerald-300">Aprovar</button><button onClick={()=>reject(clip)} className="rounded-lg bg-white/5 px-3 py-2 text-[11px] text-white/55">Rejeitar</button></>}
-              {(clip.rendered_url)&&<><button onClick={()=>publishNow(clip)} disabled={!!busy||pub?.status==='published'} className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black disabled:opacity-40"><Instagram className="mr-1.5 h-3.5 w-3.5"/>{pub?.status==='published'?'Publicado':'Publicar IG'}</button><a href={clip.rendered_url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Download className="mr-1.5 h-3.5 w-3.5"/>TikTok</a><button onClick={()=>navigator.clipboard.writeText(clip.caption||'')} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Copy className="mr-1.5 h-3.5 w-3.5"/>Caption</button></>}
+              {hasVideo&&<>
+                <button onClick={()=>watch(clip)} disabled={busy===`watch:${clip.id}`} className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black disabled:opacity-40">{busy===`watch:${clip.id}`?<Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>:<Play className="mr-1.5 h-3.5 w-3.5"/>}Assistir</button>
+                <button onClick={()=>downloadClip(clip)} disabled={busy===`download:${clip.id}`} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Download className="mr-1.5 h-3.5 w-3.5"/>Baixar MP4</button>
+                <button onClick={()=>navigator.clipboard.writeText(clip.caption||'')} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><Copy className="mr-1.5 h-3.5 w-3.5"/>Caption</button>
+                {instagram&&<button onClick={()=>publishNow(clip)} disabled={!!busy||pub?.status==='published'} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60 disabled:opacity-40"><Instagram className="mr-1.5 h-3.5 w-3.5"/>{pub?.status==='published'?'Publicado':'Publicar IG'}</button>}
+              </>}
             </div>
           </div>})}
+
         </div>
       </section>
 
