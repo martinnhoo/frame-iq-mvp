@@ -6,12 +6,28 @@ export type DeskClip = { id:string; clip_account_id:string; source_video_id?:str
 export type DeskVariant = { id:string; clip_id:string; variant_key:string; current_revision:number; current_revision_id?:string; render_status:string; rendered_storage_path?:string; last_error?:string; render_attempts:number; parameters?:Record<string,unknown> };
 export type DeskRevision = { id:string; clip_id:string; clip_variant_id:string; revision_number:number; feedback_text?:string; interpreted_action?:any; previous_parameters?:any; parameters?:any; render_status:string; rendered_storage_path?:string; last_error?:string; created_at:string };
 export type DeskFeedback = { id:string; clip_id:string; feedback_text:string; interpreted_action?:any; status:string; created_at:string };
-type DeskVideo = { id:string; title:string; thumbnail_url?:string; source_url?:string; source_id:string };
+type DeskVideo = {
+  id:string;
+  title:string;
+  thumbnail_url?:string;
+  source_url?:string;
+  source_id:string;
+  pipeline_stage?:string;
+  stage_detail?:string;
+  updated_at?:string;
+};
 type DeskSource = { id:string; label:string };
 type DeskAccount = { id:string; label:string };
 
 const LABELS:Record<string,string> = { blur_caption:"Blur + legenda", zoom_caption:"Zoom + legenda", zoom_clean:"Zoom sem legenda" };
 const ORDER = ["blur_caption","zoom_caption","zoom_clean"];
+
+const PIPELINE_LABELS:Record<string,string> = {
+  downloading:"Baixando vídeo",
+  transcribing:"Transcrevendo áudio",
+  analyzing:"Analisando com IA",
+  rendering:"Renderizando",
+};
 const mmss = (seconds?:number) => seconds == null ? "—" : `${Math.floor(seconds/60)}:${String(Math.round(seconds%60)).padStart(2,"0")}`;
 const fmt = (value?:string) => value ? new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(value)) : "—";
 
@@ -59,6 +75,13 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
   const counters=[{key:"review",label:"Revisão",count:review.length},{key:"approved",label:"Aprovados",count:approved.length},{key:"rendering",label:"Renderizando",count:rendering.length},{key:"ready",label:"Prontos",count:ready.length},{key:"discarded",label:"Descartados",count:discarded.length}];
   const activeReview=review[Math.min(reviewIndex,Math.max(0,review.length-1))];
 
+  const activeWorkerVideo=videos.find(video=>
+    ["downloading","transcribing","analyzing","rendering"].includes(video.pipeline_stage||"")
+  );
+
+  const pendingVariants=variants.filter(variant=>variant.render_status==="pending").length;
+  const renderingVariants=variants.filter(variant=>variant.render_status==="rendering").length;
+
   const submitFeedback=(text:string)=>{if(!feedbackTarget)return;onFeedback(feedbackTarget.clip,text,feedbackTarget.variant);setFeedbackTarget(null);};
   const clipHeader=(clip:DeskClip)=>{
     const video=videoById.get(clip.source_video_id||"");
@@ -69,6 +92,50 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
     <div><h2 className="text-base font-semibold text-white">Mesa de revisão</h2><p className="mt-1 text-xs text-white/40">Decida primeiro se o momento funciona. Compare versões somente depois da aprovação.</p></div>
     <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">{counters.map(item=><button key={item.key} onClick={()=>setTab(item.key)} className={`rounded-xl border px-3 py-3 text-left transition ${tab===item.key?"border-violet-400/40 bg-violet-500/10":"border-white/10 bg-black/20 hover:bg-white/5"}`}><div className="text-[10px] uppercase tracking-wide text-white/35">{item.label}</div><div className="mt-1 text-xl font-semibold text-white">{item.count}</div></button>)}</div>
     {message&&<div className="mt-4 rounded-xl border border-violet-400/20 bg-violet-500/10 px-3 py-2.5 text-xs text-violet-100">{message}</div>}
+
+    {(activeWorkerVideo||pendingVariants>0||renderingVariants>0)&&
+      <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              {activeWorkerVideo
+                ? <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-40"/>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"/>
+                  </span>
+                : <span className="h-2 w-2 rounded-full bg-white/25"/>
+              }
+
+              <span className="text-[11px] font-medium text-white/80">
+                {activeWorkerVideo
+                  ? `Worker ativo · ${PIPELINE_LABELS[activeWorkerVideo.pipeline_stage||""]||activeWorkerVideo.pipeline_stage}`
+                  : "Worker aguardando trabalho"}
+              </span>
+            </div>
+
+            {activeWorkerVideo&&
+              <div className="mt-1 max-w-2xl truncate text-[10px] text-white/35">
+                {activeWorkerVideo.title}
+              </div>
+            }
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {renderingVariants>0&&
+              <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[10px] text-sky-300">
+                {renderingVariants} renderizando
+              </span>
+            }
+
+            {pendingVariants>0&&
+              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] text-amber-200">
+                {pendingVariants} na fila de render
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    }
 
     {tab==="review"&&<div className="mt-5">
       {!activeReview?<div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">Nenhum momento aguardando revisão.</div>:<div className="overflow-hidden rounded-2xl border border-white/10 bg-black/25">
@@ -84,7 +151,37 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
     {tab!=="review"&&<div className="mt-5 space-y-5">
       {groups[tab].length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">Nenhum corte neste estado.</div>}
       {groups[tab].map(clip=>{const clipVariants=variantsByClip.get(clip.id)||[];const readyCount=clipVariants.filter(variant=>variant.render_status==="ready").length;return <article key={clip.id} className="rounded-2xl border border-white/10 bg-black/20 p-4 lg:p-5">
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div>{clipHeader(clip)}</div>{clip.status==="approved"&&<span className="shrink-0 text-xs text-white/40">{readyCount}/3 prontos</span>}</div>
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+          <div>{clipHeader(clip)}</div>
+          {clip.status==="approved"&&
+            <span className="shrink-0 text-xs text-white/40">{readyCount}/3 prontos</span>
+          }
+        </div>
+
+        {clip.status==="approved"&&readyCount<3&&
+          <div className="mt-4 flex items-start gap-3 rounded-xl border border-white/[.07] bg-white/[.025] px-3 py-3">
+            <span className="relative mt-1 flex h-2 w-2 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-35"/>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-400"/>
+            </span>
+
+            <div>
+              <div className="text-[11px] font-medium text-white/75">
+                {clipVariants.some(variant=>variant.render_status==="rendering")
+                  ? `Renderizando · ${readyCount}/3 prontas`
+                  : `Aguardando render · ${readyCount}/3 prontas`}
+              </div>
+
+              <div className="mt-1 text-[10px] text-white/35">
+                {clipVariants.some(variant=>variant.render_status==="rendering")
+                  ? "O worker está gerando as versões deste corte agora."
+                  : activeWorkerVideo
+                    ? `Na fila. O worker está ocupado em: ${PIPELINE_LABELS[activeWorkerVideo.pipeline_stage||""]||activeWorkerVideo.pipeline_stage}.`
+                    : "Na fila aguardando o worker pegar este corte."}
+              </div>
+            </div>
+          </div>
+        }
         {clip.status==="rejected"?<div className="mt-4 text-xs text-white/35">Este momento foi descartado e não será regenerado automaticamente.</div>:<div className="mt-5 grid gap-3 lg:grid-cols-3">{ORDER.map(key=>{const variant=clipVariants.find(item=>item.variant_key===key);if(!variant)return <div key={key} className="rounded-xl border border-dashed border-white/10 p-5 text-xs text-white/30">{LABELS[key]} · criando variante…</div>;const currentRevision=revisions.find(revision=>revision.id===variant.current_revision_id);return <div key={variant.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/35">
           {mediaUrls[variant.id]?<video src={mediaUrls[variant.id]} controls playsInline preload="metadata" className="aspect-[9/16] max-h-[560px] w-full bg-black object-contain"/>:<button onClick={()=>variant.render_status==="ready"&&onWatchVariant(variant)} disabled={variant.render_status!=="ready"||!!busy} className="flex aspect-[9/16] max-h-[560px] w-full items-center justify-center bg-black/50 text-xs text-white/35">{variant.render_status==="ready"?<><Play className="mr-2 h-4 w-4"/>Carregar preview</>:variant.render_status==="rendering"?<><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Gerando v{variant.current_revision}</>:"Preview indisponível"}</button>}
           <div className="p-3"><div className="flex items-center justify-between gap-2"><div className="text-xs font-medium text-white">{LABELS[key]}</div><Status status={variant.render_status}/></div><div className="mt-1 text-[10px] text-white/30">v{variant.current_revision}</div>{variant.last_error&&<div className="mt-2 text-[10px] leading-4 text-red-300">{variant.last_error}</div>}<div className="mt-3 flex flex-wrap gap-2">{variant.render_status==="ready"&&<button onClick={()=>onDownload(variant)} className="inline-flex items-center rounded-lg border border-white/10 px-2.5 py-2 text-[10px] text-white/65"><Download className="mr-1.5 h-3.5 w-3.5"/>Baixar</button>}<button onClick={()=>setFeedbackTarget({clip,variant})} className="inline-flex items-center rounded-lg border border-violet-400/20 px-2.5 py-2 text-[10px] text-violet-200"><MessageSquareText className="mr-1.5 h-3.5 w-3.5"/>Pedir ajuste</button>{variant.render_status==="error"&&currentRevision&&<button onClick={()=>onRetry(clip,currentRevision)} className="inline-flex items-center rounded-lg border border-red-500/20 px-2.5 py-2 text-[10px] text-red-300"><RotateCcw className="mr-1.5 h-3.5 w-3.5"/>Tentar novamente</button>}</div></div>
