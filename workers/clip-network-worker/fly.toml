@@ -46,3 +46,9 @@ primary_region = "gru"
   strategy = "immediate"
   # Não há health check HTTP para esperar. O SIGTERM é tratado: o worker para de
   # pegar job novo e termina o atual antes de sair.
+
+# Máquina sem serviço HTTP não é reiniciada por health check — a política aqui é
+# o que garante que um crash (OOM, exceção não tratada) volte a fazer polling.
+[[restart]]
+  policy = "always"
+
