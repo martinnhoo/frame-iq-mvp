@@ -28,7 +28,44 @@ function json(data: unknown, status = 200) {
   });
 }
 
-/**
+function parseJsonLoose(text: string) {
+  try {
+    return JSON.parse(text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim());
+  } catch {
+    throw new Error(`IA devolveu resposta não-JSON: ${text.slice(0, 300)}`);
+  }
+}
+
+/** Mesmo Gemini, servido pelo AI Gateway do Lovable (chave gerenciada). */
+async function geminiViaGateway(parts: any[], systemText: string) {
+  if (!LOVABLE_API_KEY) throw new Error("Nem GEMINI_API_KEY nem LOVABLE_API_KEY disponíveis");
+  const content = parts.map((p) => {
+    if (p?.inlineData) {
+      return {
+        type: "input_audio",
+        input_audio: { data: p.inlineData.data, format: (p.inlineData.mimeType || "").includes("wav") ? "wav" : "mp3" },
+      };
+    }
+    return { type: "text", text: p.text || "" };
+  });
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: GATEWAY_MODEL,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemText },
+        { role: "user", content },
+      ],
+    }),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(`AI Gateway falhou (${res.status}): ${JSON.stringify(body).slice(0, 600)}`);
+  return parseJsonLoose(body.choices?.[0]?.message?.content || "{}");
+}
+
+
  * Gemini. Duas rotas, mesma família de modelo:
  * - GEMINI_API_KEY presente → Google direto.
  * - Caso contrário → AI Gateway do Lovable (LOVABLE_API_KEY, já gerenciada).
