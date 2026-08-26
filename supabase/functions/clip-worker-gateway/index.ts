@@ -95,6 +95,7 @@ async function openAiTranscribeOnce(audioBase64: string, mimeType: string) {
   form.append("model", OPENAI_TRANSCRIBE_MODEL);
   form.append("response_format", "verbose_json");
   form.append("timestamp_granularities[]", "segment");
+  form.append("timestamp_granularities[]", "word");
   const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",
     headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
@@ -108,16 +109,37 @@ async function openAiTranscribeOnce(audioBase64: string, mimeType: string) {
   }
   let body: any;
   try { body = JSON.parse(raw); } catch { throw new InvalidAiJsonError(`OpenAI transcription devolveu resposta não-JSON: ${raw.slice(0, 300)}`); }
-  const segments = (body.segments || []).map((s: any) => ({
+  let segments = (body.segments || []).map((s: any) => ({
     start: Number(s.start) || 0,
     end: Number(s.end) || 0,
     text: String(s.text || "").trim(),
   })).filter((s: any) => s.text);
+
+  const words = (body.words || []).map((w: any) => ({
+    start: Number(w.start) || 0,
+    end: Number(w.end) || 0,
+    word: String(w.word || "").trim(),
+  })).filter((w: any) => w.word);
+
+  const duration = Number(body.duration)
+    || Number(words.at(-1)?.end)
+    || Number(segments.at(-1)?.end)
+    || 0;
+
   if (!segments.length && body.text) {
-    const duration = Number(body.duration) || 0;
-    return [{ start: 0, end: duration, text: String(body.text).trim() }].filter((s) => s.text);
+    segments = [{
+      start: 0,
+      end: duration,
+      text: String(body.text).trim(),
+    }].filter((s) => s.text);
   }
-  return segments;
+
+  return {
+    text: String(body.text || "").trim(),
+    segments,
+    words,
+    duration,
+  };
 }
 
 async function openAiTranscribe(audioBase64: string, mimeType: string) {
@@ -337,8 +359,11 @@ Deno.serve(async (req) => {
         return json({ ok: true, clip_render_status: clip?.render_status || "pending" });
       }
       case "transcribe_chunk": {
-        const segments = await openAiTranscribe(String(payload.audio_base64 || ""), String(payload.mime_type || "audio/mpeg"));
-        return json({ segments });
+        const transcription = await openAiTranscribe(
+          String(payload.audio_base64 || ""),
+          String(payload.mime_type || "audio/mpeg"),
+        );
+        return json(transcription);
       }
       case "analyze_and_save": {
         const job = payload.job; const transcript = payload.transcript; const { network, accounts } = await loadContext(job.source_id); const candidates = await orchestrate(network, accounts, transcript);

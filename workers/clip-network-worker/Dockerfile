@@ -14,7 +14,7 @@ RUN apt-get update \
       ffmpeg ca-certificates python3 python3-pip \
       # Fontes para o filtro subtitles: sem elas o ffmpeg renderiza legenda
       # vazia e o corte sai sem texto, sem erro nenhum no log.
-      fonts-dejavu-core fontconfig \
+      fonts-dejavu-core fonts-urw-base35 fontconfig \
  && pip3 install --no-cache-dir --break-system-packages "yt-dlp>=2025.1.1" \
  && rm -rf /var/lib/apt/lists/* \
  && fc-cache -f

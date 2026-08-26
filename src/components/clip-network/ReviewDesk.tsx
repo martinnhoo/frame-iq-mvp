@@ -19,7 +19,11 @@ type DeskVideo = {
 type DeskSource = { id:string; label:string };
 type DeskAccount = { id:string; label:string };
 
-const LABELS:Record<string,string> = { blur_caption:"Blur + legenda", zoom_caption:"Zoom + legenda", zoom_clean:"Zoom sem legenda" };
+const LABELS:Record<string,string> = {
+  blur_caption:"Legenda dinâmica",
+  zoom_caption:"Legenda clean",
+  zoom_clean:"Sem legenda",
+};
 const ORDER = ["blur_caption","zoom_caption","zoom_clean"];
 
 const PIPELINE_LABELS:Record<string,string> = {

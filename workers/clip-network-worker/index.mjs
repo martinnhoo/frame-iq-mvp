@@ -96,38 +96,142 @@ async function claimJob() {
 
 async function transcribe(input, dir) {
   const audioDir = join(dir, "audio");
-  await mkdir(audioDir, { recursive: true });
-  // Blocos de 10 min em mono 32k: o Ã¡udio viaja em base64 dentro do corpo da
-  // requisiÃ§Ã£o ao gateway, entÃ£o o bloco precisa caber com folga no limite de
-  // payload da edge function â€” e ainda assim cobre vÃ­deo de horas.
-  await run("ffmpeg", ["-y", "-i", input, "-vn", "-ac", "1", "-ar", "16000", "-b:a", "32k",
-    "-f", "segment", "-segment_time", "600", "-reset_timestamps", "1", join(audioDir, "chunk_%03d.mp3")]);
-  const files = (await readdir(audioDir)).filter((x) => x.endsWith(".mp3")).sort();
-  if (!files.length) throw new Error("Nenhum Ã¡udio extraÃ­do do master");
+
+  await mkdir(audioDir, {
+    recursive: true,
+  });
+
+  await run("ffmpeg", [
+    "-y",
+    "-i", input,
+    "-vn",
+    "-ac", "1",
+    "-ar", "16000",
+    "-b:a", "32k",
+    "-f", "segment",
+    "-segment_time", "600",
+    "-reset_timestamps", "1",
+    join(audioDir,"chunk_%03d.mp3"),
+  ]);
+
+  const files = (
+    await readdir(audioDir)
+  )
+    .filter(file => file.endsWith(".mp3"))
+    .sort();
+
+  if (!files.length) {
+    throw new Error(
+      "Nenhum áudio extraído do master"
+    );
+  }
 
   let offset = 0;
+
   const segments = [];
+  const words = [];
+  const textParts = [];
+
   for (const file of files) {
-    const buf = await readFile(join(audioDir, file));
-    const { segments: chunk = [] } = await call("transcribe_chunk", {
-      audio_base64: buf.toString("base64"), mime_type: "audio/mpeg",
-    }, { timeoutMs: 300_000 });
-    for (const seg of chunk) {
+    const chunkPath =
+      join(audioDir,file);
+
+    // Fundamental para não acumular drift entre chunks:
+    // o offset é a duração REAL do arquivo, não o fim
+    // da última palavra falada.
+    const chunkDuration =
+      await probeDuration(chunkPath);
+
+    const buf =
+      await readFile(chunkPath);
+
+    const result =
+      await call(
+        "transcribe_chunk",
+        {
+          audio_base64:
+            buf.toString("base64"),
+
+          mime_type:
+            "audio/mpeg",
+        },
+        {
+          timeoutMs: 300_000,
+        },
+      );
+
+    for (
+      const segment of result.segments || []
+    ) {
       segments.push({
-        start: Number(seg.start || 0) + offset,
-        end: Number(seg.end || 0) + offset,
-        text: String(seg.text || "").trim(),
+        start:
+          Number(segment.start || 0) +
+          offset,
+
+        end:
+          Number(segment.end || 0) +
+          offset,
+
+        text:
+          String(segment.text || "")
+            .trim(),
       });
     }
-    // O bloco tem no mÃ¡ximo 600s; usar o fim real evita empilhar erro de offset.
-    offset += Math.max(Number(chunk.at(-1)?.end || 0), 0) || 600;
-    await rm(join(audioDir, file), { force: true });
+
+    for (
+      const word of result.words || []
+    ) {
+      words.push({
+        start:
+          Number(word.start || 0) +
+          offset,
+
+        end:
+          Number(word.end || 0) +
+          offset,
+
+        word:
+          String(word.word || "")
+            .trim(),
+      });
+    }
+
+    if (result.text) {
+      textParts.push(
+        String(result.text).trim()
+      );
+    }
+
+    offset +=
+      Number(chunkDuration || 0);
+
+    await rm(
+      chunkPath,
+      { force: true },
+    );
   }
-  const text = segments.map((s) => s.text).join(" ").trim();
-  return { text, segments, duration: segments.at(-1)?.end || offset };
+
+  const text =
+    textParts.length
+      ? textParts.join(" ").trim()
+      : segments
+          .map(segment => segment.text)
+          .join(" ")
+          .trim();
+
+  return {
+    text,
+    segments,
+    words,
+    duration: offset,
+    timing_granularity:
+      words.length
+        ? "word"
+        : "segment",
+  };
 }
 
-// â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Render ──────────────────────────────────────────────────
 
 function srtTime(seconds) {
   const ms = Math.max(0, Math.round(seconds * 1000));
@@ -456,9 +560,45 @@ async function processApprovedBacklog() {
   await mkdir(TMP_ROOT, { recursive: true });
   const dir = await mkdtemp(join(TMP_ROOT, "clip-render-"));
   try {
-    const { path: master } = await resolveMedia({ video, source, dir, supabase: storageShim, bucket: BUCKET });
-    const sourceMeta = await probeMedia(master);
-    const variantById = new Map(variants.map((variant) => [variant.id, variant]));
+    const { path: master } = await resolveMedia({
+      video,
+      source,
+      dir,
+      supabase: storageShim,
+      bucket: BUCKET,
+    });
+
+    const sourceMeta =
+      await probeMedia(master);
+
+    let transcript =
+      video.transcript || {};
+
+    // Clips aprovados antes desta atualização só possuem
+    // timestamps por segmento. Reprocessa a transcrição uma
+    // única vez para ganhar timing real por palavra.
+    if (!transcript?.words?.length) {
+      log(
+        `[clip ${clip.id}] atualizando transcrição para word-level timing`
+      );
+
+      transcript =
+        await transcribe(master,dir);
+
+      await updateVideo(video.id,{
+        transcript,
+        transcript_status: "ready",
+        stage_detail:
+          "sincronização palavra por palavra concluída",
+      });
+    }
+
+    const variantById =
+      new Map(
+        variants.map(
+          variant => [variant.id,variant]
+        )
+      );
     let clipReady = false;
     const boundsByKey = new Map();
     for (const revision of revisions) {
@@ -467,7 +607,16 @@ async function processApprovedBacklog() {
       const settings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
       const boundsKey = `${settings.startSeconds}:${settings.endSeconds}`;
       if (!boundsByKey.has(boundsKey)) boundsByKey.set(boundsKey, await detectConservativeEdges(master, settings.startSeconds, settings.endSeconds, sourceMeta.hasAudio));
-      const result = await renderAndUploadRevision(master, clip, variant, revision, video.transcript, dir, sourceMeta, boundsByKey.get(boundsKey));
+      const result = await renderAndUploadRevision(
+        master,
+        clip,
+        variant,
+        revision,
+        transcript,
+        dir,
+        sourceMeta,
+        boundsByKey.get(boundsKey),
+      );
       if (result.clipRenderStatus === "ready") clipReady = true;
     }
     if (clipReady) {
@@ -499,9 +648,23 @@ async function loop() {
       const { recovered } = await call("recover_stuck");
       if (recovered) log(`recuperados ${recovered} job(s) abandonados`);
 
-      const job = await claimJob();
-      if (job) await processJob(job);
-      else if (!(await processApprovedBacklog()) && RUN_ONCE) break;
+      // Aprovações humanas têm prioridade:
+      // renderiza primeiro o que o usuário acabou de aprovar.
+      const renderedBacklog =
+        await processApprovedBacklog();
+
+      if (!renderedBacklog) {
+        const job =
+          await claimJob();
+
+        if (job) {
+          await processJob(job);
+        }
+
+        else if (RUN_ONCE) {
+          break;
+        }
+      }
     } catch (e) {
       log("erro no laÃ§o", e?.message || e);
     }
