@@ -12,8 +12,8 @@ type Network = { id:string; user_id:string; name:string; daily_limit:number; min
 type ClipAccount = { id:string; label:string; niche:string; tone?:string; daily_limit:number; active:boolean; rules?:any };
 type Social = { id:string; clip_account_id:string; platform:"instagram"|"tiktok"; username?:string; display_name?:string; status:string; capabilities?:any };
 type Source = { id:string; label:string; provider_url?:string; rights_confirmed:boolean; last_checked_at?:string; last_error?:string; active:boolean };
-type SourceVideo = { id:string; title:string; source_url?:string; thumbnail_url?:string; source_published_at?:string; media_status:string; transcript_status:string; rights_confirmed:boolean };
-type Clip = { id:string; clip_account_id:string; source_video_id?:string; hook?:string; topic?:string; caption?:string; score:number; status:string; render_status:string; rendered_url?:string; scheduled_at?:string; start_seconds?:number; end_seconds?:number; on_screen_title?:string };
+type SourceVideo = { id:string; source_id:string; title:string; source_url?:string; thumbnail_url?:string; source_published_at?:string; media_status:string; transcript_status:string; rights_confirmed:boolean; pipeline_stage:string; stage_detail?:string; last_error?:string; clips_generated?:number; attempts?:number; duration_seconds?:number; updated_at?:string };
+type Clip = { id:string; clip_account_id:string; source_video_id?:string; hook?:string; topic?:string; caption?:string; score:number; status:string; render_status:string; rendered_url?:string; rendered_storage_path?:string; last_error?:string; scheduled_at?:string; start_seconds?:number; end_seconds?:number; on_screen_title?:string };
 type Publication = { id:string; clip_id:string; platform:string; status:string; scheduled_at?:string; published_at?:string; provider_media_id?:string; error_message?:string };
 
 const fmt = (v?:string) => v ? new Intl.DateTimeFormat("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }).format(new Date(v)) : "—";
@@ -21,6 +21,19 @@ const statusLabel: Record<string,string> = {
   candidate:"Revisar", approved:"Aprovado", scheduled:"Agendado", published:"Publicado", error:"Erro",
   pending:"Pendente", rendering:"Renderizando", ready:"Pronto", queued:"Na fila", processing:"Processando", failed:"Falhou",
 };
+
+// Os estágios da máquina, na ordem em que acontecem. O índice serve de barra de
+// progresso: sem isto o painel só sabia dizer "aguardando mídia" para sempre.
+const STAGES = ["discovered","downloading","transcribing","analyzing","rendering","done"] as const;
+const stageLabel: Record<string,string> = {
+  discovered:"Descoberto", downloading:"Baixando", transcribing:"Transcrevendo",
+  analyzing:"Analisando", rendering:"Renderizando", done:"Concluído",
+  error:"Erro", blocked:"Sem autorização",
+};
+const stageTone = (s:string):"neutral"|"good"|"warn"|"bad"|"blue" =>
+  s==="done" ? "good" : s==="error" ? "bad" : s==="blocked" ? "warn" : s==="discovered" ? "neutral" : "blue";
+const mmss = (s?:number) => s==null ? "—" : `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}`;
+
 
 function Pill({ children, tone="neutral" }:{children:any; tone?:"neutral"|"good"|"warn"|"bad"|"blue"}) {
   const tones = { neutral:"border-white/10 bg-white/5 text-white/65", good:"border-emerald-500/20 bg-emerald-500/10 text-emerald-300", warn:"border-amber-500/20 bg-amber-500/10 text-amber-300", bad:"border-red-500/20 bg-red-500/10 text-red-300", blue:"border-sky-500/20 bg-sky-500/10 text-sky-300" };
