@@ -172,7 +172,9 @@ export default function ClipNetworkPage() {
       setAccounts(data?.accounts || []);
       setSocials(data?.socials || []);
       setSources(data?.sources || []);
-      setVideos((data?.videos || []).filter((video:SourceVideo)=>video.pipeline_stage!=="blocked"));
+      setVideos((data?.videos || []).filter((video:SourceVideo)=>
+        video.pipeline_stage!=="blocked" || video.stage_detail==="Pausado manualmente"
+      ));
       const nextClips:Clip[] = data?.clips || [];
       setClips(nextClips);
       setPublications(data?.publications || []);
@@ -385,6 +387,72 @@ export default function ClipNetworkPage() {
     setBusy(`download:${clip.id}`); setError(null);
     try { const url=await signMedia(clip,true); window.open(url,"_blank","noopener"); }
     catch(e:any){ setError(e.message||String(e)); } finally { setBusy(null); }
+  };
+
+  const pauseVideo = async (video:SourceVideo) => {
+    setBusy(`pause-video:${video.id}`);
+    setError(null);
+
+    try {
+      await clipBridge(CLIP_NETWORK_REVIEW_URL,{
+        action:"pause_video",
+        payload:{video_id:video.id},
+      });
+      await load();
+    } catch(e:any) {
+      setError(e.message||String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const resumeVideo = async (video:SourceVideo) => {
+    setBusy(`resume-video:${video.id}`);
+    setError(null);
+
+    try {
+      await clipBridge(CLIP_NETWORK_REVIEW_URL,{
+        action:"resume_video",
+        payload:{video_id:video.id},
+      });
+      await load();
+    } catch(e:any) {
+      setError(e.message||String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const deleteVideo = async (video:SourceVideo) => {
+    const confirmed=window.confirm(
+      `Excluir “${video.title}” da Máquina de cortes?\n\nIsso removerá também todos os cortes e revisões associados a esse vídeo. Esta ação não pode ser desfeita.`
+    );
+
+    if(!confirmed) return;
+
+    setBusy(`delete-video:${video.id}`);
+    setError(null);
+
+    try {
+      await clipBridge(CLIP_NETWORK_REVIEW_URL,{
+        action:"delete_video",
+        payload:{video_id:video.id},
+      });
+
+      setPlaying(current=>{
+        const next={...current};
+        for(const clip of clips.filter(item=>item.source_video_id===video.id)){
+          delete next[clip.id];
+        }
+        return next;
+      });
+
+      await load();
+    } catch(e:any) {
+      setError(e.message||String(e));
+    } finally {
+      setBusy(null);
+    }
   };
 
   const retryVideo = async (video:SourceVideo) => {
@@ -605,13 +673,19 @@ export default function ClipNetworkPage() {
         const readyCuts=clipStats.ready;
         const doneWithoutClips=stage==="done"&&readyCuts===0;
         const canRetry=stage!=="blocked"&&(stage==="error"||(v.attempts||0)>0);
+        const manualPaused=stage==="blocked"&&v.stage_detail==="Pausado manualmente";
+        const activelyProcessing=["downloading","transcribing","analyzing","rendering"].includes(stage);
+        const canPause=["discovered","error"].includes(stage);
+        const canDelete=!activelyProcessing;
         return <div key={v.id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
           {v.thumbnail_url?<img src={v.thumbnail_url} alt={v.title} className="aspect-video w-full object-cover opacity-80"/>:<div className="aspect-video bg-white/5"/>}
           <div className="p-3">
             <div className="text-[10px] text-white/30">{sourceById.get(v.source_id)?.label||"fonte"}</div>
             <a href={v.source_url} target="_blank" rel="noreferrer" className="mt-1 line-clamp-2 block text-xs font-medium leading-5 text-white hover:text-sky-300">{v.title}</a>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Pill tone={stageTone(stage,readyCuts)}>{doneWithoutClips?"Concluído sem clips prontos":stageLabel[stage]||stage}</Pill>
+              <Pill tone={manualPaused?"warn":stageTone(stage,readyCuts)}>
+                {manualPaused?"Pausado":doneWithoutClips?"Concluído sem clips prontos":stageLabel[stage]||stage}
+              </Pill>
               {readyCuts>0&&<Pill tone="good">{readyCuts} {readyCuts===1?"corte pronto":"cortes prontos"}</Pill>}
               {readyCuts===0&&candidates>0&&<Pill>{candidates} {candidates===1?"candidato":"candidatos"}</Pill>}
               {v.duration_seconds!=null&&<Pill>{mmss(v.duration_seconds)}</Pill>}
@@ -709,6 +783,56 @@ export default function ClipNetworkPage() {
             </div>
             {v.last_error&&<div className="mt-2 rounded-lg border border-red-500/15 bg-red-500/10 px-2 py-1.5 text-[10px] leading-4 text-red-300">{v.last_error}</div>}
             {canRetry&&<button onClick={()=>retryVideo(v)} disabled={busy===`retry:${v.id}`} className="mt-2.5 inline-flex items-center rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] text-white/60 hover:bg-white/5 disabled:opacity-40">{busy===`retry:${v.id}`?<Loader2 className="mr-1.5 h-3 w-3 animate-spin"/>:<RotateCcw className="mr-1.5 h-3 w-3"/>}Reprocessar</button>}
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/[.06] pt-3">
+              {canPause&&
+                <button
+                  onClick={()=>pauseVideo(v)}
+                  disabled={!!busy}
+                  className="inline-flex items-center rounded-lg border border-amber-500/15 bg-amber-500/[.06] px-2.5 py-1.5 text-[10px] text-amber-200/75 hover:bg-amber-500/10 disabled:opacity-35"
+                >
+                  {busy===`pause-video:${v.id}`
+                    ?<Loader2 className="mr-1.5 h-3 w-3 animate-spin"/>
+                    :<PowerOff className="mr-1.5 h-3 w-3"/>
+                  }
+                  Pausar
+                </button>
+              }
+
+              {manualPaused&&
+                <button
+                  onClick={()=>resumeVideo(v)}
+                  disabled={!!busy}
+                  className="inline-flex items-center rounded-lg border border-emerald-500/15 bg-emerald-500/[.06] px-2.5 py-1.5 text-[10px] text-emerald-200/75 hover:bg-emerald-500/10 disabled:opacity-35"
+                >
+                  {busy===`resume-video:${v.id}`
+                    ?<Loader2 className="mr-1.5 h-3 w-3 animate-spin"/>
+                    :<Power className="mr-1.5 h-3 w-3"/>
+                  }
+                  Retomar
+                </button>
+              }
+
+              {activelyProcessing&&
+                <span className="text-[9px] text-white/25">
+                  Controles disponíveis quando esta etapa terminar
+                </span>
+              }
+
+              {canDelete&&
+                <button
+                  onClick={()=>deleteVideo(v)}
+                  disabled={!!busy}
+                  className="ml-auto inline-flex items-center rounded-lg border border-red-500/15 px-2.5 py-1.5 text-[10px] text-red-300/65 hover:bg-red-500/[.08] disabled:opacity-35"
+                >
+                  {busy===`delete-video:${v.id}`
+                    ?<Loader2 className="mr-1.5 h-3 w-3 animate-spin"/>
+                    :<Trash2 className="mr-1.5 h-3 w-3"/>
+                  }
+                  Excluir
+                </button>
+              }
+            </div>
           </div>
         </div>;
       })}

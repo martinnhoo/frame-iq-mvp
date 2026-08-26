@@ -94,6 +94,183 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (["pause_video","resume_video","delete_video"].includes(String(action))) {
+      const videoId = String(payload.video_id || "");
+      if (!videoId) return json({ error: "video_id required" }, 400);
+
+      const { data: video, error: videoError } = await supabase
+        .from("clip_source_videos")
+        .select("id,user_id,title,pipeline_stage,stage_detail,media_storage_path")
+        .eq("id", videoId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (videoError) throw videoError;
+      if (!video) return json({ error: "video_not_found" }, 404);
+
+      const activeStages = new Set([
+        "downloading",
+        "transcribing",
+        "analyzing",
+        "rendering",
+      ]);
+
+      if (action === "pause_video") {
+        if (activeStages.has(video.pipeline_stage)) {
+          return json({ error: "video_processing" }, 409);
+        }
+
+        if (
+          video.pipeline_stage === "blocked" &&
+          video.stage_detail === "Pausado manualmente"
+        ) {
+          return json({ ok: true, already_paused: true });
+        }
+
+        if (!["discovered","error"].includes(video.pipeline_stage)) {
+          return json({ error: "video_cannot_pause" }, 409);
+        }
+
+        const { error } = await supabase
+          .from("clip_source_videos")
+          .update({
+            pipeline_stage: "blocked",
+            media_status: "blocked",
+            stage_detail: "Pausado manualmente",
+            locked_by: null,
+            locked_at: null,
+            lease_expires_at: null,
+            next_retry_at: null,
+            updated_at: nowIso(),
+          })
+          .eq("id", video.id)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        return json({ ok: true, status: "paused" });
+      }
+
+      if (action === "resume_video") {
+        if (
+          video.pipeline_stage !== "blocked" ||
+          video.stage_detail !== "Pausado manualmente"
+        ) {
+          return json({ error: "video_not_manually_paused" }, 409);
+        }
+
+        const { error } = await supabase
+          .from("clip_source_videos")
+          .update({
+            pipeline_stage: "discovered",
+            media_status: "waiting_for_media",
+            stage_detail: null,
+            last_error: null,
+            locked_by: null,
+            locked_at: null,
+            lease_expires_at: null,
+            next_retry_at: null,
+            updated_at: nowIso(),
+          })
+          .eq("id", video.id)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        return json({ ok: true, status: "resumed" });
+      }
+
+      // delete_video
+      if (activeStages.has(video.pipeline_stage)) {
+        return json({ error: "video_processing" }, 409);
+      }
+
+      const { data: clips, error: clipsError } = await supabase
+        .from("clips")
+        .select("id,rendered_storage_path")
+        .eq("source_video_id", video.id)
+        .eq("user_id", user.id);
+
+      if (clipsError) throw clipsError;
+
+      const clipIds = (clips || []).map((clip:any) => clip.id);
+      const paths:string[] = (clips || [])
+        .map((clip:any) => clip.rendered_storage_path)
+        .filter(Boolean);
+
+      if (clipIds.length) {
+        const [variantResult, revisionResult] = await Promise.all([
+          supabase
+            .from("clip_variants")
+            .select("rendered_storage_path")
+            .in("clip_id", clipIds)
+            .eq("user_id", user.id),
+          supabase
+            .from("clip_revisions")
+            .select("rendered_storage_path")
+            .in("clip_id", clipIds)
+            .eq("user_id", user.id),
+        ]);
+
+        if (variantResult.error) throw variantResult.error;
+        if (revisionResult.error) throw revisionResult.error;
+
+        for (const row of variantResult.data || []) {
+          if (row.rendered_storage_path) paths.push(row.rendered_storage_path);
+        }
+
+        for (const row of revisionResult.data || []) {
+          if (row.rendered_storage_path) paths.push(row.rendered_storage_path);
+        }
+
+        const { error: deleteClipsError } = await supabase
+          .from("clips")
+          .delete()
+          .in("id", clipIds)
+          .eq("user_id", user.id);
+
+        if (deleteClipsError) throw deleteClipsError;
+      }
+
+      if (video.media_storage_path) paths.push(video.media_storage_path);
+
+      const { error: removeVideoError } = await supabase
+        .from("clip_source_videos")
+        .update({
+          pipeline_stage: "blocked",
+          media_status: "blocked",
+          stage_detail: "Removido manualmente",
+          last_error: null,
+          locked_by: null,
+          locked_at: null,
+          lease_expires_at: null,
+          next_retry_at: null,
+          updated_at: nowIso(),
+        })
+        .eq("id", video.id)
+        .eq("user_id", user.id);
+
+      if (removeVideoError) throw removeVideoError;
+
+      const uniquePaths = [...new Set(paths.filter(Boolean))];
+      let storageWarning:string|null = null;
+
+      if (uniquePaths.length) {
+        const { error: storageError } = await supabase.storage
+          .from("clip-network")
+          .remove(uniquePaths);
+
+        if (storageError) storageWarning = storageError.message;
+      }
+
+      return json({
+        ok: true,
+        status: "removed",
+        deleted_clips: clipIds.length,
+        storage_warning: storageWarning,
+      });
+    }
+
     const clipId = String(payload.clip_id || "");
     if (!clipId) return json({ error: "clip_id required" }, 400);
     const { data: clip, error: clipError } = await supabase.from("clips")
