@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: "YOUTUBE_API_KEY missing" }, 500);
 
     const authHeader = req.headers.get("Authorization") || "";
-    const cronSecret = Deno.env.get("CLIP_NETWORK_CRON_SECRET");
+    const cronSecret = Deno.env.get("CLIP_CRON_TOKEN") || Deno.env.get("CLIP_NETWORK_CRON_SECRET");
     const headerSecret = req.headers.get("x-clip-cron-secret") || "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     // Duas portas para o modo cron:
