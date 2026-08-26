@@ -1,0 +1,10 @@
+{
+  "name": "adbrief-clip-network-worker",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node index.mjs", "once": "node index.mjs --once" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "luxon": "^3.7.2"
+  }
+}

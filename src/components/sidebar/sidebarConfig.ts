@@ -7,7 +7,7 @@
 import {
   House, Tags, Folder, Image, Video, Mic, Workflow, PanelsTopLeft,
   GalleryHorizontal, FlaskConical, Users, Captions, AudioLines,
-  ChartNoAxesColumnIncreasing,
+  ChartNoAxesColumnIncreasing, Clapperboard,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -32,6 +32,7 @@ export interface SidebarSection {
 
 const dict = {
   pt: {
+    clips: "Rede de cortes",
     main: "Principal", create: "Criar", auto: "Automações", intel: "Inteligência",
     home: "Início", brands: "Marcas", library: "Biblioteca",
     image: "Imagem", video: "Vídeo", voice: "Locução",
@@ -44,6 +45,7 @@ const dict = {
     lockedPlan: "Disponível em planos superiores",
   },
   en: {
+    clips: "Clip network",
     main: "Main", create: "Create", auto: "Automations", intel: "Intelligence",
     home: "Home", brands: "Brands", library: "Library",
     image: "Image", video: "Video", voice: "Voiceover",
@@ -56,6 +58,7 @@ const dict = {
     lockedPlan: "Available on higher plans",
   },
   es: {
+    clips: "Red de clips",
     main: "Principal", create: "Crear", auto: "Automatizaciones", intel: "Inteligencia",
     home: "Inicio", brands: "Marcas", library: "Biblioteca",
     image: "Imagen", video: "Video", voice: "Locución",
@@ -100,6 +103,7 @@ export function getSidebarSections(lang: Lang): SidebarSection[] {
       label: t.auto,
       items: [
         { href: "/dashboard/hub/workflows", label: t.workflows, icon: Workflow, requiredPlan: "creator" },
+        { href: "/dashboard/clips", label: t.clips, icon: Clapperboard, requiredPlan: "creator", badge: "BETA" },
         { href: "/dashboard/hub/storyboard", label: t.storyboard, icon: PanelsTopLeft },
         { href: "/dashboard/hub/carousel", label: t.carousel, icon: GalleryHorizontal },
         { href: "/dashboard/hub/ab", label: t.ab, icon: FlaskConical },

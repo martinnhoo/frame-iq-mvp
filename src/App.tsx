@@ -63,6 +63,8 @@ const BriefGenerator   = lazy(() => import("./pages/dashboard/BriefGenerator"));
 const CreativeLoopPage = lazy(() => import("./pages/dashboard/CreativeLoopPage"));
 const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
 const OAuthCallback    = lazy(() => import("./pages/dashboard/OAuthCallback"));
+const ClipNetworkPage = lazy(() => import("./pages/dashboard/ClipNetworkPage"));
+const ClipNetworkOAuthCallback = lazy(() => import("./pages/dashboard/ClipNetworkOAuthCallback"));
 const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
 const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage"));
 const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
@@ -213,6 +215,8 @@ const App = () => (
                 <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
                 <Route path="loop" element={<CreativeLoopPage />} />
                 <Route path="performance" element={<PerformanceDashboard />} />
+                <Route path="clips" element={<ClipNetworkPage />} />
+                <Route path="clips/connect/:platform/callback" element={<ClipNetworkOAuthCallback />} />
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
