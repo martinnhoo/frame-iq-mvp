@@ -353,6 +353,7 @@ Deno.serve(async (req) => {
             },
           ],
           "Você é um transcritor preciso. Não resuma, não invente, não traduza.",
+          { fallbackModels: ["gemini-2.5-flash-lite"] },
         );
         const segments = (parsed.segments || [])
           .map((s: any) => ({ start: Number(s.start) || 0, end: Number(s.end) || 0, text: String(s.text || "").trim() }))
