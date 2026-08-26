@@ -117,8 +117,9 @@ export default function ClipNetworkPage() {
   const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length;
 
 
-  const load = async () => {
-    setLoading(true); setError(null);
+  const load = async (showLoading=false) => {
+    if(showLoading) setLoading(true);
+    setError(null);
     try {
       const data = await clipApi("bootstrap");
       const net = data?.network || null;
@@ -130,10 +131,10 @@ export default function ClipNetworkPage() {
       setClips(data?.clips || []);
       setPublications(data?.publications || []);
     } catch(e:any) { setError(e.message || String(e)); }
-    finally { setLoading(false); }
+    finally { if(showLoading) setLoading(false); }
   };
 
-  useEffect(()=>{ load(); },[]);
+  useEffect(()=>{ load(true); },[]);
 
   const createPilot = async () => {
     setBusy("pilot"); setError(null);
@@ -331,7 +332,7 @@ export default function ClipNetworkPage() {
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div><div className="flex items-center gap-2"><h1 className="text-2xl font-semibold tracking-tight text-white">Clip Network</h1><Pill tone={network.approval_mode==='auto'?'good':'warn'}>{network.approval_mode==='auto'?'Autopilot':'Revisão manual'}</Pill></div><p className="mt-1 text-sm text-white/45">{primaryAccount?.label || network.name} · limite {network.daily_limit}/dia</p></div>
       <div className="flex flex-wrap gap-2">
-        <button onClick={load} className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 hover:bg-white/10"><RefreshCw className="mr-2 h-3.5 w-3.5"/>Atualizar</button>
+        <button onClick={()=>load()} className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 hover:bg-white/10"><RefreshCw className="mr-2 h-3.5 w-3.5"/>Atualizar</button>
         <button onClick={toggleAutopilot} disabled={busy==='auto'} className={`inline-flex items-center rounded-xl px-4 py-2 text-xs font-medium ${network.approval_mode==='auto'?'bg-emerald-500/15 text-emerald-300':'bg-violet-500 text-white'}`}><Zap className="mr-2 h-3.5 w-3.5"/>{network.approval_mode==='auto'?'Pausar autopilot':'Ativar autopilot'}</button>
       </div>
     </div>
