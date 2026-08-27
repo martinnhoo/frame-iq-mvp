@@ -11,7 +11,7 @@ import {
 const db = supabase as any;
 
 const CLIP_NETWORK_API_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-api";
-const CLIP_NETWORK_REVIEW_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-review";
+const CLIP_NETWORK_REVIEW_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-review-wake";
 const CLIP_NETWORK_SIGN_MEDIA_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-sign-media";
 const CLIP_WORKER_STATUS_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-worker-status";
 
