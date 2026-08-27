@@ -548,7 +548,7 @@ async function buildClipQualityV51({
   let headlineResult;
   try {
     headlineResult = await callFunction(
-      "clip-quality-v51",
+      "clip-headline-v511",
       "headline",
       {
         transcript: transcript.text,

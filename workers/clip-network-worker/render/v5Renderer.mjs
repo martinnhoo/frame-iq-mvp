@@ -497,7 +497,12 @@ function groupWords(words, maxWords = 6, maxChars = 36, maxDuration = 2.4) {
   return groups;
 }
 
-function breakIndex(group, maxLineChars = 21) {
+// V5.1.1 deterministic caption scheduler:
+// - no overlap between caption groups
+// - hard speaker boundaries
+// - max 4 words
+// - one active ASS caption event at any instant
+function breakIndex(group, maxLineChars = 19) {
   const full = group.map((item) => item.word).join(" ");
   if (full.length <= maxLineChars || group.length < 2) return -1;
   let best = 1;
@@ -508,7 +513,14 @@ function breakIndex(group, maxLineChars = 21) {
     const overflow =
       Math.max(0, left - maxLineChars) +
       Math.max(0, right - maxLineChars);
-    const candidate = overflow * 10 + Math.abs(left - right);
+    const orphanPenalty =
+      group.length >= 3 && (index === 1 || index === group.length - 1)
+        ? 18
+        : 0;
+    const candidate =
+      overflow * 10 +
+      Math.abs(left - right) +
+      orphanPenalty;
     if (candidate < score) {
       score = candidate;
       best = index;
@@ -521,23 +533,130 @@ function phrase(group, activeIndex, activeColor = "&H0000D8FF&") {
   const parts = group.map((item, index) => {
     const word = escapeAss(item.word);
     if (index === activeIndex) {
-      return `{\\c${activeColor}}${word}{\\c&H00FFFFFF&}`;
+      return `{\\\\c${activeColor}}${word}{\\\\c&H00FFFFFF&}`;
     }
     return word;
   });
   const at = breakIndex(group);
   if (at <= 0) return parts.join(" ");
-  return `${parts.slice(0, at).join(" ")}\\N${parts.slice(at).join(" ")}`;
+  return `${parts.slice(0, at).join(" ")}\\\\N${parts.slice(at).join(" ")}`;
 }
 
-function wrapText(text, maxChars = 29) {
+const toCs = (seconds) =>
+  Math.max(0, Math.round(Number(seconds || 0) * 100));
+const fromCs = (value) => Math.max(0, Number(value || 0) / 100);
+
+function buildCaptionSchedule(groups, duration) {
+  const durationCs = Math.max(1, Math.floor(Number(duration || 0) * 100));
+  const events = [];
+  const groupWindows = [];
+  let cursorCs = 0;
+
+  for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
+    const group = groups[groupIndex];
+    if (!group?.length) continue;
+
+    const rawStartCs = toCs(group[0].start);
+    const nextRawStartCs =
+      groupIndex + 1 < groups.length
+        ? toCs(groups[groupIndex + 1][0].start)
+        : durationCs + 1;
+
+    const startCs = Math.max(cursorCs, rawStartCs);
+    const naturalEndCs = Math.max(
+      startCs + 1,
+      toCs(Number(group.at(-1).end || 0) + 0.03),
+    );
+
+    // Reserve 10 ms before the next caption group. This is deliberate:
+    // ASS/libass rounding can otherwise display both groups on one frame.
+    const hardBoundaryCs =
+      nextRawStartCs > startCs + 1
+        ? nextRawStartCs - 1
+        : nextRawStartCs;
+
+    const endCs = Math.min(
+      durationCs,
+      naturalEndCs,
+      Math.max(startCs + 1, hardBoundaryCs),
+    );
+
+    if (endCs <= startCs) continue;
+
+    const groupEvents = [];
+    let wordCursorCs = startCs;
+
+    for (let index = 0; index < group.length; index += 1) {
+      const item = group[index];
+      const start = Math.max(wordCursorCs, toCs(item.start), startCs);
+      if (start >= endCs) break;
+
+      const next = group[index + 1];
+      const requestedEnd =
+        next
+          ? Math.max(start + 1, toCs(next.start))
+          : endCs;
+      const end = Math.min(endCs, requestedEnd);
+      if (end <= start) continue;
+
+      const event = {
+        group_index: groupIndex,
+        active_index: index,
+        start_cs: start,
+        end_cs: end,
+        start: fromCs(start),
+        end: fromCs(end),
+        group,
+      };
+      events.push(event);
+      groupEvents.push(event);
+      wordCursorCs = end;
+    }
+
+    const renderedStartCs = groupEvents[0]?.start_cs ?? startCs;
+    const renderedEndCs = groupEvents.at(-1)?.end_cs ?? endCs;
+    groupWindows.push({
+      group_index: groupIndex,
+      start_cs: renderedStartCs,
+      end_cs: renderedEndCs,
+      start: fromCs(renderedStartCs),
+      end: fromCs(renderedEndCs),
+      group,
+    });
+
+    cursorCs = renderedEndCs + 1;
+  }
+
+  let overlapCount = 0;
+  for (let index = 1; index < events.length; index += 1) {
+    if (events[index].start_cs < events[index - 1].end_cs) {
+      overlapCount += 1;
+    }
+  }
+
+  if (overlapCount > 0) {
+    throw new Error(
+      `V5.1.1 caption scheduler gerou ${overlapCount} overlaps`,
+    );
+  }
+
+  return {
+    events,
+    group_windows: groupWindows,
+    overlap_count: overlapCount,
+  };
+}
+
+function headlineLines(text, maxChars, maxLines) {
   const words = String(text || "").trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return "";
+  if (!words.length) return [];
+
   const lines = [];
   let current = "";
+
   for (const word of words) {
     const proposed = current ? `${current} ${word}` : word;
-    if (current && proposed.length > maxChars && lines.length < 2) {
+    if (current && proposed.length > maxChars) {
       lines.push(current);
       current = word;
     } else {
@@ -545,56 +664,156 @@ function wrapText(text, maxChars = 29) {
     }
   }
   if (current) lines.push(current);
-  return lines.slice(0, 3).map(escapeAss).join("\\N");
+
+  // Avoid a one-word orphan when there is room to rebalance.
+  if (
+    lines.length >= 2 &&
+    lines.at(-1).split(/\s+/).length === 1
+  ) {
+    const prevWords = lines.at(-2).split(/\s+/);
+    if (prevWords.length >= 3) {
+      const moved = prevWords.pop();
+      lines[lines.length - 2] = prevWords.join(" ");
+      lines[lines.length - 1] = `${moved} ${lines.at(-1)}`;
+    }
+  }
+
+  if (lines.length > maxLines) return [];
+  return lines;
 }
 
-function headlineEvents(lines, headline, end) {
-  if (!headline?.enabled || !headline?.text || end <= 0) return;
-  const stop = assTime(end);
-  const text = wrapText(
-    headline.preset === "news_red_bar"
-      ? String(headline.text).toUpperCase()
-      : headline.text,
-    headline.preset === "social_post" ? 38 : 31,
-  );
+function buildHeadlineLayout(headline) {
+  if (!headline?.enabled || !headline?.text) {
+    return {
+      enabled: false,
+      preset: "none",
+      text: "",
+      safe: true,
+      reason: "disabled",
+      duration: 0,
+    };
+  }
 
-  if (headline.preset === "social_post") {
+  const allowed = new Set([
+    "news_page",
+    "viral_headline",
+    "media_split",
+  ]);
+  const preset = allowed.has(String(headline.preset))
+    ? String(headline.preset)
+    : "viral_headline";
+  const emoji = String(headline.emoji || "").trim();
+  const uppercase =
+    preset === "viral_headline" || preset === "media_split";
+  const baseText = uppercase
+    ? String(headline.text).toUpperCase()
+    : String(headline.text);
+  const displayText =
+    emoji && !baseText.includes(emoji)
+      ? `${baseText} ${emoji}`
+      : baseText;
+
+  const config =
+    preset === "news_page"
+      ? {
+          maxChars: 34,
+          maxLines: 3,
+          fontSize: displayText.length <= 42 ? 48 : 43,
+          minFontSize: 40,
+        }
+      : preset === "media_split"
+        ? {
+            maxChars: 34,
+            maxLines: 2,
+            fontSize: displayText.length <= 38 ? 46 : 40,
+            minFontSize: 36,
+          }
+        : {
+            maxChars: 27,
+            maxLines: 2,
+            fontSize: displayText.length <= 30 ? 62 : 54,
+            minFontSize: 48,
+          };
+
+  let lines = headlineLines(
+    displayText,
+    config.maxChars,
+    config.maxLines,
+  );
+  let fontSize = config.fontSize;
+  let maxChars = config.maxChars;
+
+  while (!lines.length && fontSize > config.minFontSize) {
+    fontSize -= 2;
+    maxChars += 2;
+    lines = headlineLines(displayText, maxChars, config.maxLines);
+  }
+
+  if (!lines.length) {
+    return {
+      enabled: false,
+      preset: "none",
+      text: "",
+      safe: false,
+      reason: "overflow",
+      duration: 0,
+      source_preset: preset,
+    };
+  }
+
+  const panelHeight =
+    preset === "news_page"
+      ? clamp(88 + lines.length * 60, 170, 270)
+      : preset === "viral_headline"
+        ? clamp(45 + lines.length * 68, 120, 195)
+        : 140;
+
+  return {
+    ...headline,
+    enabled: true,
+    preset,
+    display_text: displayText,
+    lines,
+    font_size: fontSize,
+    panel_height: panelHeight,
+    safe: true,
+    reason: "ok",
+  };
+}
+
+function headlineEvents(lines, headlineLayout, end) {
+  if (!headlineLayout?.enabled || end <= 0) return;
+  const stop = assTime(end);
+  const text = headlineLayout.lines.map(escapeAss).join("\\\\N");
+
+  if (headlineLayout.preset === "news_page") {
+    const height = Number(headlineLayout.panel_height || 220);
     lines.push(
-      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 330 l 0 330`,
+      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\\\an7\\\\pos(0,0)\\\\p1\\\\bord0\\\\shad0\\\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
     );
     lines.push(
-      `Dialogue: 2,${assTime(0)},${stop},SocialDot,,0,0,0,,●`,
-    );
-    if (headline.page_name) {
-      lines.push(
-        `Dialogue: 2,${assTime(0)},${stop},SocialMeta,,0,0,0,,${escapeAss(headline.page_name)}`,
-      );
-    }
-    if (headline.handle) {
-      lines.push(
-        `Dialogue: 2,${assTime(0)},${stop},SocialHandle,,0,0,0,,${escapeAss(headline.handle)}`,
-      );
-    }
-    lines.push(
-      `Dialogue: 2,${assTime(0)},${stop},SocialHeadline,,0,0,0,,${text}`,
-    );
-  } else if (headline.preset === "bold_top_banner") {
-    lines.push(
-      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 210 l 0 210`,
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageLabel,,0,0,0,,{\\\\an7\\\\pos(52,28)}●  AGORA`,
     );
     lines.push(
-      `Dialogue: 2,${assTime(0)},${stop},BoldHeadline,,0,0,0,,${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageHeadline,,0,0,0,,{\\\\an8\\\\pos(540,${Math.round(height * 0.58)})\\\\fs${headlineLayout.font_size}}${text}`,
     );
-  } else if (headline.preset === "news_red_bar") {
+    return;
+  }
+
+  if (headlineLayout.preset === "viral_headline") {
+    const height = Number(headlineLayout.panel_height || 175);
     lines.push(
-      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H002929E6&}m 0 0 l 1080 0 l 1080 180 l 0 180`,
+      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\\\an7\\\\pos(0,0)\\\\p1\\\\bord0\\\\shad0\\\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
     );
     lines.push(
-      `Dialogue: 2,${assTime(0)},${stop},NewsHeadline,,0,0,0,,${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},ViralHeadline,,0,0,0,,{\\\\an8\\\\pos(540,${Math.round(height / 2)})\\\\fs${headlineLayout.font_size}}${text}`,
     );
-  } else {
+    return;
+  }
+
+  if (headlineLayout.preset === "media_split") {
     lines.push(
-      `Dialogue: 2,${assTime(0)},${stop},CleanHeadline,,0,0,0,,${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},MediaHeadline,,0,0,0,,{\\\\an5\\\\pos(540,1210)\\\\fs${headlineLayout.font_size}}${text}`,
     );
   }
 }
@@ -602,23 +821,27 @@ function headlineEvents(lines, headline, end) {
 async function writeV5Ass({ outputPath, words, plan, duration }) {
   const caption = plan?.captions || {};
   const preset = caption.preset || "dynamic_active_word";
-  const requestedMaxWords = Number(caption.max_words || 5);
-  const maxWords =
-    preset === "bold_phrase"
-      ? Math.min(requestedMaxWords, 4)
-      : Math.min(requestedMaxWords, 5);
+  const requestedMaxWords = Number(caption.max_words || 4);
+  const maxWords = Math.min(4, Math.max(2, requestedMaxWords));
   const groups = groupWords(
     words,
     maxWords,
-    preset === "bold_phrase" ? 30 : 32,
-    preset === "bold_phrase" ? 1.9 : 2.15,
+    28,
+    1.9,
   );
+  const schedule = buildCaptionSchedule(groups, duration);
+  const headlineLayout = buildHeadlineLayout(plan?.headline || {});
+  const mediaSplit =
+    headlineLayout.enabled &&
+    headlineLayout.preset === "media_split";
+
   const fontSize =
-    preset === "bold_phrase" ? 72 :
+    preset === "bold_phrase" ? 70 :
       preset === "clean_phrase" ? 62 : 66;
   const marginV =
-    caption.position === "lower" ? 245 :
-      caption.position === "center_low" ? 385 : 315;
+    mediaSplit ? 830 :
+      caption.position === "lower" ? 245 :
+        caption.position === "center_low" ? 385 : 315;
 
   const lines = [
     "[Script Info]",
@@ -632,13 +855,10 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
     `Style: Caption,Inter,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,2,90,90,${marginV},1`,
     "Style: Graphic,Inter,20,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
-    "Style: SocialDot,Inter,38,&H0067C84A,&H0067C84A,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,50,0,42,1",
-    "Style: SocialMeta,Inter,30,&H00111111,&H00111111,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,105,0,38,1",
-    "Style: SocialHandle,Inter,22,&H00777777,&H00777777,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,105,0,78,1",
-    "Style: SocialHeadline,Inter,42,&H00111111,&H00111111,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,65,65,130,1",
-    "Style: BoldHeadline,Inter,55,&H00000000,&H00000000,&H00FFFFFF,&H00000000,-1,-1,0,0,100,100,0,0,1,0,0,8,55,55,55,1",
-    "Style: NewsHeadline,Inter,44,&H00FFFFFF,&H00FFFFFF,&H002929E6,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,55,55,42,1",
-    "Style: CleanHeadline,Inter,58,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,80,80,92,1",
+    "Style: NewsPageLabel,Inter,27,&H00252525,&H00252525,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
+    "Style: NewsPageHeadline,Inter,48,&H00101010,&H00101010,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,60,60,0,1",
+    "Style: ViralHeadline,DejaVu Sans Condensed,58,&H00101010,&H00101010,&H00000000,&H00000000,-1,-1,0,0,100,100,-0.5,0,1,0,0,8,48,48,0,1",
+    "Style: MediaHeadline,DejaVu Sans Condensed,44,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00000000,-1,0,0,0,100,100,-0.2,0,1,2,0,5,45,45,0,1",
     "",
     "[Events]",
     "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -646,41 +866,32 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
 
   headlineEvents(
     lines,
-    plan?.headline || {},
-    Math.min(duration, Number(plan?.headline?.duration || 0)),
+    headlineLayout,
+    Math.min(duration, Number(headlineLayout?.duration || 0)),
   );
 
-  for (const group of groups) {
-    if (preset === "clean_phrase") {
-      const start = clamp(group[0].start, 0, duration);
-      const end = clamp(group.at(-1).end + 0.08, start + 0.1, duration);
+  if (preset === "clean_phrase") {
+    for (const window of schedule.group_windows) {
+      const group = window.group;
       const at = breakIndex(group);
       const text =
         at <= 0
           ? group.map((item) => escapeAss(item.word)).join(" ")
-          : `${group.slice(0, at).map((item) => escapeAss(item.word)).join(" ")}\\N${group.slice(at).map((item) => escapeAss(item.word)).join(" ")}`;
+          : `${group.slice(0, at).map((item) => escapeAss(item.word)).join(" ")}\\\\N${group.slice(at).map((item) => escapeAss(item.word)).join(" ")}`;
       lines.push(
-        `Dialogue: 1,${assTime(start)},${assTime(end)},Caption,,0,0,0,,${text}`,
+        `Dialogue: 1,${assTime(window.start)},${assTime(window.end)},Caption,,0,0,0,,${text}`,
       );
-      continue;
     }
-
-    for (let index = 0; index < group.length; index += 1) {
-      const item = group[index];
-      const next = group[index + 1];
-      const start = clamp(item.start, 0, duration);
-      const end = clamp(
-        Math.max(item.end, next ? next.start : item.end + 0.08),
-        start + 0.05,
-        duration,
-      );
+  } else {
+    for (const event of schedule.events) {
       lines.push(
-        `Dialogue: 1,${assTime(start)},${assTime(end)},Caption,,0,0,0,,${phrase(group, index)}`,
+        `Dialogue: 1,${assTime(event.start)},${assTime(event.end)},Caption,,0,0,0,,${phrase(event.group, event.active_index)}`,
       );
     }
   }
 
-  await writeFile(outputPath, lines.join("\n"), "utf8");
+  await writeFile(outputPath, lines.join("\\n"), "utf8");
+
   const speakerIds = [
     ...new Set(
       words
@@ -704,13 +915,21 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
   }
 
   return {
+    version: "5.1.1",
     preset,
     words: words.length,
     caption_groups: groups.length,
+    caption_events: schedule.events.length,
+    caption_overlap_count: schedule.overlap_count,
+    max_words_per_group:
+      groups.length
+        ? Math.max(...groups.map((group) => group.length))
+        : 0,
     speaker_count: speakerIds.length,
     speaker_switches: speakerSwitches,
     speaker_safe: true,
-    headline: plan?.headline || { enabled: false, preset: "none" },
+    one_caption_at_a_time: schedule.overlap_count === 0,
+    headline: headlineLayout,
   };
 }
 
@@ -718,6 +937,8 @@ function buildFilterComplex({
   shots,
   assPath,
   hasAudio,
+  mediaSplit = false,
+  outputDuration,
 }) {
   const count = shots.length;
   const filters = [];
@@ -751,19 +972,38 @@ function buildFilterComplex({
       `${shots.map((_, i) => `[v${i}][a${i}]`).join("")}` +
       `concat=n=${count}:v=1:a=1[vcat][acat]`,
     );
-    filters.push(
-      `[vcat]subtitles='${filterPath(assPath)}',format=yuv420p[vout]`,
-    );
-    filters.push(
-      `[acat]loudnorm=I=-16:TP=-1.5:LRA=11[aout]`,
-    );
   } else {
     filters.push(
       `${shots.map((_, i) => `[v${i}]`).join("")}` +
       `concat=n=${count}:v=1:a=0[vcat]`,
     );
+  }
+
+  let videoLabel = "[vcat]";
+  if (mediaSplit) {
+    const d = Math.max(0.1, Number(outputDuration || 0)).toFixed(3);
     filters.push(
-      `[vcat]subtitles='${filterPath(assPath)}',format=yuv420p[vout]`,
+      `[vcat]scale=1080:1140:force_original_aspect_ratio=increase,crop=1080:1140,setsar=1[vtop]`,
+    );
+    filters.push(
+      `[1:v]scale=1080:640:force_original_aspect_ratio=increase,crop=1080:640,trim=duration=${d},setpts=PTS-STARTPTS,setsar=1[vbottom]`,
+    );
+    filters.push(
+      `color=c=0xE21D2B:s=1080x140:r=25:d=${d}[vbar]`,
+    );
+    filters.push(
+      "[vtop][vbar][vbottom]vstack=inputs=3[vlayout]",
+    );
+    videoLabel = "[vlayout]";
+  }
+
+  filters.push(
+    `${videoLabel}subtitles='${filterPath(assPath)}',format=yuv420p[vout]`,
+  );
+
+  if (hasAudio) {
+    filters.push(
+      "[acat]loudnorm=I=-16:TP=-1.5:LRA=11[aout]",
     );
   }
 
@@ -778,6 +1018,7 @@ async function runFfmpeg({
   outputDuration,
   filterComplex,
   hasAudio,
+  supportingFrame = null,
   report,
 }) {
   const args = [
@@ -786,10 +1027,21 @@ async function runFfmpeg({
     "-y",
     "-ss", String(clipStart),
     "-i", master,
+  ];
+
+  if (supportingFrame) {
+    args.push(
+      "-loop", "1",
+      "-framerate", "25",
+      "-i", supportingFrame,
+    );
+  }
+
+  args.push(
     "-t", String(clipDuration),
     "-filter_complex", filterComplex,
     "-map", "[vout]",
-  ];
+  );
 
   if (hasAudio) args.push("-map", "[aout]");
 
@@ -876,6 +1128,86 @@ async function runFfmpeg({
         reject(
           new Error(
             `FFmpeg V5 falhou (${code}): ${stderr.slice(-2200)}`,
+          ),
+        );
+      }
+    });
+  });
+}
+
+
+function selectSupportingFrameTime(plan, vision, duration) {
+  const safeDuration = Math.max(0.5, Number(duration || 0));
+  const reaction = (Array.isArray(plan?.beats) ? plan.beats : [])
+    .filter(
+      (beat) =>
+        beat?.type === "reaction" &&
+        Number(beat.time) >= 0.25 &&
+        Number(beat.time) <= safeDuration - 0.25,
+    )
+    .sort((a, b) => Number(b.strength || 0) - Number(a.strength || 0))[0];
+
+  if (reaction) {
+    return clamp(Number(reaction.time), 0.25, safeDuration - 0.25);
+  }
+
+  const camera = (Array.isArray(vision?.camera) ? vision.camera : [])
+    .filter(
+      (point) =>
+        Number(point.time) >= 0.25 &&
+        Number(point.time) <= safeDuration - 0.25,
+    )
+    .sort(
+      (a, b) =>
+        Number(b.confidence || 0) -
+        Number(a.confidence || 0),
+    )[0];
+
+  if (camera) {
+    return clamp(Number(camera.time), 0.25, safeDuration - 0.25);
+  }
+
+  return clamp(
+    Math.min(2, safeDuration * 0.33),
+    0.25,
+    Math.max(0.25, safeDuration - 0.25),
+  );
+}
+
+async function extractSupportingFrame({
+  master,
+  absoluteTime,
+  outputPath,
+}) {
+  await new Promise((resolve, reject) => {
+    const child = spawn(
+      "ffmpeg",
+      [
+        "-hide_banner",
+        "-loglevel", "error",
+        "-y",
+        "-ss", String(Math.max(0, absoluteTime)),
+        "-i", master,
+        "-frames:v", "1",
+        "-vf",
+        "scale=1080:-2:force_original_aspect_ratio=decrease",
+        "-q:v", "2",
+        outputPath,
+      ],
+      { stdio: ["ignore", "ignore", "pipe"] },
+    );
+
+    let stderr = "";
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) resolve();
+      else {
+        reject(
+          new Error(
+            `V5.1.1 supporting frame falhou (${code}): ${stderr.slice(-1000)}`,
           ),
         );
       }
@@ -1005,17 +1337,47 @@ export async function renderEditorialV5({
       `${captionMeta.words} palavras · ${captionMeta.caption_groups} grupos`,
   });
 
+  const mediaSplit =
+    captionMeta?.headline?.enabled === true &&
+    captionMeta?.headline?.preset === "media_split";
+  let supportingFrame = null;
+  let supportingVisual = null;
+
+  if (mediaSplit) {
+    const relativeTime = selectSupportingFrameTime(
+      plan,
+      vision,
+      clipDuration,
+    );
+    supportingFrame = join(
+      dir,
+      `${revision.id}-headline-support-v511.jpg`,
+    );
+    await extractSupportingFrame({
+      master,
+      absoluteTime: clipStart + relativeTime,
+      outputPath: supportingFrame,
+    });
+    supportingVisual = {
+      source: "clip_freeze_frame",
+      relative_time_seconds:
+        Number(relativeTime.toFixed(3)),
+    };
+  }
+
   const filterComplex = buildFilterComplex({
     shots,
     assPath,
     hasAudio: Boolean(sourceMeta.hasAudio),
+    mediaSplit,
+    outputDuration,
   });
 
   await report({
     phase: "render",
     phase_pct: 0,
     detail:
-      `V5 hard-cut renderer · ${shots.length} decisões visuais`,
+      `V5.1.1 hard-cut renderer · ${shots.length} decisões visuais · headline ${captionMeta?.headline?.preset || "none"}`,
   });
 
   await runFfmpeg({
@@ -1026,6 +1388,7 @@ export async function renderEditorialV5({
     outputDuration,
     filterComplex,
     hasAudio: Boolean(sourceMeta.hasAudio),
+    supportingFrame,
     report,
   });
 
@@ -1064,7 +1427,8 @@ export async function renderEditorialV5({
         content_ranges: contentRanges,
         shot_count: shots.length,
         shots,
-        headline: plan.headline,
+        headline: captionMeta.headline,
+        supporting_visual: supportingVisual,
         captions: captionMeta,
         alternatives_available:
           Array.isArray(v5?.alternatives)
@@ -1088,5 +1452,8 @@ export const __v5Test = {
   buildShots,
   cropForShot,
   groupWords,
+  buildCaptionSchedule,
+  buildHeadlineLayout,
+  selectSupportingFrameTime,
   attachVisionSpeakers,
 };

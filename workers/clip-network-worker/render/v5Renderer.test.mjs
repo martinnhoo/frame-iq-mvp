@@ -96,3 +96,54 @@ test("V5.1 preserves diarized speaker IDs through retiming", () => {
   assert.equal(mapped[0].speaker_id, "A");
   assert.equal(mapped[1].speaker_id, "A");
 });
+
+
+test("V5.1.1 caption scheduler has zero overlap", () => {
+  const words = [
+    { word: "Você", start: 0.00, end: 0.22, speaker_id: "A" },
+    { word: "não", start: 0.23, end: 0.38, speaker_id: "A" },
+    { word: "vai", start: 0.39, end: 0.52, speaker_id: "A" },
+    { word: "fazer", start: 0.53, end: 0.72, speaker_id: "A" },
+    { word: "o", start: 0.73, end: 0.80, speaker_id: "B" },
+    { word: "quê?", start: 0.81, end: 1.02, speaker_id: "B" },
+  ];
+
+  const groups = __v5Test.groupWords(words, 4, 28, 1.9);
+  assert.ok(groups.every((group) => group.length <= 4));
+  assert.equal(groups.length, 2);
+
+  const schedule = __v5Test.buildCaptionSchedule(groups, 1.2);
+  assert.equal(schedule.overlap_count, 0);
+  for (let index = 1; index < schedule.events.length; index += 1) {
+    assert.ok(
+      schedule.events[index].start_cs >=
+      schedule.events[index - 1].end_cs,
+    );
+  }
+});
+
+test("V5.1.1 headline layouts match the three editorial presets", () => {
+  for (const preset of ["news_page", "viral_headline", "media_split"]) {
+    const layout = __v5Test.buildHeadlineLayout({
+      enabled: true,
+      preset,
+      text: "Lucas surpreendeu todo mundo",
+      emoji: "😳",
+      duration: 2.7,
+    });
+    assert.equal(layout.enabled, true);
+    assert.equal(layout.preset, preset);
+    assert.ok(layout.lines.length >= 1);
+    assert.ok(layout.lines.length <= (preset === "news_page" ? 3 : 2));
+    assert.equal(layout.safe, true);
+  }
+});
+
+test("V5.1.1 media split chooses a grounded clip frame", () => {
+  const time = __v5Test.selectSupportingFrameTime(
+    { beats: [{ type: "reaction", time: 2.4, strength: 0.9 }] },
+    { camera: [{ time: 1.2, confidence: 0.95 }] },
+    8,
+  );
+  assert.equal(time, 2.4);
+});
