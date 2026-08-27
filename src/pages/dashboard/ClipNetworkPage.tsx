@@ -337,32 +337,17 @@ export default function ClipNetworkPage() {
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
-  const uploadTestClip = async (file:File) => {
-    if(!primaryAccount) return; setBusy("upload"); setError(null);
-    try {
-      const {data:{user}}=await supabase.auth.getUser(); if(!user) throw new Error("Faça login novamente");
-      const id=crypto.randomUUID(); const path=`${user.id}/manual-${id}.mp4`;
-      const {error:upErr}=await supabase.storage.from("clip-network").upload(path,file,{contentType:file.type||"video/mp4",upsert:false}); if(upErr)throw upErr;
-      const {data:pub}=supabase.storage.from("clip-network").getPublicUrl(path);
-      const {data:clip,error:cErr}=await db.from("clips").insert({user_id:user.id,clip_account_id:primaryAccount.id,hook:"Teste de publicação",caption:testCaption,score:100,status:"approved",render_status:"not_needed",rendered_storage_path:path,rendered_url:pub.publicUrl}).select("*").single(); if(cErr)throw cErr;
-      if(instagram){ await db.from("clip_publications").insert({user_id:user.id,clip_id:clip.id,social_account_id:instagram.id,platform:"instagram",status:"queued",scheduled_at:new Date().toISOString()}); }
-      await load();
-    }catch(e:any){setError(e.message||String(e));}finally{setBusy(null); if(fileRef.current)fileRef.current.value="";}
-  };
-
   const publishNow = async (clip:Clip) => {
     if(!instagram){setError("Conecte o Instagram antes de publicar.");return;} setBusy(`publish:${clip.id}`); setError(null);
     try{
-      const {data:{user}}=await supabase.auth.getUser(); if(!user)throw new Error("Faça login novamente");
-      let pub=publicationByClip.get(clip.id);
-      if(!pub){const {data,error:e}=await db.from("clip_publications").insert({user_id:user.id,clip_id:clip.id,social_account_id:instagram.id,platform:"instagram",status:"queued",scheduled_at:new Date().toISOString()}).select("*").single();if(e)throw e;pub=data;}
-      const {data,error:e}=await supabase.functions.invoke("clip-network-publish-instagram",{body:{publication_id:pub.id,action:"publish"}});if(e)throw e;if(data?.error)throw new Error(data.error);await load();
+      await clipBridge(CLIP_INSTAGRAM_PUBLISH_URL,{action:"publish",clip_id:clip.id,social_account_id:instagram.id});
+      await load();
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
   const approve = async (clip:Clip) => {
     setBusy(`approve:${clip.id}`); setError(null);
-    try{const data=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"approve",payload:{clip_id:clip.id}});setReviewMessage("Momento aprovado. Criando as três variantes v1…");await load();}
+    try{await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"approve",payload:{clip_id:clip.id}});setReviewMessage("Momento aprovado. AI Editor preparando a edição final…");await load();}
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
   const reject = async (clip:Clip) => {
