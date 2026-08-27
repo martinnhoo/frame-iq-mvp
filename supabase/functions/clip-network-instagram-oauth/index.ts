@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Meta Graph responses are runtime payloads. */
-import { clipCors, json, requireClipUser, signClipState, verifyClipState } from "../_shared/clip-network.ts";
+import { clipCors, json, requireClipBridgeUser } from "../_shared/clip-network-bridge.ts";
+import { signClipState, verifyClipState } from "../_shared/clip-network.ts";
 import { buildInstagramAuthorizationUrl } from "./oauth-url.ts";
 
 const APP_URL = (Deno.env.get("APP_URL") || "https://adbrief.pro").replace(/\/+$/, "");
@@ -11,7 +12,7 @@ const REDIRECT_URI = `${APP_URL}/dashboard/clips/connect/instagram/callback`;
 const SCOPES = ["instagram_business_basic", "instagram_business_content_publish"].join(",");
 
 async function currentUser(req: Request) {
-  return await requireClipUser(req);
+  return await requireClipBridgeUser(req);
 }
 
 Deno.serve(async (req) => {
