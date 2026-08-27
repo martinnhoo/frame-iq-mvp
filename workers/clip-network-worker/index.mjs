@@ -1,40 +1,44 @@
 /**
- * AdBrief Clip Network â€” worker da mÃ¡quina de cortes.
+ * AdBrief Clip Network Ã¢â‚¬â€ worker da mÃƒÂ¡quina de cortes.
  *
- * Um vÃ­deo por vez, do comeÃ§o ao fim, sem clique humano:
+ * Um vÃƒÂ­deo por vez, do comeÃƒÂ§o ao fim, sem clique humano:
  *
- *   descoberto â†’ baixando â†’ transcrevendo â†’ analisando â†’ renderizando â†’ concluÃ­do
+ *   descoberto Ã¢â€ â€™ baixando Ã¢â€ â€™ transcrevendo Ã¢â€ â€™ analisando Ã¢â€ â€™ renderizando Ã¢â€ â€™ concluÃƒÂ­do
  *
- * DivisÃ£o de responsabilidade (mudou de propÃ³sito):
- * - Fly: yt-dlp, ffmpeg, disco temporÃ¡rio. Nada mais.
- * - Lovable/Supabase: banco, storage privilegiado e IA (Gemini), atrÃ¡s da edge
+ * DivisÃƒÂ£o de responsabilidade (mudou de propÃƒÂ³sito):
+ * - Fly: yt-dlp, ffmpeg, disco temporÃƒÂ¡rio. Nada mais.
+ * - Lovable/Supabase: banco, storage privilegiado e IA (Gemini), atrÃƒÂ¡s da edge
  *   function clip-worker-gateway.
- * O worker conhece apenas SUPABASE_URL e CLIP_WORKER_SECRET â€” nem service role
- * nem chave de IA existem nesta mÃ¡quina.
+ * O worker conhece apenas SUPABASE_URL e CLIP_WORKER_SECRET Ã¢â‚¬â€ nem service role
+ * nem chave de IA existem nesta mÃƒÂ¡quina.
  *
- * Regras que o cÃ³digo respeita e que nÃ£o sÃ£o negociÃ¡veis:
- * - SÃ³ processa vÃ­deo cuja FONTE estÃ¡ marcada como autorizada (rights_confirmed).
- * - O master vive apenas no filesystem temporÃ¡rio do worker e Ã© apagado no fim.
- * - Nada Ã© publicado em rede social aqui. Autopilot nesta fase significa
+ * Regras que o cÃƒÂ³digo respeita e que nÃƒÂ£o sÃƒÂ£o negociÃƒÂ¡veis:
+ * - SÃƒÂ³ processa vÃƒÂ­deo cuja FONTE estÃƒÂ¡ marcada como autorizada (rights_confirmed).
+ * - O master vive apenas no filesystem temporÃƒÂ¡rio do worker e ÃƒÂ© apagado no fim.
+ * - Nada ÃƒÂ© publicado em rede social aqui. Autopilot nesta fase significa
  *   "deixar os cortes prontos sozinho".
- * - O bucket Ã© privado: o worker grava o caminho, nÃ£o uma URL pÃºblica.
- * - IdempotÃªncia: candidato tem dedupe_key, vÃ­deo concluÃ­do nÃ£o volta para a
+ * - O bucket ÃƒÂ© privado: o worker grava o caminho, nÃƒÂ£o uma URL pÃƒÂºblica.
+ * - IdempotÃƒÂªncia: candidato tem dedupe_key, vÃƒÂ­deo concluÃƒÂ­do nÃƒÂ£o volta para a
  *   fila, e o lock com lease permite recuperar job abandonado.
  */
 import { spawn } from "node:child_process";
 import { hostname } from "node:os";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { resolveMedia, probeDuration, MediaResolverError } from "./mediaResolver.mjs";
-import { call, storageShim, uploadBytes } from "./gateway.mjs";
+import { call, callFunction, storageShim, uploadBytes } from "./gateway.mjs";
 import { normalizeRenderSettings, revisionStoragePath } from "./render/config.mjs";
-import { writeAssCaptions } from "./render/captions.mjs";
-import { buildAudioFilter, buildVideoFilter } from "./render/filters.mjs";
+import { buildRemotionCaptionPages } from "./render/captions.mjs";
+import { buildAudioFilter, buildBaseVideoFilter } from "./render/filters.mjs";
+import { renderCaptionedVideo, renderEditorialVideo } from "./render/remotionRenderer.mjs";
+import { buildVisualPlan } from "./render/visualDirector.mjs";
+import { renderEditorialV4 } from "./render/v4Renderer.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const WORKER_SECRET = process.env.CLIP_WORKER_SECRET;
 const BUCKET = process.env.CLIP_BUCKET || "clip-network";
 const POLL_MS = Number(process.env.CLIP_WORKER_POLL_MS || 30000);
+const IDLE_SHUTDOWN_MS = Number(process.env.CLIP_IDLE_SHUTDOWN_MS || 90000);
 const LEASE_SECS = Number(process.env.CLIP_LEASE_SECONDS || 900);
 const TMP_ROOT = process.env.CLIP_TMP_DIR || "/data/tmp";
 const WORKER_ID = process.env.CLIP_WORKER_ID || `clip-worker-${hostname()}`;
@@ -48,7 +52,7 @@ const log = (...a) => console.log(`[clip-worker ${new Date().toISOString()}]`, .
 const nowIso = () => new Date().toISOString();
 
 let shuttingDown = false;
-process.on("SIGTERM", () => { shuttingDown = true; log("SIGTERM: encerrando apÃ³s o job atual"); });
+process.on("SIGTERM", () => { shuttingDown = true; log("SIGTERM: encerrando apÃƒÂ³s o job atual"); });
 process.on("SIGINT", () => { shuttingDown = true; });
 
 function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
@@ -70,7 +74,7 @@ function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
 const updateVideo = (videoId, patch) => call("update_video", { video_id: videoId, patch });
 const updateRevision = (revisionId, patch) => call("update_revision", { revision_id: revisionId, patch });
 
-// â”€â”€ Estado do pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Estado do pipeline Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function setStage(videoId, stage, detail) {
   await call("touch_lease", {
@@ -79,7 +83,7 @@ async function setStage(videoId, stage, detail) {
   });
 }
 
-/** Heartbeat: renova o lease a 1/3 do tempo para o reaper nÃ£o roubar o job em curso. */
+/** Heartbeat: renova o lease a 1/3 do tempo para o reaper nÃƒÂ£o roubar o job em curso. */
 function startHeartbeat(videoId, getStage) {
   const interval = setInterval(() => {
     setStage(videoId, getStage(), null).catch((e) => log("heartbeat falhou", e?.message));
@@ -92,7 +96,7 @@ async function claimJob() {
   return job || null;
 }
 
-// â”€â”€ TranscriÃ§Ã£o (Gemini, via gateway) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ TranscriÃƒÂ§ÃƒÂ£o (Gemini, via gateway) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function transcribe(input, dir) {
   const audioDir = join(dir, "audio");
@@ -122,7 +126,7 @@ async function transcribe(input, dir) {
 
   if (!files.length) {
     throw new Error(
-      "Nenhum áudio extraído do master"
+      "Nenhum Ã¡udio extraÃ­do do master"
     );
   }
 
@@ -136,9 +140,9 @@ async function transcribe(input, dir) {
     const chunkPath =
       join(audioDir,file);
 
-    // Fundamental para não acumular drift entre chunks:
-    // o offset é a duração REAL do arquivo, não o fim
-    // da última palavra falada.
+    // Fundamental para nÃ£o acumular drift entre chunks:
+    // o offset Ã© a duraÃ§Ã£o REAL do arquivo, nÃ£o o fim
+    // da Ãºltima palavra falada.
     const chunkDuration =
       await probeDuration(chunkPath);
 
@@ -231,97 +235,7 @@ async function transcribe(input, dir) {
   };
 }
 
-// ── Render ──────────────────────────────────────────────────
-
-function srtTime(seconds) {
-  const ms = Math.max(0, Math.round(seconds * 1000));
-  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), s = Math.floor((ms % 60000) / 1000), x = ms % 1000;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")},${String(x).padStart(3, "0")}`;
-}
-
-// Legenda estilo Reels/Shorts: blocos curtos, no mÃ¡ximo 2 linhas, sem custo de IA.
-const CAPTION_TARGET_WORDS = 4;   // alvo por bloco
-const CAPTION_MAX_WORDS = 5;      // teto duro por bloco
-const CAPTION_MAX_LINE_CHARS = 24; // largura confortÃ¡vel no 1080x1920
-
-/** Limpa espaÃ§os/quebras que vÃªm da transcriÃ§Ã£o sem tocar na pontuaÃ§Ã£o. */
-function normalizeCaptionText(text) {
-  return String(text || "").replace(/\s+/g, " ").trim();
-}
-
-/** Quebra por frases/pausas primeiro: pontuaÃ§Ã£o manda mais que contagem de palavras. */
-function splitBySentences(text) {
-  return text
-    .split(/(?<=[.!?â€¦]|[,;:])\s+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-}
-
-/** Agrupa palavras em blocos curtos, evitando bloco final com 1 palavra solta. */
-function buildChunks(text) {
-  const chunks = [];
-  for (const phrase of splitBySentences(normalizeCaptionText(text))) {
-    const words = phrase.split(" ").filter(Boolean);
-    if (!words.length) continue;
-    // Distribui de forma equilibrada em vez de encher e deixar sobra.
-    const parts = Math.max(1, Math.ceil(words.length / CAPTION_TARGET_WORDS));
-    const per = Math.min(CAPTION_MAX_WORDS, Math.ceil(words.length / parts));
-    let i = 0;
-    while (i < words.length) {
-      let take = Math.min(per, words.length - i);
-      // Sobraria uma palavra solta no prÃ³ximo bloco? Puxa uma para trÃ¡s.
-      if (words.length - (i + take) === 1 && take > 1) take -= 1;
-      chunks.push(words.slice(i, i + take));
-      i += take;
-    }
-  }
-  return chunks;
-}
-
-/** No mÃ¡ximo 2 linhas, balanceadas para nÃ£o deixar uma palavra sozinha embaixo. */
-function layoutLines(words) {
-  const single = words.join(" ");
-  if (single.length <= CAPTION_MAX_LINE_CHARS || words.length < 2) return single;
-  let best = null;
-  for (let cut = 1; cut < words.length; cut++) {
-    const a = words.slice(0, cut).join(" ");
-    const b = words.slice(cut).join(" ");
-    const cost = Math.abs(a.length - b.length) + Math.max(0, a.length - CAPTION_MAX_LINE_CHARS) * 4
-      + Math.max(0, b.length - CAPTION_MAX_LINE_CHARS) * 4;
-    if (!best || cost < best.cost) best = { cost, text: `${a}\n${b}` };
-  }
-  return best.text;
-}
-
-/** Reparte o tempo do segmento entre os blocos proporcionalmente Ã s palavras, sem gap/overlap. */
-function chunkSegment(segment) {
-  const chunks = buildChunks(segment.text);
-  if (!chunks.length) return [];
-  const total = chunks.reduce((n, c) => n + c.length, 0);
-  const segStart = Number(segment.start) || 0;
-  const segEnd = Math.max(segStart, Number(segment.end) || segStart);
-  const span = segEnd - segStart;
-  const cues = [];
-  let acc = 0;
-  for (const chunk of chunks) {
-    const from = segStart + (span * acc) / total;
-    acc += chunk.length;
-    const to = segStart + (span * acc) / total;
-    cues.push({ start: from, end: to, text: layoutLines(chunk) });
-  }
-  return cues;
-}
-
-async function writeSrt(transcript, start, end, file) {
-  const cues = (transcript?.segments || [])
-    .filter((s) => s.end > start && s.start < end)
-    .flatMap(chunkSegment)
-    .filter((c) => c.end > start && c.start < end && c.text);
-  const rows = cues
-    .map((c, i) => `${i + 1}\n${srtTime(Math.max(0, c.start - start))} --> ${srtTime(Math.min(end - start, c.end - start))}\n${c.text}\n`)
-    .join("\n");
-  await writeFile(file, rows || "1\n00:00:00,000 --> 00:00:03,000\n \n");
-}
+// â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function probeMedia(file) {
   const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file], { timeoutMs: 60_000 });
@@ -349,43 +263,555 @@ async function detectConservativeEdges(master, start, end, hasAudio) {
       ? Math.min(0.75, end - start - trailingStart) : 0;
     return { start: start + Math.max(0, leading), end: end - Math.max(0, trailing) };
   } catch (error) {
-    log("análise conservadora de silêncio ignorada", error?.message || error);
+    log("anÃ¡lise conservadora de silÃªncio ignorada", error?.message || error);
     return { start, end };
   }
 }
 
-async function renderRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds) {
-  const settings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
-  settings.startSeconds = effectiveBounds?.start ?? settings.startSeconds;
-  settings.endSeconds = effectiveBounds?.end ?? settings.endSeconds;
+async function prepareBaseClip(
+  master,
+  out,
+  settings,
+  sourceMeta,
+) {
+  const duration =
+    settings.endSeconds -
+    settings.startSeconds;
+
+  const args = [
+    "-y",
+    "-ss", String(settings.startSeconds),
+    "-i", master,
+    "-t", String(duration),
+
+    "-map", "0:v:0",
+  ];
+
+  if (sourceMeta.hasAudio) {
+    args.push(
+      "-map", "0:a:0?",
+    );
+  }
+
+  args.push(
+    "-vf", buildBaseVideoFilter(settings.editPlan),
+
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-crf", "18",
+    "-pix_fmt", "yuv420p",
+  );
+
+  if (sourceMeta.hasAudio) {
+    args.push(
+      "-c:a", "aac",
+      "-b:a", "128k",
+    );
+
+    if (settings.audio.normalize) {
+      args.push(
+        "-af",
+        buildAudioFilter(duration),
+      );
+    }
+  } else {
+    args.push("-an");
+  }
+
+  args.push(
+    "-movflags",
+    "+faststart",
+    out,
+  );
+
+  await run("ffmpeg", args);
+}
+
+async function renderRevision(
+  master,
+  clip,
+  variant,
+  revision,
+  transcript,
+  dir,
+  sourceMeta,
+  effectiveBounds,
+) {
+  let parameters = revision.parameters || {};
+
+  if (variant.variant_key === "editorial_master") {
+    try {
+      parameters = await buildVisualPlan({
+        run,
+        callFunction,
+        master,
+        clip,
+        revision,
+        dir,
+        sourceMeta,
+        log,
+      });
+    } catch (error) {
+      log(
+        `[clip ${clip.id}] AI Editor v3 indisponivel; fallback v2:`,
+        error?.message || error,
+      );
+    }
+  }
+
+  const settings = normalizeRenderSettings(
+    variant.variant_key,
+    parameters,
+    clip,
+  );
+
+  if (variant.variant_key !== "editorial_master") {
+    settings.startSeconds = effectiveBounds?.start ?? settings.startSeconds;
+    settings.endSeconds = effectiveBounds?.end ?? settings.endSeconds;
+  }
+
   const duration = settings.endSeconds - settings.startSeconds;
-  if (duration <= 0) throw new Error("Janela de render inválida");
+  if (duration <= 0) throw new Error("Janela de render invalida");
 
   const out = join(dir, `${revision.id}.mp4`);
-  const ass = settings.captions.enabled ? join(dir, `${revision.id}.ass`) : null;
-  if (ass) await writeAssCaptions(transcript, settings, ass);
-  const filter = buildVideoFilter({ variantKey: variant.variant_key, settings, assPath: ass, fps: sourceMeta.fps, source: sourceMeta });
-  const args = ["-y", "-ss", String(settings.startSeconds), "-i", master, "-t", String(duration),
-    "-filter_complex", filter, "-map", "[v]", "-map", "0:a?",
-    "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p",
-    "-c:a", "aac", "-b:a", "128k"];
-  if (sourceMeta.hasAudio) args.push("-af", buildAudioFilter(duration));
-  args.push("-movflags", "+faststart", out);
-  await run("ffmpeg", args);
+  const base = join(dir, `${revision.id}-base.mp4`);
+
+  try {
+    await prepareBaseClip(master, base, settings, sourceMeta);
+
+    const pages = settings.captions.enabled
+      ? buildRemotionCaptionPages(
+          transcript,
+          settings.startSeconds,
+          settings.endSeconds,
+          settings.captions.text,
+          settings.captions,
+        )
+      : [];
+
+    if (variant.variant_key === "editorial_master") {
+      await renderEditorialVideo({
+        inputVideo: base,
+        outputVideo: out,
+        pages,
+        durationSeconds: duration,
+        captionSettings: settings.captions,
+        editPlan: parameters || {},
+      });
+    } else if (settings.captions.enabled) {
+      await renderCaptionedVideo({
+        inputVideo: base,
+        outputVideo: out,
+        pages,
+        durationSeconds: duration,
+        captionSettings: settings.captions,
+      });
+    } else {
+      await rm(out, { force: true });
+      await prepareBaseClip(master, out, settings, sourceMeta);
+    }
+  } finally {
+    await rm(base, { force: true });
+  }
 
   const output = await probeMedia(out);
-  if (!output.hasVideo || output.width !== 1080 || output.height !== 1920 || output.duration <= 0) {
-    throw new Error(`MP4 inválido: ${output.width}x${output.height}, duração ${output.duration || 0}`);
+
+  if (
+    !output.hasVideo ||
+    output.width !== 1080 ||
+    output.height !== 1920 ||
+    output.duration <= 0
+  ) {
+    throw new Error(
+      `MP4 invalido: ${output.width}x${output.height}, duracao ${output.duration || 0}`,
+    );
   }
-  if (sourceMeta.hasAudio && !output.hasAudio) throw new Error("MP4 inválido: faixa de áudio ausente");
-  return { out, settings };
+
+  if (sourceMeta.hasAudio && !output.hasAudio) {
+    throw new Error("MP4 invalido: faixa de audio ausente");
+  }
+
+  return { out, settings, parameters };
 }
 
 /**
- * Renderiza e sobe. O bucket Ã© privado de propÃ³sito: gravamos apenas o caminho
+ * Renderiza e sobe. O bucket ÃƒÂ© privado de propÃƒÂ³sito: gravamos apenas o caminho
  * e o dashboard pede uma signed URL na hora de assistir/baixar. Persistir uma
  * URL assinada no banco criaria um link que expira e vira erro silencioso.
  */
+
+async function renderAndUploadV4Revision(
+  clip,
+  variant,
+  revision,
+  video,
+  source,
+  dir,
+) {
+  const startedAtMs = Date.now();
+  let parameters = {
+    ...(revision.parameters || {}),
+    editor: "ai_editor_v4_open_source",
+    editor_version: 4,
+    renderer: "ffmpeg_one_pass_v4",
+  };
+  let activePhase = null;
+  let activePhaseStartedAt = null;
+  const phaseTimings = {
+    ...(parameters?.v4_progress?.phase_timings || {}),
+  };
+  let lastPersistAt = 0;
+  let lastPersistPct = -1;
+
+  const ranges = {
+    acquire: [0, 10],
+    vision: [10, 45],
+    captions: [45, 50],
+    render: [50, 95],
+    qa: [95, 98],
+    upload: [98, 100],
+    done: [100, 100],
+    error: [0, 0],
+  };
+
+  const closePhase = (phase, now) => {
+    if (!phase || !activePhaseStartedAt) return;
+    const existing = phaseTimings[phase] || {};
+    phaseTimings[phase] = {
+      ...existing,
+      started_at:
+        existing.started_at ||
+        new Date(activePhaseStartedAt).toISOString(),
+      finished_at: new Date(now).toISOString(),
+      duration_ms:
+        Number(existing.duration_ms || 0) +
+        Math.max(0, now - activePhaseStartedAt),
+    };
+  };
+
+  const report = async (event = {}, force = false) => {
+    const now = Date.now();
+    const phase = String(event.phase || activePhase || "acquire");
+    const phasePct = Math.max(
+      0,
+      Math.min(100, Number(event.phase_pct ?? 0)),
+    );
+
+    if (phase !== activePhase) {
+      closePhase(activePhase, now);
+      activePhase = phase;
+      activePhaseStartedAt = now;
+      phaseTimings[phase] = {
+        ...(phaseTimings[phase] || {}),
+        started_at:
+          phaseTimings[phase]?.started_at ||
+          new Date(now).toISOString(),
+      };
+      force = true;
+    }
+
+    const range = ranges[phase] || [0, 100];
+    const overallPct =
+      phase === "done"
+        ? 100
+        : phase === "error"
+          ? Number(parameters?.v4_progress?.overall_pct || 0)
+          : range[0] +
+            ((range[1] - range[0]) * phasePct) / 100;
+
+    const elapsedMs = Math.max(0, now - startedAtMs);
+
+    parameters = {
+      ...parameters,
+      v4_progress: {
+        version: 4,
+        phase,
+        phase_pct: Number(phasePct.toFixed(2)),
+        overall_pct: Number(overallPct.toFixed(2)),
+        detail: event.detail || null,
+        current:
+          event.current === undefined ? null : event.current,
+        total:
+          event.total === undefined ? null : event.total,
+        eta_seconds:
+          event.eta_seconds === undefined
+            ? null
+            : event.eta_seconds,
+        started_at:
+          parameters?.v4_progress?.started_at ||
+          new Date(startedAtMs).toISOString(),
+        updated_at: new Date(now).toISOString(),
+        elapsed_ms: elapsedMs,
+        phase_timings: phaseTimings,
+      },
+    };
+
+    const shouldPersist =
+      force ||
+      now - lastPersistAt >= 1500 ||
+      Math.floor(overallPct) >= lastPersistPct + 2;
+
+    if (!shouldPersist) return;
+
+    lastPersistAt = now;
+    lastPersistPct = Math.floor(overallPct);
+
+    await updateRevision(revision.id, {
+      render_status: "rendering",
+      locked_by: WORKER_ID,
+      lease_expires_at: new Date(
+        Date.now() + LEASE_SECS * 1000,
+      ).toISOString(),
+      parameters,
+      last_error: null,
+    });
+  };
+
+  await updateRevision(revision.id, {
+    render_status: "rendering",
+    locked_by: WORKER_ID,
+    lease_expires_at: new Date(
+      Date.now() + LEASE_SECS * 1000,
+    ).toISOString(),
+    render_attempts:
+      Number(revision.render_attempts || 0) + 1,
+    parameters,
+    last_error: null,
+  });
+
+  let out = null;
+
+  try {
+    await report(
+      {
+        phase: "acquire",
+        phase_pct: 0,
+        detail: "Obtendo master do cache/fonte",
+      },
+      true,
+    );
+
+    const { path: master, strategy } = await resolveMedia({
+      video,
+      source,
+      dir,
+      supabase: storageShim,
+      bucket: BUCKET,
+      onProgress: (detail) => {
+        const match = /(\d+(?:\.\d+)?)%/.exec(
+          String(detail || ""),
+        );
+        const phasePct = match
+          ? Math.max(0, Math.min(99, Number(match[1])))
+          : 15;
+        return report({
+          phase: "acquire",
+          phase_pct: phasePct,
+          detail: String(detail || "obtendo master"),
+        }).catch(() => {});
+      },
+    });
+
+    await report(
+      {
+        phase: "acquire",
+        phase_pct: 100,
+        detail: `Master pronto via ${strategy}`,
+      },
+      true,
+    );
+
+    const sourceMeta = await probeMedia(master);
+    const transcript = video.transcript || {};
+
+    const rendered = await renderEditorialV4({
+      master,
+      clip,
+      revision: {
+        ...revision,
+        parameters,
+      },
+      transcript,
+      dir,
+      sourceMeta,
+      report,
+    });
+
+    out = rendered.out;
+    parameters = {
+      ...parameters,
+      ...(rendered.parameters || {}),
+      v4_progress: parameters.v4_progress,
+    };
+
+    await report(
+      {
+        phase: "qa",
+        phase_pct: 0,
+        detail: "Validando MP4 final",
+      },
+      true,
+    );
+
+    const output = await probeMedia(out);
+
+    if (
+      !output.hasVideo ||
+      output.width !== 1080 ||
+      output.height !== 1920 ||
+      output.duration <= 0
+    ) {
+      throw new Error(
+        `MP4 v4 invalido: ${output.width}x${output.height}, duracao ${output.duration || 0}`,
+      );
+    }
+
+    if (sourceMeta.hasAudio && !output.hasAudio) {
+      throw new Error(
+        "MP4 v4 invalido: faixa de audio ausente",
+      );
+    }
+
+    await report(
+      {
+        phase: "qa",
+        phase_pct: 100,
+        detail:
+          `${output.width}x${output.height} · ${output.duration.toFixed(1)}s`,
+      },
+      true,
+    );
+
+    const storagePath = revisionStoragePath(
+      clip.user_id,
+      clip.id,
+      variant.variant_key,
+      revision.revision_number,
+    );
+
+    await report(
+      {
+        phase: "upload",
+        phase_pct: 0,
+        detail: "Enviando MP4 para o Supabase Storage",
+      },
+      true,
+    );
+
+    await uploadBytes(
+      storagePath,
+      await readFile(out),
+      "video/mp4",
+    );
+
+    await report(
+      {
+        phase: "upload",
+        phase_pct: 100,
+        detail: "Upload concluido",
+      },
+      true,
+    );
+
+    const finishedAtMs = Date.now();
+    closePhase(activePhase, finishedAtMs);
+
+    parameters = {
+      ...parameters,
+      render_duration_ms:
+        finishedAtMs - startedAtMs,
+      render_started_at:
+        new Date(startedAtMs).toISOString(),
+      render_finished_at:
+        new Date(finishedAtMs).toISOString(),
+      v4_progress: {
+        ...(parameters.v4_progress || {}),
+        phase: "done",
+        phase_pct: 100,
+        overall_pct: 100,
+        detail: "Concluido",
+        updated_at:
+          new Date(finishedAtMs).toISOString(),
+        elapsed_ms:
+          finishedAtMs - startedAtMs,
+        total_duration_ms:
+          finishedAtMs - startedAtMs,
+        eta_seconds: 0,
+        phase_timings: phaseTimings,
+      },
+    };
+
+    const response = await updateRevision(revision.id, {
+      render_status: "ready",
+      rendered_storage_path: storagePath,
+      rendered_url: null,
+      parameters,
+      last_error: null,
+      locked_by: null,
+      lease_expires_at: null,
+    });
+
+    if (out) await rm(out, { force: true });
+
+    log(
+      `[clip ${clip.id}] editorial_master v${revision.revision_number} ready via AI Editor v4 in ${Math.round((finishedAtMs - startedAtMs) / 1000)}s`,
+    );
+
+    return {
+      ok: true,
+      clipRenderStatus:
+        response.clip_render_status,
+    };
+  } catch (error) {
+    const failedAt = Date.now();
+    closePhase(activePhase, failedAt);
+
+    parameters = {
+      ...parameters,
+      render_duration_ms:
+        failedAt - startedAtMs,
+      render_started_at:
+        new Date(startedAtMs).toISOString(),
+      render_finished_at:
+        new Date(failedAt).toISOString(),
+      v4_progress: {
+        ...(parameters.v4_progress || {}),
+        phase: "error",
+        detail:
+          String(error?.message || error).slice(0, 500),
+        updated_at:
+          new Date(failedAt).toISOString(),
+        elapsed_ms:
+          failedAt - startedAtMs,
+        total_duration_ms:
+          failedAt - startedAtMs,
+        eta_seconds: null,
+        phase_timings: phaseTimings,
+      },
+    };
+
+    await updateRevision(revision.id, {
+      render_status: "error",
+      last_error:
+        String(error?.message || error).slice(0, 1500),
+      parameters,
+      locked_by: null,
+      lease_expires_at: null,
+    }).catch(() => {});
+
+    if (out) {
+      await rm(out, { force: true }).catch(() => {});
+    }
+
+    log(
+      `[clip ${clip.id}] AI Editor v4 failed`,
+      error?.message || error,
+    );
+
+    return { ok: false };
+  }
+}
+
 async function renderAndUploadRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds) {
   const label = `${variant.variant_key} v${revision.revision_number}`;
   log(`[clip ${clip.id}] rendering ${label}`);
@@ -395,11 +821,11 @@ async function renderAndUploadRevision(master, clip, variant, revision, transcri
     render_attempts: Number(revision.render_attempts || 0) + 1,
   });
   try {
-    const { out, settings } = await renderRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds);
+    const { out, settings, parameters: renderedParameters } = await renderRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds);
     const path = revisionStoragePath(clip.user_id, clip.id, variant.variant_key, revision.revision_number);
     await uploadBytes(path, await readFile(out), "video/mp4");
     const parameters = {
-      ...(revision.parameters || {}),
+      ...(renderedParameters || revision.parameters || {}),
       start_seconds: Number(revision.parameters?.start_seconds ?? clip.start_seconds),
       end_seconds: Number(revision.parameters?.end_seconds ?? clip.end_seconds),
       effective_start_seconds: settings.startSeconds,
@@ -423,7 +849,7 @@ async function renderAndUploadRevision(master, clip, variant, revision, transcri
   }
 }
 
-// â”€â”€ Job completo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Job completo Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function failJob(job, error) {
   const retryable = !(error instanceof MediaResolverError) || error.retryable !== false;
@@ -436,7 +862,7 @@ async function failJob(job, error) {
         media_status: "blocked",
         stage_detail: error?.code === "source_too_short"
           ? "fonte curta ignorada"
-          : "fonte bloqueada: erro nÃ£o retentÃ¡vel",
+          : "fonte bloqueada: erro nÃƒÂ£o retentÃƒÂ¡vel",
         last_error: message.slice(0, 2000),
         locked_by: null,
         locked_at: null,
@@ -445,19 +871,19 @@ async function failJob(job, error) {
         processing_finished_at: nowIso(),
       });
     } catch (updateError) {
-      log("nÃ£o consegui registrar o bloqueio terminal", updateError?.message);
+      log("nÃƒÂ£o consegui registrar o bloqueio terminal", updateError?.message);
       await call("fail_job", {
         video_id: job.id,
         attempts: Number(job.attempts || 0),
         retryable,
         error: message,
-      }).catch((e) => log("nÃ£o consegui registrar a falha", e?.message));
+      }).catch((e) => log("nÃƒÂ£o consegui registrar a falha", e?.message));
     }
   } else {
     await call("fail_job", {
       video_id: job.id, attempts: Number(job.attempts || 0),
       retryable, error: message,
-    }).catch((e) => log("nÃ£o consegui registrar a falha", e?.message));
+    }).catch((e) => log("nÃƒÂ£o consegui registrar a falha", e?.message));
   }
 
   log("job falhou", job.id, message);
@@ -471,7 +897,7 @@ async function processJob(job) {
   try {
     const ctx = await call("context", { source_id: job.source_id });
 
-    // 1. MÃ­dia
+    // 1. MÃƒÂ­dia
     const { path: master, strategy } = await resolveMedia({
       video: job, source: ctx.source, dir, supabase: storageShim, bucket: BUCKET,
       onProgress: (detail) => setStage(job.id, "downloading", detail),
@@ -482,11 +908,11 @@ async function processJob(job) {
       stage_detail: `master obtido via ${strategy}`,
     });
 
-    // 2. TranscriÃ§Ã£o â€” reaproveitada se jÃ¡ existe (retry nÃ£o repaga a IA).
+    // 2. TranscriÃƒÂ§ÃƒÂ£o Ã¢â‚¬â€ reaproveitada se jÃƒÂ¡ existe (retry nÃƒÂ£o repaga a IA).
     stage = "transcribing";
     let transcript = job.transcript;
     if (!transcript?.segments?.length) {
-      await setStage(job.id, "transcribing", "transcrevendo Ã¡udio");
+      await setStage(job.id, "transcribing", "transcrevendo ÃƒÂ¡udio");
       transcript = await transcribe(master, dir);
       await updateVideo(job.id, {
         transcript, transcript_status: "ready",
@@ -494,52 +920,42 @@ async function processJob(job) {
       });
     }
 
-    // 3. SeleÃ§Ã£o editorial + 4. autopilot â€” ambos no gateway, onde a chave de
-    // IA e a service role moram.
+        // 3. Diretor Editorial v2.
     stage = "analyzing";
-    await setStage(job.id, "analyzing", "IA escolhendo os melhores momentos");
-    const { clips = [], approved = [], variants = [], revisions = [] } = await call("analyze_and_save", { job, transcript }, { timeoutMs: 300_000 });
 
-    // 5. Render dos aprovados, usando o master que jÃ¡ estÃ¡ em disco.
-    const approvedClips = [...new Map(
-      [...clips.filter((c) => c.status === "approved"), ...approved].map((clip) => [clip.id, clip]),
-    ).values()];
-    const approvedIds = new Set(approvedClips.map((clip) => clip.id));
-    const clipById = new Map(approvedClips.map((clip) => [clip.id, clip]));
-    const variantById = new Map(variants.map((variant) => [variant.id, variant]));
-    const toRender = revisions.filter((revision) => approvedIds.has(revision.clip_id)
-      && ["pending", "error"].includes(revision.render_status)
-      && Number(revision.render_attempts || 0) < 4);
-    stage = "rendering";
-    let rendered = 0;
-    const sourceMeta = await probeMedia(master);
-    const boundsByClip = new Map();
-    for (const [i, revision] of toRender.entries()) {
-      if (shuttingDown) break;
-      const clip = clipById.get(revision.clip_id);
-      const variant = variantById.get(revision.clip_variant_id);
-      if (!clip || !variant) continue;
-      await setStage(job.id, "rendering", `renderizando variante ${i + 1}/${toRender.length}`);
-      const baseSettings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
-      const boundsKey = `${clip.id}:${baseSettings.startSeconds}:${baseSettings.endSeconds}`;
-      if (!boundsByClip.has(boundsKey)) {
-        boundsByClip.set(boundsKey, await detectConservativeEdges(master, baseSettings.startSeconds, baseSettings.endSeconds, sourceMeta.hasAudio));
-      }
-      const result = await renderAndUploadRevision(master, clip, variant, revision, transcript, dir, sourceMeta, boundsByClip.get(boundsKey));
-      if (result.ok) rendered += 1;
-    }
+    await setStage(
+      job.id,
+      "analyzing",
+      "Diretor Editorial v2 procurando micro-historias fortes",
+    );
 
-    if (toRender.length > 0 && rendered === 0) {
-      throw new Error(`Todas as ${toRender.length} variantes aprovadas falharam no render`);
-    }
+    const {
+      clips = [],
+      editorial_version,
+      threshold,
+    } = await callFunction(
+      "clip-editorial-v2",
+      "analyze_and_save",
+      {
+        job: {
+          ...job,
+          duration_seconds: duration || transcript.duration,
+        },
+        transcript,
+      },
+      { timeoutMs: 10 * 60 * 1000 },
+    );
 
     await call("finish_job", {
       video_id: job.id,
-      clips_generated: rendered,
+      clips_generated: 0,
       candidates_count: clips.length,
-      approved_count: approvedClips.length,
+      approved_count: 0,
     });
-    log(`concluÃ­do "${job.title}": ${clips.length} candidatos, ${rendered} variantes renderizadas`);
+
+    log(
+      `concluido "${job.title}": ${clips.length} candidatos editoriais v${editorial_version || 2} (regua ${threshold || 78})`,
+    );
   } catch (e) {
     await failJob(job, e);
   } finally {
@@ -550,16 +966,79 @@ async function processJob(job) {
 }
 
 /**
- * Backlog de aprovaÃ§Ã£o manual (modo revisÃ£o). Precisa reobter o master, entÃ£o
- * roda sÃ³ quando nÃ£o hÃ¡ vÃ­deo novo na fila.
+ * Backlog de aprovaÃƒÂ§ÃƒÂ£o manual (modo revisÃƒÂ£o). Precisa reobter o master, entÃƒÂ£o
+ * roda sÃƒÂ³ quando nÃƒÂ£o hÃƒÂ¡ vÃƒÂ­deo novo na fila.
  */
 async function processApprovedBacklog() {
-  const { clip, variants = [], revisions = [], video, source } = await call("next_render_backlog");
-  if (!clip) return false;
+  const response = await callFunction(
+    "clip-ai-editor-v2",
+    "next_render_job",
+    {},
+    { timeoutMs: 5 * 60 * 1000 },
+  );
+
+  const renderJob = response?.job;
+  if (!renderJob) return false;
+
+  const { clip, variant, video, source } = renderJob;
+  let revision = renderJob.revision;
 
   await mkdir(TMP_ROOT, { recursive: true });
-  const dir = await mkdtemp(join(TMP_ROOT, "clip-render-"));
+  const dir = await mkdtemp(join(TMP_ROOT, "clip-render-v2-"));
+
   try {
+    if (
+      Number(revision.revision_number || 1) > 1 &&
+      revision.feedback_text
+    ) {
+      const revised = await callFunction(
+        "clip-ai-editor-revise-v2",
+        "revise_plan",
+        {
+          plan: revision.parameters || variant.parameters || {},
+          feedback: revision.feedback_text,
+          duration_seconds:
+            Number(clip.end_seconds) - Number(clip.start_seconds),
+        },
+        { timeoutMs: 3 * 60 * 1000 },
+      );
+
+      if (revised?.plan) {
+        revision = { ...revision, parameters: revised.plan };
+        await updateRevision(revision.id, {
+          parameters: revised.plan,
+        });
+      }
+    }
+
+
+    if (
+      variant.variant_key === "editorial_master" &&
+      process.env.CLIP_AI_EDITOR_VERSION !== "3"
+    ) {
+      const v4Result =
+        await renderAndUploadV4Revision(
+          clip,
+          variant,
+          revision,
+          video,
+          source,
+          dir,
+        );
+
+      if (v4Result.ok) {
+        await call("finish_job", {
+          video_id: video.id,
+          clips_generated:
+            Number(video.clips_generated || 0) + 1,
+          candidates_count: 1,
+          approved_count: 1,
+        });
+      }
+
+      return true;
+    }
+
     const { path: master } = await resolveMedia({
       video,
       source,
@@ -568,60 +1047,31 @@ async function processApprovedBacklog() {
       bucket: BUCKET,
     });
 
-    const sourceMeta =
-      await probeMedia(master);
+    const sourceMeta = await probeMedia(master);
+    let transcript = video.transcript || {};
 
-    let transcript =
-      video.transcript || {};
-
-    // Clips aprovados antes desta atualização só possuem
-    // timestamps por segmento. Reprocessa a transcrição uma
-    // única vez para ganhar timing real por palavra.
     if (!transcript?.words?.length) {
-      log(
-        `[clip ${clip.id}] atualizando transcrição para word-level timing`
-      );
-
-      transcript =
-        await transcribe(master,dir);
-
-      await updateVideo(video.id,{
+      log(`[clip ${clip.id}] atualizando transcricao para word-level timing`);
+      transcript = await transcribe(master, dir);
+      await updateVideo(video.id, {
         transcript,
         transcript_status: "ready",
-        stage_detail:
-          "sincronização palavra por palavra concluída",
+        stage_detail: "sincronizacao palavra por palavra concluida",
       });
     }
 
-    const variantById =
-      new Map(
-        variants.map(
-          variant => [variant.id,variant]
-        )
-      );
-    let clipReady = false;
-    const boundsByKey = new Map();
-    for (const revision of revisions) {
-      const variant = variantById.get(revision.clip_variant_id);
-      if (!variant) continue;
-      const settings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
-      const boundsKey = `${settings.startSeconds}:${settings.endSeconds}`;
-      if (!boundsByKey.has(boundsKey)) boundsByKey.set(boundsKey, await detectConservativeEdges(master, settings.startSeconds, settings.endSeconds, sourceMeta.hasAudio));
-      const result = await renderAndUploadRevision(
-        master,
-        clip,
-        variant,
-        revision,
-        transcript,
-        dir,
-        sourceMeta,
-        boundsByKey.get(boundsKey),
-      );
-      if (result.clipRenderStatus === "ready") clipReady = true;
-    }
-    if (clipReady) {
-      // CompatÃ­vel tambÃ©m com a versÃ£o anterior do gateway: incrementa a
-      // mÃ©trica apÃ³s aprovaÃ§Ã£o manual. O gateway novo reconta pelo banco.
+    const result = await renderAndUploadRevision(
+      master,
+      clip,
+      variant,
+      revision,
+      transcript,
+      dir,
+      sourceMeta,
+      null,
+    );
+
+    if (result.ok) {
       await call("finish_job", {
         video_id: video.id,
         clips_generated: Number(video.clips_generated || 0) + 1,
@@ -629,13 +1079,24 @@ async function processApprovedBacklog() {
         approved_count: 1,
       });
     }
+
     return true;
-  } catch (e) {
-    for (const revision of revisions) {
-      if (["pending", "rendering"].includes(revision.render_status)) {
-        await updateRevision(revision.id, { render_status: "error", last_error: String(e?.message || e).slice(0, 1500), locked_by: null, lease_expires_at: null }).catch(() => {});
-      }
-    }
+  } catch (error) {
+    await updateRevision(
+      revision.id,
+      {
+        render_status: "error",
+        last_error: String(error?.message || error).slice(0, 1500),
+        locked_by: null,
+        lease_expires_at: null,
+      },
+    ).catch(() => {});
+
+    log(
+      `[clip ${clip.id}] editorial master failed`,
+      error?.message || error,
+    );
+
     return true;
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -643,36 +1104,72 @@ async function processApprovedBacklog() {
 }
 
 async function loop() {
+  let idleSince = null;
+
   do {
+    let didWork = false;
+
     try {
       const { recovered } = await call("recover_stuck");
-      if (recovered) log(`recuperados ${recovered} job(s) abandonados`);
 
-      // Aprovações humanas têm prioridade:
-      // renderiza primeiro o que o usuário acabou de aprovar.
+      if (recovered) {
+        log(`recuperados ${recovered} job(s) abandonados`);
+      }
+
+      // Primeiro: cortes aprovados / revisoes.
       const renderedBacklog =
         await processApprovedBacklog();
 
-      if (!renderedBacklog) {
+      if (renderedBacklog) {
+        didWork = true;
+      } else {
+        // Depois: novos videos descobertos.
         const job =
           await claimJob();
 
         if (job) {
+          didWork = true;
           await processJob(job);
-        }
-
-        else if (RUN_ONCE) {
+        } else if (RUN_ONCE) {
           break;
         }
       }
     } catch (e) {
       log("erro no laÃ§o", e?.message || e);
     }
-    if (RUN_ONCE || shuttingDown) break;
-    await new Promise((r) => setTimeout(r, POLL_MS));
+
+    if (didWork) {
+      idleSince = null;
+    } else if (!RUN_ONCE && !shuttingDown) {
+
+      if (idleSince === null) {
+        idleSince = Date.now();
+      }
+
+      const idleFor =
+        Date.now() - idleSince;
+
+      if (idleFor >= IDLE_SHUTDOWN_MS) {
+        log(
+          `fila vazia por ${Math.round(idleFor / 1000)}s; ` +
+          `encerrando para a Fly desligar a Machine`
+        );
+
+        break;
+      }
+    }
+
+    if (RUN_ONCE || shuttingDown) {
+      break;
+    }
+
+    await new Promise(
+      (resolve) =>
+        setTimeout(resolve,POLL_MS)
+    );
   } while (true);
+
   log("worker encerrado");
 }
-
 log(`worker ${WORKER_ID} iniciado (IA e banco via gateway, bucket ${BUCKET}, ts ${nowIso()})`);
 await loop();

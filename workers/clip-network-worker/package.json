@@ -5,7 +5,15 @@
   "scripts": {
     "start": "node index.mjs",
     "once": "node index.mjs --once",
-    "check": "node --check index.mjs && node --check mediaResolver.mjs && node --check gateway.mjs && node --check render/config.mjs && node --check render/captions.mjs && node --check render/filters.mjs",
+    "check": "node --check index.mjs && node --check mediaResolver.mjs && node --check gateway.mjs && node --check render/config.mjs && node --check render/captions.mjs && node --check render/filters.mjs && node --check render/remotionRenderer.mjs && node --check render/v4Renderer.mjs",
     "test": "node --test *.test.mjs render/*.test.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.518",
+    "@remotion/captions": "4.0.518",
+    "@remotion/renderer": "4.0.518",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.518"
   }
 }

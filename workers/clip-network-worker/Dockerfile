@@ -1,9 +1,6 @@
-# Worker da máquina de cortes.
-#
-# yt-dlp vem do pip e não do apt: a versão do apt fica meses atrás, e a
-# obtenção de mídia é justamente a parte que quebra quando a ferramenta está
-# velha. ffmpeg/ffprobe vêm do apt porque não precisamos de codec exótico — só
-# H.264, AAC, extração de áudio e o filtro de blur/subtitles.
+# AdBrief Clip Network worker
+# FFmpeg continua responsavel por download/probe/audio/base clip.
+# Remotion renderiza a camada visual das variantes com legenda.
 FROM node:20-bookworm-slim
 
 ENV NODE_ENV=production \
@@ -12,25 +9,31 @@ ENV NODE_ENV=production \
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       ffmpeg ca-certificates python3 python3-pip \
-      # Fontes para o filtro subtitles: sem elas o ffmpeg renderiza legenda
-      # vazia e o corte sai sem texto, sem erro nenhum no log.
-      fonts-dejavu-core fonts-urw-base35 fontconfig \
- && pip3 install --no-cache-dir --break-system-packages "yt-dlp>=2025.1.1" \
+      fonts-dejavu-core fonts-urw-base35 fontconfig libgomp1 \
+      libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2 \
+      libxrandr2 libxkbcommon-dev libxfixes3 libxcomposite1 libxdamage1 \
+      libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2 \
+ && pip3 install --no-cache-dir --break-system-packages "yt-dlp>=2025.1.1" "numpy==1.26.4" "opencv-python-headless==4.10.0.84" \
  && rm -rf /var/lib/apt/lists/* \
  && fc-cache -f
 
 WORKDIR /app
 
+RUN mkdir -p /app/vision \
+ && python3 -c "import urllib.request; urllib.request.urlretrieve('https://raw.githubusercontent.com/ShiqiYu/libfacedetection.train/a61a428929148171b488f024b5d6774f93cdbc13/tasks/task1/onnx/yunet.onnx', '/app/vision/yunet.onnx')"
+
 COPY package.json ./
 RUN npm install --omit=dev --no-audit --no-fund
 
+# Baixa o Chrome Headless Shell recomendado pelo Remotion durante o build.
+RUN node -e "import('@remotion/renderer').then(async ({ensureBrowser}) => { await ensureBrowser({logLevel:'warn'}); })"
+
 COPY index.mjs mediaResolver.mjs gateway.mjs ./
 COPY render ./render
+COPY vision ./vision
+RUN python3 -m py_compile /app/vision/ai_editor_v4.py
+COPY remotion ./remotion
 
-# Volume do Fly. O master do vídeo vive aqui só durante o job e é apagado no
-# final — nada persistente mora neste diretório.
 RUN mkdir -p /data/tmp
 
-# Sem porta exposta: o worker não atende requisição, só consome a fila do
-# Postgres. Nada de fora fala com o processo que segura a service role key.
 CMD ["node", "index.mjs"]

@@ -33,6 +33,77 @@ const PIPELINE_LABELS:Record<string,string> = {
 const mmss = (seconds?:number) => seconds == null ? "—" : `${Math.floor(seconds/60)}:${String(Math.round(seconds%60)).padStart(2,"0")}`;
 const fmt = (value?:string) => value ? new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(value)) : "—";
 
+
+
+const V4_PHASE_LABELS:Record<string,string> = {
+  acquire:"Obtendo video",
+  vision:"Analisando pessoas e camera",
+  captions:"Montando legendas",
+  render:"Renderizando MP4",
+  qa:"Validando arquivo",
+  upload:"Enviando para storage",
+  done:"Concluido",
+  error:"Erro",
+};
+
+const fmtDurationMs=(value?:number|null)=>{
+  if(value==null||!Number.isFinite(Number(value)))return "—";
+  const total=Math.max(0,Math.round(Number(value)/1000));
+  const minutes=Math.floor(total/60);
+  const seconds=total%60;
+  return minutes>0?`${minutes}m ${String(seconds).padStart(2,"0")}s`:`${seconds}s`;
+};
+
+function RenderTelemetry({revision,status}:{revision?:DeskRevision;status:string}) {
+  const progress=revision?.parameters?.v4_progress;
+  if(!progress){
+    if(status==="pending")return <div className="mt-3 text-[10px] text-white/35">Na fila do render.</div>;
+    return null;
+  }
+
+  const pct=Math.max(0,Math.min(100,Number(progress.overall_pct||0)));
+  const elapsed=Number(progress.total_duration_ms||progress.elapsed_ms||revision?.parameters?.render_duration_ms||0);
+  const phase=String(progress.phase||"");
+  const current=progress.current;
+  const total=progress.total;
+  const eta=progress.eta_seconds==null?null:Number(progress.eta_seconds);
+  const detail=String(progress.detail||"").trim();
+
+  return <div className="mt-3 rounded-lg border border-white/8 bg-white/[.025] p-3">
+    <div className="flex items-center justify-between gap-3">
+      <div className="text-[10px] font-medium text-white/65">
+        {V4_PHASE_LABELS[phase]||phase||"AI Editor v4"}
+      </div>
+      <div className="text-[10px] tabular-nums text-white/55">
+        {status==="ready"?"100%":`${Math.round(pct)}%`}
+      </div>
+    </div>
+
+    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/8">
+      <div
+        className="h-full rounded-full bg-sky-400 transition-[width] duration-500"
+        style={{width:`${status==="ready"?100:pct}%`}}
+      />
+    </div>
+
+    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-white/35">
+      <span>Tempo: {fmtDurationMs(elapsed)}</span>
+      {current!=null&&total!=null&&<span>{current}/{total}</span>}
+      {eta!=null&&eta>0&&status==="rendering"&&<span>ETA ~{fmtDurationMs(eta*1000)}</span>}
+      {revision?.parameters?.editor_version===4&&<span>AI Editor v4</span>}
+      {revision?.parameters?.renderer&&<span>{String(revision.parameters.renderer)}</span>}
+    </div>
+
+    {detail&&<div className="mt-1.5 text-[9px] text-white/30">{detail}</div>}
+
+    {status==="ready"&&
+      <div className="mt-2 text-[10px] text-emerald-300/70">
+        Concluido em {fmtDurationMs(Number(revision?.parameters?.render_duration_ms||elapsed))}
+      </div>
+    }
+  </div>;
+}
+
 function Status({status}:{status:string}) {
   const styles = status === "ready" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
     : status === "error" ? "border-red-500/20 bg-red-500/10 text-red-300"
@@ -188,7 +259,7 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
         }
         {clip.status==="rejected"?<div className="mt-4 text-xs text-white/35">Este momento foi descartado e não será regenerado automaticamente.</div>:<div className="mt-5 grid gap-3 lg:grid-cols-2">{ORDER.map(key=>{const variant=clipVariants.find(item=>item.variant_key===key);if(!variant)return <div key={key} className="rounded-xl border border-dashed border-white/10 p-5 text-xs text-white/30">{LABELS[key]} · criando variante…</div>;const currentRevision=revisions.find(revision=>revision.id===variant.current_revision_id);return <div key={variant.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/35">
           {mediaUrls[variant.id]?<video src={mediaUrls[variant.id]} controls playsInline preload="metadata" className="aspect-[9/16] max-h-[560px] w-full bg-black object-contain"/>:<button onClick={()=>variant.render_status==="ready"&&onWatchVariant(variant)} disabled={variant.render_status!=="ready"||!!busy} className="flex aspect-[9/16] max-h-[560px] w-full items-center justify-center bg-black/50 text-xs text-white/35">{variant.render_status==="ready"?<><Play className="mr-2 h-4 w-4"/>Carregar preview</>:variant.render_status==="rendering"?<><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Gerando v{variant.current_revision}</>:"Preview indisponível"}</button>}
-          <div className="p-3"><div className="flex items-center justify-between gap-2"><div className="text-xs font-medium text-white">{LABELS[key]}</div><Status status={variant.render_status}/></div><div className="mt-1 text-[10px] text-white/30">v{variant.current_revision}</div>{variant.last_error&&<div className="mt-2 text-[10px] leading-4 text-red-300">{variant.last_error}</div>}<div className="mt-3 flex flex-wrap gap-2">{variant.render_status==="ready"&&canPublishInstagram&&onPublish&&(()=>{const pubStatus=publicationStatusByClip?.[clip.id];const done=pubStatus==="published";const running=pubStatus==="publishing"||pubStatus==="processing"||pubStatus==="queued";return <button onClick={()=>onPublish(clip)} disabled={done||running||!!busy} className="inline-flex items-center rounded-lg border border-pink-400/25 bg-pink-500/10 px-2.5 py-2 text-[10px] text-pink-200 disabled:opacity-40"><Instagram className="mr-1.5 h-3.5 w-3.5"/>{done?"Publicado":running?"Publicando…":"Publicar IG"}</button>;})()}{variant.render_status==="ready"&&<button onClick={()=>onDownload(variant)} className="inline-flex items-center rounded-lg border border-white/10 px-2.5 py-2 text-[10px] text-white/65"><Download className="mr-1.5 h-3.5 w-3.5"/>Baixar</button>}<button onClick={()=>setFeedbackTarget({clip,variant})} className="inline-flex items-center rounded-lg border border-violet-400/20 px-2.5 py-2 text-[10px] text-violet-200"><MessageSquareText className="mr-1.5 h-3.5 w-3.5"/>Pedir ajuste</button>{variant.render_status==="error"&&currentRevision&&<button onClick={()=>onRetry(clip,currentRevision)} className="inline-flex items-center rounded-lg border border-red-500/20 px-2.5 py-2 text-[10px] text-red-300"><RotateCcw className="mr-1.5 h-3.5 w-3.5"/>Tentar novamente</button>}</div></div>
+          <div className="p-3"><div className="flex items-center justify-between gap-2"><div className="text-xs font-medium text-white">{LABELS[key]}</div><Status status={variant.render_status}/></div><div className="mt-1 text-[10px] text-white/30">v{variant.current_revision}</div><RenderTelemetry revision={currentRevision} status={variant.render_status}/>{variant.last_error&&<div className="mt-2 text-[10px] leading-4 text-red-300">{variant.last_error}</div>}<div className="mt-3 flex flex-wrap gap-2">{variant.render_status==="ready"&&canPublishInstagram&&onPublish&&(()=>{const pubStatus=publicationStatusByClip?.[clip.id];const done=pubStatus==="published";const running=pubStatus==="publishing"||pubStatus==="processing"||pubStatus==="queued";return <button onClick={()=>onPublish(clip)} disabled={done||running||!!busy} className="inline-flex items-center rounded-lg border border-pink-400/25 bg-pink-500/10 px-2.5 py-2 text-[10px] text-pink-200 disabled:opacity-40"><Instagram className="mr-1.5 h-3.5 w-3.5"/>{done?"Publicado":running?"Publicando…":"Publicar IG"}</button>;})()}{variant.render_status==="ready"&&<button onClick={()=>onDownload(variant)} className="inline-flex items-center rounded-lg border border-white/10 px-2.5 py-2 text-[10px] text-white/65"><Download className="mr-1.5 h-3.5 w-3.5"/>Baixar</button>}<button onClick={()=>setFeedbackTarget({clip,variant})} className="inline-flex items-center rounded-lg border border-violet-400/20 px-2.5 py-2 text-[10px] text-violet-200"><MessageSquareText className="mr-1.5 h-3.5 w-3.5"/>Pedir ajuste</button>{variant.render_status==="error"&&currentRevision&&<button onClick={()=>onRetry(clip,currentRevision)} className="inline-flex items-center rounded-lg border border-red-500/20 px-2.5 py-2 text-[10px] text-red-300"><RotateCcw className="mr-1.5 h-3.5 w-3.5"/>Tentar novamente</button>}</div></div>
         </div>;})}</div>}
         {feedbackTarget?.clip.id===clip.id&&<div className="mt-4"><FeedbackBox busy={!!busy} targetLabel={feedbackTarget.variant?LABELS[feedbackTarget.variant.variant_key]:"Todas as variantes compatíveis"} onSubmit={submitFeedback} onCancel={()=>setFeedbackTarget(null)}/></div>}
         {clip.status!=="rejected"&&<div className="mt-4 flex flex-wrap gap-2"><button onClick={()=>setFeedbackTarget({clip})} className="inline-flex items-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><MessageSquareText className="mr-1.5 h-3.5 w-3.5"/>Ajuste geral</button></div>}

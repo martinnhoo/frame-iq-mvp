@@ -184,6 +184,8 @@ export default function ClipNetworkPage() {
     + variants.filter(variant=>["pending","rendering"].includes(variant.render_status)).length;
 
 
+  const hasLiveRenders = variants.some(variant=>["pending","rendering"].includes(variant.render_status)) || clips.some(clip=>clip.status==="approved" && !variants.some(variant=>variant.clip_id===clip.id && variant.variant_key==="editorial_master" && variant.render_status==="ready"));
+
   const loadWorkerStatus = async () => {
     try {
       const data = await clipBridge(
@@ -254,6 +256,43 @@ export default function ClipNetworkPage() {
 
     return ()=>clearInterval(workerStatusTimer);
   },[]);
+
+
+  useEffect(()=>{
+    if(!hasLiveRenders)return;
+
+    let cancelled=false;
+
+    const refreshRenderState=async()=>{
+      try{
+        const reviewData=await clipBridge(
+          CLIP_NETWORK_REVIEW_URL,
+          {action:"bootstrap",payload:{}}
+        );
+
+        if(cancelled)return;
+
+        setVariants(reviewData?.variants||[]);
+        setRevisions(reviewData?.revisions||[]);
+        setFeedback(reviewData?.feedback||[]);
+      }catch{
+        // O status global continua mostrando falhas de backend.
+        // A barra por clip tenta novamente no proximo tick.
+      }
+    };
+
+    refreshRenderState();
+
+    const renderTimer=setInterval(
+      refreshRenderState,
+      2500
+    );
+
+    return ()=>{
+      cancelled=true;
+      clearInterval(renderTimer);
+    };
+  },[hasLiveRenders]);
 
   const createPilot = async () => {
     setBusy("pilot"); setError(null);

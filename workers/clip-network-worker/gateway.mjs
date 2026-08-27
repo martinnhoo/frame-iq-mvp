@@ -27,6 +27,41 @@ export async function call(action, payload = {}, { timeoutMs = 180_000 } = {}) {
   }
 }
 
+export async function callFunction(
+  functionName,
+  action,
+  payload = {},
+  { timeoutMs = 180_000 } = {},
+) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const endpoint = `${SUPABASE_URL}/functions/v1/${functionName}`;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-clip-worker-secret": WORKER_SECRET,
+      },
+      body: JSON.stringify({ action, payload }),
+      signal: ctrl.signal,
+    });
+
+    const body = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        `${functionName} ${action} falhou (${res.status}): ${JSON.stringify(body).slice(0, 500)}`,
+      );
+    }
+
+    return body;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** URL assinada de leitura para um caminho do bucket privado. */
 export async function signedDownload(path, expiresIn = 3600) {
   const { signed_url } = await call("signed_download", { path, expires_in: expiresIn });

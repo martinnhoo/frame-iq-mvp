@@ -5,303 +5,83 @@ import {
   aggregateVariantProgress,
   normalizeRenderSettings,
   revisionStoragePath,
+  RENDER_CONFIG,
   VARIANT_KEYS,
 } from "./config.mjs";
 
-import {
-  buildAssDocument,
-  buildCaptionCues,
-} from "./captions.mjs";
+import { buildRemotionCaptionPages } from "./captions.mjs";
+import { buildAudioFilter, buildBaseVideoFilter } from "./filters.mjs";
 
-import {
-  buildAudioFilter,
-  buildVideoFilter,
-} from "./filters.mjs";
+test("v2 usa editorial_master", () => {
+  assert.deepEqual(VARIANT_KEYS, ["editorial_master"]);
+});
 
-test(
-  "mantém exatamente as três variantes",
-  () => {
-    assert.deepEqual(
-      VARIANT_KEYS,
-      [
-        "blur_caption",
-        "zoom_caption",
-        "zoom_clean",
+test("storage path editorial master", () => {
+  assert.equal(
+    revisionStoragePath("u", "c", "editorial_master", 2),
+    "u/c/editorial_master/v2.mp4",
+  );
+});
+
+test("base vertical sem zoompan", () => {
+  const filter = buildBaseVideoFilter();
+  assert.match(filter, /crop=1080:1920/);
+  assert.doesNotMatch(filter, /zoompan/);
+});
+
+test("captions word-level", () => {
+  const pages = buildRemotionCaptionPages(
+    {
+      words: [
+        { word: "isso", start: 10, end: 10.24 },
+        { word: "e", start: 10.31, end: 10.42 },
+        { word: "muito", start: 10.51, end: 10.80 },
+        { word: "bom", start: 10.86, end: 11.12 },
       ],
-    );
-  },
-);
+    },
+    10,
+    12,
+  );
 
-test(
-  "caminhos de revisão são versionados",
-  () => {
-    assert.equal(
-      revisionStoragePath(
-        "user",
-        "clip",
-        "zoom_caption",
-        2,
-      ),
-      "user/clip/zoom_caption/v2.mp4",
-    );
-  },
-);
+  assert.ok(pages.length >= 1);
+  assert.ok(pages.every(page => page.tokens.length <= 4));
+});
 
-test(
-  "todas as variantes usam crop vertical estático sem zoompan nem blur",
-  () => {
-    for (
-      const key of VARIANT_KEYS
-    ) {
-      const settings =
-        normalizeRenderSettings(
-          key,
-          {},
-          {
-            start_seconds: 0,
-            end_seconds: 20,
-          },
-        );
+test("editorial master le edit plan", () => {
+  const settings = normalizeRenderSettings(
+    "editorial_master",
+    {
+      start_seconds: 4,
+      end_seconds: 24,
+      captions: { enabled: true, position: "lower_mid", scale: 0.95 },
+      camera: [
+        { start: 0, end: 2, scale_from: 1.05, scale_to: 1.1 },
+      ],
+    },
+    { start_seconds: 0, end_seconds: 30 },
+  );
 
-      const filter =
-        buildVideoFilter({
-          variantKey: key,
-          settings,
-          assPath:
-            settings.captions.enabled
-              ? "/tmp/a.ass"
-              : null,
+  assert.equal(settings.startSeconds, 4);
+  assert.equal(settings.endSeconds, 24);
+  assert.equal(settings.captions.position, "lower_mid");
+  assert.equal(settings.editPlan.camera.length, 1);
+});
 
-          fps: 30,
+test("active word amarelo", () => {
+  assert.equal(RENDER_CONFIG.captions.activeColour, "#FFD800");
+});
 
-          source: {
-            width: 1920,
-            height: 1080,
-          },
-        });
+test("audio normalizado", () => {
+  const filter = buildAudioFilter(30);
+  assert.match(filter, /I=-16/);
+  assert.match(filter, /TP=-1.5/);
+});
 
-      assert.match(
-        filter,
-        /force_original_aspect_ratio=increase/,
-      );
-
-      assert.match(
-        filter,
-        /crop=1080:1920/,
-      );
-
-      assert.doesNotMatch(
-        filter,
-        /zoompan/,
-      );
-
-      assert.doesNotMatch(
-        filter,
-        /boxblur/,
-      );
-    }
-  },
-);
-
-test(
-  "usa timestamps reais por palavra",
-  () => {
-    const cues =
-      buildCaptionCues(
-        {
-          words: [
-            {
-              word: "isso",
-              start: 10.00,
-              end: 10.24,
-            },
-            {
-              word: "é",
-              start: 10.31,
-              end: 10.42,
-            },
-            {
-              word: "muito",
-              start: 10.51,
-              end: 10.80,
-            },
-            {
-              word: "bom",
-              start: 10.86,
-              end: 11.12,
-            },
-          ],
-        },
-        10,
-        12,
-      );
-
-    assert.ok(cues.length >= 4);
-
-    assert.equal(
-      cues[0].start,
-      0,
-    );
-
-    assert.ok(
-      Math.abs(
-        cues[1].start - 0.31
-      ) < 0.001,
-    );
-
-    assert.equal(
-      cues[1].activeIndex,
-      1,
-    );
-  },
-);
-
-test(
-  "kinetic caption usa caixa alta e destaque amarelo",
-  () => {
-    const cues =
-      buildCaptionCues(
-        {
-          words: [
-            {
-              word: "ainda",
-              start: 0,
-              end: 0.3,
-            },
-            {
-              word: "nesse",
-              start: 0.35,
-              end: 0.6,
-            },
-            {
-              word: "vídeo",
-              start: 0.65,
-              end: 1,
-            },
-          ],
-        },
-        0,
-        2,
-      );
-
-    const ass =
-      buildAssDocument(
-        cues,
-        {
-          scale: 1,
-          position: "lower",
-          style: "kinetic",
-        },
-      );
-
-    assert.match(
-      ass,
-      /Nimbus Sans Narrow/,
-    );
-
-    assert.match(
-      ass,
-      /&H0000D8FF/,
-    );
-
-    assert.match(
-      ass,
-      /AINDA/,
-    );
-
-    assert.match(
-      ass,
-      /\\t\(0,110/,
-    );
-  },
-);
-
-test(
-  "clean caption não usa animação da palavra ativa",
-  () => {
-    const cues =
-      buildCaptionCues(
-        {
-          words: [
-            {
-              word: "teste",
-              start: 0,
-              end: 0.4,
-            },
-            {
-              word: "clean",
-              start: 0.5,
-              end: 0.9,
-            },
-          ],
-        },
-        0,
-        1,
-      );
-
-    const ass =
-      buildAssDocument(
-        cues,
-        {
-          scale: 1,
-          position: "lower",
-          style: "clean",
-        },
-      );
-
-    assert.doesNotMatch(
-      ass,
-      /\\t\(0,110/,
-    );
-  },
-);
-
-test(
-  "áudio continua normalizado para social",
-  () => {
-    const filter =
-      buildAudioFilter(30);
-
-    assert.match(
-      filter,
-      /I=-16/,
-    );
-
-    assert.match(
-      filter,
-      /TP=-1.5/,
-    );
-  },
-);
-
-test(
-  "progresso continua 0 a 3",
-  () => {
-    for (
-      let ready = 0;
-      ready <= 3;
-      ready += 1
-    ) {
-      const variants =
-        VARIANT_KEYS.map(
-          (variant_key,index) => ({
-            variant_key,
-            render_status:
-              index < ready
-                ? "ready"
-                : "pending",
-          }),
-        );
-
-      const result =
-        aggregateVariantProgress(
-          variants
-        );
-
-      assert.equal(
-        result.ready,
-        ready,
-      );
-    }
-  },
-);
+test("progress v2", () => {
+  assert.equal(
+    aggregateVariantProgress([
+      { variant_key: "editorial_master", render_status: "ready" },
+    ]).ready,
+    1,
+  );
+});

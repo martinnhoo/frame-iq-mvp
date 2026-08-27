@@ -1,192 +1,132 @@
-export const VARIANT_KEYS = Object.freeze(["blur_caption", "zoom_caption", "zoom_clean"]);
+export const VARIANT_KEYS = Object.freeze(["editorial_master"]);
+
+const ALL_STORAGE_KEYS = Object.freeze([
+  "editorial_master",
+  "blur_caption",
+  "zoom_caption",
+  "zoom_clean",
+]);
 
 export const RENDER_CONFIG = Object.freeze({
   width: 1080,
   height: 1920,
-  maxAutomaticEdgeTrimSeconds: 0.75,
-
-  safeArea: Object.freeze({
-    top: 120,
-    bottom: 300,
-    left: 70,
-    right: 70,
-  }),
-
+  fps: 30,
   captions: Object.freeze({
-    fontName: "Nimbus Sans Narrow",
-    fontSize: 68,
-    outline: 5,
-    shadow: 2,
-
-    lowerMargin: 345,
-    lowerMidMargin: 455,
-
-    maxWords: 4,
-    targetWords: 3,
-    maxLineChars: 20,
-
-    pauseBreakSeconds: 0.38,
-
-    activeScale: 1.10,
-    activeColour: "&H0000D8FF",
-    normalColour: "&H00FFFFFF",
+    fontFamily: '"Nimbus Sans Narrow", "Arial Narrow", Arial, sans-serif',
+    fontSize: 96,
+    outline: 10,
+    bottom: 390,
+    lowerMidBottom: 520,
+    targetWords: 5,
+    maxWords: 6,
+    combineTokensWithinMilliseconds: 1100,
+    breakOnSilenceAfterMilliseconds: 420,
+    blockEntranceFrames: 4,
+    blockEntranceScale: 0.92,
+    blockEntranceTranslateY: 18,
+    activeColour: "#FFD800",
+    normalColour: "#FFFFFF",
   }),
-
   audio: Object.freeze({
     loudnessI: -16,
     truePeak: -1.5,
     loudnessRange: 11,
     fadeSeconds: 0.08,
   }),
-
-  // Mantido por compatibilidade com revisões antigas.
-  // O renderer novo não usa zoom animado.
-  punchIn: Object.freeze({
-    periodSeconds: 12,
-    levels: Object.freeze({
-      low: 0,
-      medium: 0,
-      high: 0,
-    }),
-  }),
 });
 
-export const RENDER_PRESETS = Object.freeze({
-  blur_caption: Object.freeze({
-    framingMode: "cover_center",
-    captions: true,
-    captionStyle: "kinetic",
-    zoomIntensity: "none",
-  }),
-
-  zoom_caption: Object.freeze({
-    framingMode: "cover_center",
-    captions: true,
-    captionStyle: "clean",
-    zoomIntensity: "none",
-  }),
-
-  zoom_clean: Object.freeze({
-    framingMode: "cover_center",
-    captions: false,
-    captionStyle: "clean",
-    zoomIntensity: "none",
-  }),
+const PRESETS = Object.freeze({
+  editorial_master: Object.freeze({ captions: true, captionStyle: "tiktok" }),
+  blur_caption: Object.freeze({ captions: true, captionStyle: "tiktok" }),
+  zoom_caption: Object.freeze({ captions: true, captionStyle: "tiktok" }),
+  zoom_clean: Object.freeze({ captions: false, captionStyle: "clean" }),
 });
 
 const finite = (value, fallback) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
 
 export function normalizeRenderSettings(variantKey, raw = {}, clip = {}) {
-  const preset = RENDER_PRESETS[variantKey];
-
-  if (!preset) {
-    throw new Error(`variant_key desconhecida: ${variantKey}`);
-  }
+  const preset = PRESETS[variantKey];
+  if (!preset) throw new Error(`variant_key desconhecida: ${variantKey}`);
 
   const nestedCaptions =
-    raw.captions && typeof raw.captions === "object"
-      ? raw.captions
-      : {};
+    raw.captions && typeof raw.captions === "object" ? raw.captions : {};
 
   const start = finite(
     raw.start_seconds ?? raw.startSeconds,
     finite(clip.start_seconds, 0),
   );
-
   const end = finite(
     raw.end_seconds ?? raw.endSeconds,
     finite(clip.end_seconds, start),
   );
 
-  const fontScale = Math.min(
-    1.35,
-    Math.max(
-      0.70,
-      finite(nestedCaptions.scale ?? raw.caption_scale, 1),
-    ),
+  const requestedPosition = String(
+    nestedCaptions.position ?? raw.caption_position ?? "lower_mid",
   );
+  const position = ["lower", "lower_mid", "center"].includes(requestedPosition)
+    ? requestedPosition
+    : "lower_mid";
 
   return {
     startSeconds: start,
     endSeconds: Math.max(start + 0.1, end),
-
     captions: {
       enabled: Boolean(
-        nestedCaptions.enabled ??
-        raw.captions ??
-        preset.captions
+        nestedCaptions.enabled ?? raw.captions ?? preset.captions
       ),
-
-      scale: fontScale,
-
-      position: String(
-        nestedCaptions.position ??
-        raw.caption_position ??
-        "lower"
+      scale: Math.min(
+        1.12,
+        Math.max(
+          0.78,
+          finite(nestedCaptions.scale ?? raw.caption_scale, 0.9),
+        ),
       ),
-
-      text:
-        nestedCaptions.text ??
-        raw.caption_text ??
-        null,
-
-      style: String(
-        nestedCaptions.style ??
-        preset.captionStyle
+      position,
+      text: nestedCaptions.text ?? raw.caption_text ?? null,
+      style: preset.captionStyle,
+      uppercase: nestedCaptions.uppercase === true,
+      maxWords: Math.min(
+        7,
+        Math.max(3, Math.round(finite(nestedCaptions.max_words, 6))),
       ),
+      phraseMode: nestedCaptions.phrase_mode !== false,
+      highlightActiveWord: nestedCaptions.highlightActiveWord !== false,
     },
-
-    // Todos usam o crop vertical estático que ficou melhor.
     framing: {
-      mode: "cover_center",
+      mode: Array.isArray(raw.framing) ? "visual_director" : "cover_center",
       zoomIntensity: "none",
     },
-
-    audio: {
-      normalize: raw.audio?.normalize !== false,
-    },
-
+    audio: { normalize: raw.audio?.normalize !== false },
     hookTitle: {
-      enabled: Boolean(raw.hookTitle?.enabled ?? false),
+      enabled: Boolean(
+        raw.hook_overlay?.enabled ?? raw.hookTitle?.enabled ?? false
+      ),
     },
+    editPlan: variantKey === "editorial_master" ? raw : null,
   };
 }
 
-export function revisionStoragePath(
-  userId,
-  clipId,
-  variantKey,
-  revisionNumber,
-) {
-  if (!VARIANT_KEYS.includes(variantKey)) {
+export function revisionStoragePath(userId, clipId, variantKey, revisionNumber) {
+  if (!ALL_STORAGE_KEYS.includes(variantKey)) {
     throw new Error(`variant_key desconhecida: ${variantKey}`);
   }
-
   return `${userId}/${clipId}/${variantKey}/v${Number(revisionNumber)}.mp4`;
 }
 
 export function aggregateVariantProgress(variants) {
-  const total = VARIANT_KEYS.length;
-
-  const ready = variants.filter(
-    variant => variant.render_status === "ready"
-  ).length;
-
-  const rendering = variants.some(
-    variant => variant.render_status === "rendering"
-  );
-
-  const failed = variants.filter(
-    variant => variant.render_status === "error"
-  ).length;
-
+  const masters = variants.filter(v => v.variant_key === "editorial_master");
+  const relevant = masters.length ? masters : variants;
+  const total = masters.length ? 1 : relevant.length;
+  const ready = relevant.filter(v => v.render_status === "ready").length;
+  const rendering = relevant.some(v => v.render_status === "rendering");
+  const failed = relevant.filter(v => v.render_status === "error").length;
   return {
     total,
     ready,
     failed,
     status:
-      ready === total
+      total > 0 && ready === total
         ? "ready"
         : rendering
           ? "rendering"
