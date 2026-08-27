@@ -341,14 +341,32 @@ export default function ClipNetworkPage() {
         throw new Error("A conexão retornou um endereço inválido do Instagram.");
       }
       if(oauthWindow&&!oauthWindow.closed){
-        oauthWindow.location.replace(authUrl.toString());
-        oauthWindow.focus();
+        // Focus while the popup is still same-origin. Some browsers throw when
+        // focus() runs after navigation starts; the old catch then closed an
+        // otherwise valid Instagram OAuth window.
+        try{oauthWindow.focus();}catch{/* focus is optional */}
+        oauthWindow.location.href=authUrl.toString();
       }else{
         window.location.assign(authUrl.toString());
       }
     }catch(e:any){
-      if(oauthWindow&&!oauthWindow.closed) oauthWindow.close();
-      setError(e.message||String(e));
+      const message=e.message||String(e);
+      if(oauthWindow&&!oauthWindow.closed){
+        try{
+          const doc=oauthWindow.document;
+          doc.title="Erro ao conectar Instagram";
+          doc.body.replaceChildren();
+          doc.body.style.cssText="margin:0;padding:32px;background:#09090b;color:#fafafa;font:15px/1.5 system-ui,sans-serif";
+          const title=doc.createElement("h1");
+          title.textContent="Não foi possível conectar o Instagram";
+          title.style.cssText="font-size:20px;margin:0 0 12px";
+          const detail=doc.createElement("p");
+          detail.textContent=message;
+          detail.style.cssText="color:#fca5a5;margin:0";
+          doc.body.append(title,detail);
+        }catch{/* Leave the popup open if navigation already started. */}
+      }
+      setError(message);
     }finally{setBusy(null);}
   };
 
