@@ -71,9 +71,10 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
   },[variants]);
   const review=clips.filter(clip=>clip.status==="candidate");
   const discarded=clips.filter(clip=>clip.status==="rejected");
-  const approved=clips.filter(clip=>clip.status==="approved"&&(variantsByClip.get(clip.id)||[]).length===0);
+  const masterOf=(clipId:string)=>(variantsByClip.get(clipId)||[]).find(variant=>variant.variant_key==="editorial_master");
+  const approved=clips.filter(clip=>clip.status==="approved"&&!masterOf(clip.id));
   const ready=clips.filter(clip=>clip.status==="approved"&&(variantsByClip.get(clip.id)||[]).some(variant=>variant.variant_key==="editorial_master"&&variant.render_status==="ready"));
-  const rendering=clips.filter(clip=>clip.status==="approved"&&!ready.includes(clip)&&!approved.includes(clip));
+  const rendering=clips.filter(clip=>clip.status==="approved"&&!!masterOf(clip.id)&&masterOf(clip.id)?.render_status!=="ready");
   const groups:Record<string,DeskClip[]>={review,approved,rendering,ready,discarded};
   const counters=[{key:"review",label:"Revisão",count:review.length},{key:"approved",label:"Aprovados",count:approved.length},{key:"rendering",label:"Renderizando",count:rendering.length},{key:"ready",label:"Prontos",count:ready.length},{key:"discarded",label:"Descartados",count:discarded.length}];
   const activeReview=review[Math.min(reviewIndex,Math.max(0,review.length-1))];
@@ -82,8 +83,8 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
     ["downloading","transcribing","analyzing","rendering"].includes(video.pipeline_stage||"")
   );
 
-  const pendingVariants=variants.filter(variant=>variant.render_status==="pending").length;
-  const renderingVariants=variants.filter(variant=>variant.render_status==="rendering").length;
+  const pendingVariants=variants.filter(variant=>variant.variant_key==="editorial_master"&&variant.render_status==="pending").length;
+  const renderingVariants=variants.filter(variant=>variant.variant_key==="editorial_master"&&variant.render_status==="rendering").length;
 
   const submitFeedback=(text:string)=>{if(!feedbackTarget)return;onFeedback(feedbackTarget.clip,text,feedbackTarget.variant);setFeedbackTarget(null);};
   const clipHeader=(clip:DeskClip)=>{
@@ -153,7 +154,7 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
 
     {tab!=="review"&&<div className="mt-5 space-y-5">
       {groups[tab].length===0&&<div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">Nenhum corte neste estado.</div>}
-      {groups[tab].map(clip=>{const clipVariants=variantsByClip.get(clip.id)||[];const readyCount=clipVariants.filter(variant=>variant.render_status==="ready").length;return <article key={clip.id} className="rounded-2xl border border-white/10 bg-black/20 p-4 lg:p-5">
+      {groups[tab].map(clip=>{const clipVariants=variantsByClip.get(clip.id)||[];const readyCount=clipVariants.filter(variant=>variant.variant_key==="editorial_master"&&variant.render_status==="ready").length;return <article key={clip.id} className="rounded-2xl border border-white/10 bg-black/20 p-4 lg:p-5">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
           <div>{clipHeader(clip)}</div>
           {clip.status==="approved"&&
@@ -170,13 +171,13 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
 
             <div>
               <div className="text-[11px] font-medium text-white/75">
-                {clipVariants.some(variant=>variant.render_status==="rendering")
+                {clipVariants.some(variant=>variant.variant_key==="editorial_master"&&variant.render_status==="rendering")
                   ? `Renderizando · ${readyCount}/1 pronta`
                   : `Aguardando render · ${readyCount}/1 pronta`}
               </div>
 
               <div className="mt-1 text-[10px] text-white/35">
-                {clipVariants.some(variant=>variant.render_status==="rendering")
+                {clipVariants.some(variant=>variant.variant_key==="editorial_master"&&variant.render_status==="rendering")
                   ? "O worker está gerando as versões deste corte agora."
                   : activeWorkerVideo
                     ? `Na fila. O worker está ocupado em: ${PIPELINE_LABELS[activeWorkerVideo.pipeline_stage||""]||activeWorkerVideo.pipeline_stage}.`
