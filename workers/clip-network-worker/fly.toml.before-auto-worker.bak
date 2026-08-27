@@ -1,0 +1,55 @@
+# Worker da Rede de Cortes no Fly.io.
+#
+# gru (São Paulo): o gargalo é o download do master e a chamada ao OpenAI, não a
+# latência até o Postgres. Manter perto de você facilita depurar e o custo é o
+# mesmo.
+
+app = "adbrief-clip-worker"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  CLIP_WORKER_ID = "fly-clip-worker"
+  CLIP_TMP_DIR = "/data/tmp"
+  CLIP_BUCKET = "clip-network"
+  CLIP_ORCHESTRATOR_MODEL = "gpt-4o-mini"
+  # Um vídeo por vez, por decisão: o piloto quer previsibilidade de custo e de
+  # memória, não throughput. Concorrência maior aqui é mudar o número de
+  # máquinas, não este arquivo.
+  CLIP_WORKER_POLL_MS = "30000"
+  # 900s cobre com folga o pior caso medido (download longo + Whisper em
+  # blocos). O heartbeat renova a cada 1/3 disso, então lease expirado significa
+  # de verdade que a máquina morreu.
+  CLIP_LEASE_SECONDS = "900"
+  CLIP_MAX_HEIGHT = "1080"
+  CLIP_MIN_SOURCE_DURATION_SECONDS = "181"
+
+# Sem [http_service]: o worker não escuta porta. Nada da internet fala com ele.
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "2gb"
+  # 2 GB e não 4: aqui o Whisper roda na API da OpenAI, não local. O consumo de
+  # pico é ffmpeg fazendo scale+blur+overlay em 1080x1920, que trabalha em
+  # streaming e fica bem abaixo de 1 GB. Se aparecer reinício silencioso da
+  # máquina com attempt subindo sempre no mesmo estágio, é OOM: subir para 4gb
+  # é uma linha.
+
+[[mounts]]
+  source = "clip_worker_data"
+  destination = "/data"
+  # Só temporários. O estado vive no Postgres e o corte final no bucket; se o
+  # volume sumir, o reaper devolve os jobs em andamento para a fila.
+
+[deploy]
+  strategy = "immediate"
+  # Não há health check HTTP para esperar. O SIGTERM é tratado: o worker para de
+  # pegar job novo e termina o atual antes de sair.
+
+# Máquina sem serviço HTTP não é reiniciada por health check — a política aqui é
+# o que garante que um crash (OOM, exceção não tratada) volte a fazer polling.
+[[restart]]
+  policy = "always"
+

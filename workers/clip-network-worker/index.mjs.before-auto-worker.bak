@@ -26,17 +26,16 @@ import { hostname } from "node:os";
 import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { resolveMedia, probeDuration, MediaResolverError } from "./mediaResolver.mjs";
-import { call, callFunction, storageShim, uploadBytes } from "./gateway.mjs";
+import { call, storageShim, uploadBytes } from "./gateway.mjs";
 import { normalizeRenderSettings, revisionStoragePath } from "./render/config.mjs";
 import { buildRemotionCaptionPages } from "./render/captions.mjs";
 import { buildAudioFilter, buildBaseVideoFilter } from "./render/filters.mjs";
-import { renderCaptionedVideo, renderEditorialVideo } from "./render/remotionRenderer.mjs";
+import { renderCaptionedVideo } from "./render/remotionRenderer.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const WORKER_SECRET = process.env.CLIP_WORKER_SECRET;
 const BUCKET = process.env.CLIP_BUCKET || "clip-network";
 const POLL_MS = Number(process.env.CLIP_WORKER_POLL_MS || 30000);
-const IDLE_SHUTDOWN_MS = Number(process.env.CLIP_IDLE_SHUTDOWN_MS || 90000);
 const LEASE_SECS = Number(process.env.CLIP_LEASE_SECONDS || 900);
 const TMP_ROOT = process.env.CLIP_TMP_DIR || "/data/tmp";
 const WORKER_ID = process.env.CLIP_WORKER_ID || `clip-worker-${hostname()}`;
@@ -335,61 +334,82 @@ async function renderRevision(
   sourceMeta,
   effectiveBounds,
 ) {
-  const settings = normalizeRenderSettings(
-    variant.variant_key,
-    revision.parameters,
-    clip,
-  );
+  const settings =
+    normalizeRenderSettings(
+      variant.variant_key,
+      revision.parameters,
+      clip,
+    );
 
-  if (variant.variant_key !== "editorial_master") {
-    settings.startSeconds = effectiveBounds?.start ?? settings.startSeconds;
-    settings.endSeconds = effectiveBounds?.end ?? settings.endSeconds;
+  settings.startSeconds =
+    effectiveBounds?.start ??
+    settings.startSeconds;
+
+  settings.endSeconds =
+    effectiveBounds?.end ??
+    settings.endSeconds;
+
+  const duration =
+    settings.endSeconds -
+    settings.startSeconds;
+
+  if (duration <= 0) {
+    throw new Error(
+      "Janela de render inválida"
+    );
   }
 
-  const duration = settings.endSeconds - settings.startSeconds;
-  if (duration <= 0) throw new Error("Janela de render invalida");
+  const out =
+    join(dir, `${revision.id}.mp4`);
 
-  const out = join(dir, `${revision.id}.mp4`);
-  const base = join(dir, `${revision.id}-base.mp4`);
+  if (settings.captions.enabled) {
+    const base =
+      join(
+        dir,
+        `${revision.id}-base.mp4`,
+      );
 
-  try {
-    await prepareBaseClip(master, base, settings, sourceMeta);
+    try {
+      await prepareBaseClip(
+        master,
+        base,
+        settings,
+        sourceMeta,
+      );
 
-    const pages = settings.captions.enabled
-      ? buildRemotionCaptionPages(
+      const pages =
+        buildRemotionCaptionPages(
           transcript,
           settings.startSeconds,
           settings.endSeconds,
           settings.captions.text,
-        )
-      : [];
+        );
 
-    if (variant.variant_key === "editorial_master") {
-      await renderEditorialVideo({
-        inputVideo: base,
-        outputVideo: out,
-        pages,
-        durationSeconds: duration,
-        captionSettings: settings.captions,
-        editPlan: revision.parameters || {},
-      });
-    } else if (settings.captions.enabled) {
       await renderCaptionedVideo({
         inputVideo: base,
         outputVideo: out,
         pages,
         durationSeconds: duration,
-        captionSettings: settings.captions,
+        captionSettings:
+          settings.captions,
       });
-    } else {
-      await rm(out, { force: true });
-      await prepareBaseClip(master, out, settings, sourceMeta);
+    } finally {
+      await rm(
+        base,
+        { force: true },
+      );
     }
-  } finally {
-    await rm(base, { force: true });
+  } else {
+    await prepareBaseClip(
+      master,
+      out,
+      settings,
+      sourceMeta,
+    );
   }
 
-  const output = await probeMedia(out);
+  const output =
+    await probeMedia(out);
 
   if (
     !output.hasVideo ||
@@ -398,15 +418,23 @@ async function renderRevision(
     output.duration <= 0
   ) {
     throw new Error(
-      `MP4 invalido: ${output.width}x${output.height}, duracao ${output.duration || 0}`,
+      `MP4 inválido: ${output.width}x${output.height}, duração ${output.duration || 0}`
     );
   }
 
-  if (sourceMeta.hasAudio && !output.hasAudio) {
-    throw new Error("MP4 invalido: faixa de audio ausente");
+  if (
+    sourceMeta.hasAudio &&
+    !output.hasAudio
+  ) {
+    throw new Error(
+      "MP4 inválido: faixa de áudio ausente"
+    );
   }
 
-  return { out, settings };
+  return {
+    out,
+    settings,
+  };
 }
 
 /**
@@ -522,42 +550,52 @@ async function processJob(job) {
       });
     }
 
-        // 3. Diretor Editorial v2.
+    // 3. SeleÃ§Ã£o editorial + 4. autopilot â€” ambos no gateway, onde a chave de
+    // IA e a service role moram.
     stage = "analyzing";
+    await setStage(job.id, "analyzing", "IA escolhendo os melhores momentos");
+    const { clips = [], approved = [], variants = [], revisions = [] } = await call("analyze_and_save", { job, transcript }, { timeoutMs: 300_000 });
 
-    await setStage(
-      job.id,
-      "analyzing",
-      "Diretor Editorial v2 procurando micro-historias fortes",
-    );
+    // 5. Render dos aprovados, usando o master que jÃ¡ estÃ¡ em disco.
+    const approvedClips = [...new Map(
+      [...clips.filter((c) => c.status === "approved"), ...approved].map((clip) => [clip.id, clip]),
+    ).values()];
+    const approvedIds = new Set(approvedClips.map((clip) => clip.id));
+    const clipById = new Map(approvedClips.map((clip) => [clip.id, clip]));
+    const variantById = new Map(variants.map((variant) => [variant.id, variant]));
+    const toRender = revisions.filter((revision) => approvedIds.has(revision.clip_id)
+      && ["pending", "error"].includes(revision.render_status)
+      && Number(revision.render_attempts || 0) < 4);
+    stage = "rendering";
+    let rendered = 0;
+    const sourceMeta = await probeMedia(master);
+    const boundsByClip = new Map();
+    for (const [i, revision] of toRender.entries()) {
+      if (shuttingDown) break;
+      const clip = clipById.get(revision.clip_id);
+      const variant = variantById.get(revision.clip_variant_id);
+      if (!clip || !variant) continue;
+      await setStage(job.id, "rendering", `renderizando variante ${i + 1}/${toRender.length}`);
+      const baseSettings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
+      const boundsKey = `${clip.id}:${baseSettings.startSeconds}:${baseSettings.endSeconds}`;
+      if (!boundsByClip.has(boundsKey)) {
+        boundsByClip.set(boundsKey, await detectConservativeEdges(master, baseSettings.startSeconds, baseSettings.endSeconds, sourceMeta.hasAudio));
+      }
+      const result = await renderAndUploadRevision(master, clip, variant, revision, transcript, dir, sourceMeta, boundsByClip.get(boundsKey));
+      if (result.ok) rendered += 1;
+    }
 
-    const {
-      clips = [],
-      editorial_version,
-      threshold,
-    } = await callFunction(
-      "clip-editorial-v2",
-      "analyze_and_save",
-      {
-        job: {
-          ...job,
-          duration_seconds: duration || transcript.duration,
-        },
-        transcript,
-      },
-      { timeoutMs: 10 * 60 * 1000 },
-    );
+    if (toRender.length > 0 && rendered === 0) {
+      throw new Error(`Todas as ${toRender.length} variantes aprovadas falharam no render`);
+    }
 
     await call("finish_job", {
       video_id: job.id,
-      clips_generated: 0,
+      clips_generated: rendered,
       candidates_count: clips.length,
-      approved_count: 0,
+      approved_count: approvedClips.length,
     });
-
-    log(
-      `concluido "${job.title}": ${clips.length} candidatos editoriais v${editorial_version || 2} (regua ${threshold || 78})`,
-    );
+    log(`concluÃ­do "${job.title}": ${clips.length} candidatos, ${rendered} variantes renderizadas`);
   } catch (e) {
     await failJob(job, e);
   } finally {
@@ -572,47 +610,12 @@ async function processJob(job) {
  * roda sÃ³ quando nÃ£o hÃ¡ vÃ­deo novo na fila.
  */
 async function processApprovedBacklog() {
-  const response = await callFunction(
-    "clip-ai-editor-v2",
-    "next_render_job",
-    {},
-    { timeoutMs: 5 * 60 * 1000 },
-  );
-
-  const renderJob = response?.job;
-  if (!renderJob) return false;
-
-  const { clip, variant, video, source } = renderJob;
-  let revision = renderJob.revision;
+  const { clip, variants = [], revisions = [], video, source } = await call("next_render_backlog");
+  if (!clip) return false;
 
   await mkdir(TMP_ROOT, { recursive: true });
-  const dir = await mkdtemp(join(TMP_ROOT, "clip-render-v2-"));
-
+  const dir = await mkdtemp(join(TMP_ROOT, "clip-render-"));
   try {
-    if (
-      Number(revision.revision_number || 1) > 1 &&
-      revision.feedback_text
-    ) {
-      const revised = await callFunction(
-        "clip-ai-editor-revise-v2",
-        "revise_plan",
-        {
-          plan: revision.parameters || variant.parameters || {},
-          feedback: revision.feedback_text,
-          duration_seconds:
-            Number(clip.end_seconds) - Number(clip.start_seconds),
-        },
-        { timeoutMs: 3 * 60 * 1000 },
-      );
-
-      if (revised?.plan) {
-        revision = { ...revision, parameters: revised.plan };
-        await updateRevision(revision.id, {
-          parameters: revised.plan,
-        });
-      }
-    }
-
     const { path: master } = await resolveMedia({
       video,
       source,
@@ -621,31 +624,60 @@ async function processApprovedBacklog() {
       bucket: BUCKET,
     });
 
-    const sourceMeta = await probeMedia(master);
-    let transcript = video.transcript || {};
+    const sourceMeta =
+      await probeMedia(master);
 
+    let transcript =
+      video.transcript || {};
+
+    // Clips aprovados antes desta atualização só possuem
+    // timestamps por segmento. Reprocessa a transcrição uma
+    // única vez para ganhar timing real por palavra.
     if (!transcript?.words?.length) {
-      log(`[clip ${clip.id}] atualizando transcricao para word-level timing`);
-      transcript = await transcribe(master, dir);
-      await updateVideo(video.id, {
+      log(
+        `[clip ${clip.id}] atualizando transcrição para word-level timing`
+      );
+
+      transcript =
+        await transcribe(master,dir);
+
+      await updateVideo(video.id,{
         transcript,
         transcript_status: "ready",
-        stage_detail: "sincronizacao palavra por palavra concluida",
+        stage_detail:
+          "sincronização palavra por palavra concluída",
       });
     }
 
-    const result = await renderAndUploadRevision(
-      master,
-      clip,
-      variant,
-      revision,
-      transcript,
-      dir,
-      sourceMeta,
-      null,
-    );
-
-    if (result.ok) {
+    const variantById =
+      new Map(
+        variants.map(
+          variant => [variant.id,variant]
+        )
+      );
+    let clipReady = false;
+    const boundsByKey = new Map();
+    for (const revision of revisions) {
+      const variant = variantById.get(revision.clip_variant_id);
+      if (!variant) continue;
+      const settings = normalizeRenderSettings(variant.variant_key, revision.parameters, clip);
+      const boundsKey = `${settings.startSeconds}:${settings.endSeconds}`;
+      if (!boundsByKey.has(boundsKey)) boundsByKey.set(boundsKey, await detectConservativeEdges(master, settings.startSeconds, settings.endSeconds, sourceMeta.hasAudio));
+      const result = await renderAndUploadRevision(
+        master,
+        clip,
+        variant,
+        revision,
+        transcript,
+        dir,
+        sourceMeta,
+        boundsByKey.get(boundsKey),
+      );
+      if (result.clipRenderStatus === "ready") clipReady = true;
+    }
+    if (clipReady) {
+      // CompatÃ­vel tambÃ©m com a versÃ£o anterior do gateway: incrementa a
+      // mÃ©trica apÃ³s aprovaÃ§Ã£o manual. O gateway novo reconta pelo banco.
       await call("finish_job", {
         video_id: video.id,
         clips_generated: Number(video.clips_generated || 0) + 1,
@@ -653,24 +685,13 @@ async function processApprovedBacklog() {
         approved_count: 1,
       });
     }
-
     return true;
-  } catch (error) {
-    await updateRevision(
-      revision.id,
-      {
-        render_status: "error",
-        last_error: String(error?.message || error).slice(0, 1500),
-        locked_by: null,
-        lease_expires_at: null,
-      },
-    ).catch(() => {});
-
-    log(
-      `[clip ${clip.id}] editorial master failed`,
-      error?.message || error,
-    );
-
+  } catch (e) {
+    for (const revision of revisions) {
+      if (["pending", "rendering"].includes(revision.render_status)) {
+        await updateRevision(revision.id, { render_status: "error", last_error: String(e?.message || e).slice(0, 1500), locked_by: null, lease_expires_at: null }).catch(() => {});
+      }
+    }
     return true;
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -678,72 +699,36 @@ async function processApprovedBacklog() {
 }
 
 async function loop() {
-  let idleSince = null;
-
   do {
-    let didWork = false;
-
     try {
       const { recovered } = await call("recover_stuck");
+      if (recovered) log(`recuperados ${recovered} job(s) abandonados`);
 
-      if (recovered) {
-        log(`recuperados ${recovered} job(s) abandonados`);
-      }
-
-      // Primeiro: cortes aprovados / revisoes.
+      // Aprovações humanas têm prioridade:
+      // renderiza primeiro o que o usuário acabou de aprovar.
       const renderedBacklog =
         await processApprovedBacklog();
 
-      if (renderedBacklog) {
-        didWork = true;
-      } else {
-        // Depois: novos videos descobertos.
+      if (!renderedBacklog) {
         const job =
           await claimJob();
 
         if (job) {
-          didWork = true;
           await processJob(job);
-        } else if (RUN_ONCE) {
+        }
+
+        else if (RUN_ONCE) {
           break;
         }
       }
     } catch (e) {
-      log("erro no laço", e?.message || e);
+      log("erro no laÃ§o", e?.message || e);
     }
-
-    if (didWork) {
-      idleSince = null;
-    } else if (!RUN_ONCE && !shuttingDown) {
-
-      if (idleSince === null) {
-        idleSince = Date.now();
-      }
-
-      const idleFor =
-        Date.now() - idleSince;
-
-      if (idleFor >= IDLE_SHUTDOWN_MS) {
-        log(
-          `fila vazia por ${Math.round(idleFor / 1000)}s; ` +
-          `encerrando para a Fly desligar a Machine`
-        );
-
-        break;
-      }
-    }
-
-    if (RUN_ONCE || shuttingDown) {
-      break;
-    }
-
-    await new Promise(
-      (resolve) =>
-        setTimeout(resolve,POLL_MS)
-    );
+    if (RUN_ONCE || shuttingDown) break;
+    await new Promise((r) => setTimeout(r, POLL_MS));
   } while (true);
-
   log("worker encerrado");
 }
+
 log(`worker ${WORKER_ID} iniciado (IA e banco via gateway, bucket ${BUCKET}, ts ${nowIso()})`);
 await loop();

@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { createTikTokStyleCaptions } from "@remotion/captions";
 import { RENDER_CONFIG } from "./config.mjs";
 
 const normalizeText = text =>
@@ -11,7 +11,6 @@ function cleanTimedWords(rawWords = []) {
 
   for (const raw of rawWords) {
     const text = normalizeText(raw.word ?? raw.text);
-
     const start = Number(raw.start);
     const end = Number(raw.end);
 
@@ -23,18 +22,12 @@ function cleanTimedWords(rawWords = []) {
       continue;
     }
 
-    // Caso o Whisper devolva pontuação isolada,
-    // cola no token anterior para não virar uma "palavra".
-    if (
-      /^[,.;:!?…]+$/.test(text) &&
-      result.length
-    ) {
+    if (/^[,.;:!?…]+$/.test(text) && result.length) {
       result[result.length - 1].text += text;
       result[result.length - 1].end = Math.max(
         result[result.length - 1].end,
         end,
       );
-
       continue;
     }
 
@@ -56,7 +49,6 @@ function estimateWordsFromSegment(segment) {
   if (!tokens.length) return [];
 
   const start = Number(segment.start) || 0;
-
   const end = Math.max(
     start + 0.02,
     Number(segment.end) || start,
@@ -64,7 +56,7 @@ function estimateWordsFromSegment(segment) {
 
   const span = end - start;
 
-  return tokens.map((text,index) => ({
+  return tokens.map((text, index) => ({
     text,
     start: start + span * index / tokens.length,
     end: start + span * (index + 1) / tokens.length,
@@ -92,11 +84,8 @@ function collectTimedWords(
     word.start < end
   );
 
-  if (precise.length) {
-    return precise;
-  }
+  if (precise.length) return precise;
 
-  // Fallback de segurança para transcrições antigas.
   return (transcript?.segments || [])
     .filter(segment =>
       Number(segment.end) > start &&
@@ -105,155 +94,92 @@ function collectTimedWords(
     .flatMap(estimateWordsFromSegment);
 }
 
-function groupWords(words) {
-  const cfg = RENDER_CONFIG.captions;
-  const groups = [];
+function toCaptionTokens(words, clipStart, clipEnd) {
+  return words
+    .map((word, index) => {
+      const from = Math.max(clipStart, Number(word.start));
+      const to = Math.min(clipEnd, Number(word.end));
 
-  let current = [];
+      if (!(to > from)) return null;
 
-  const flush = () => {
-    if (!current.length) return;
-
-    groups.push(current);
-    current = [];
-  };
-
-  for (const word of words) {
-    const previous = current.at(-1);
-
-    const pause =
-      previous
-        ? word.start - previous.end
-        : 0;
-
-    if (
-      current.length &&
-      (
-        current.length >= cfg.maxWords ||
-        pause >= cfg.pauseBreakSeconds
-      )
-    ) {
-      flush();
-    }
-
-    current.push(word);
-
-    if (
-      current.length >= 2 &&
-      /[.!?…]$/.test(word.text)
-    ) {
-      flush();
-    }
-
-    else if (
-      current.length >= cfg.targetWords &&
-      /[,;:]$/.test(word.text)
-    ) {
-      flush();
-    }
-  }
-
-  flush();
-
-  // Evita um último bloco visualmente feio com 1 palavra,
-  // quando há espaço no bloco anterior e não existe pausa grande.
-  if (
-    groups.length >= 2 &&
-    groups.at(-1).length === 1
-  ) {
-    const last = groups.at(-1);
-    const previous = groups.at(-2);
-
-    const pause =
-      last[0].start -
-      previous.at(-1).end;
-
-    if (
-      previous.length < cfg.maxWords &&
-      pause < cfg.pauseBreakSeconds
-    ) {
-      previous.push(last[0]);
-      groups.pop();
-    }
-  }
-
-  return groups;
-}
-
-function findBalancedLineCut(tokens) {
-  const cfg = RENDER_CONFIG.captions;
-
-  const single = tokens.join(" ");
-
-  if (
-    single.length <= cfg.maxLineChars ||
-    tokens.length < 2
-  ) {
-    return null;
-  }
-
-  let best = {
-    cost: Number.POSITIVE_INFINITY,
-    cut: null,
-  };
-
-  for (
-    let cut = 1;
-    cut < tokens.length;
-    cut += 1
-  ) {
-    const first =
-      tokens.slice(0,cut).join(" ");
-
-    const second =
-      tokens.slice(cut).join(" ");
-
-    const overflow =
-      Math.max(
+      const startMs = Math.max(
         0,
-        first.length - cfg.maxLineChars,
-      ) +
-      Math.max(
-        0,
-        second.length - cfg.maxLineChars,
+        Math.round((from - clipStart) * 1000),
       );
 
-    const cost =
-      Math.abs(first.length - second.length) +
-      overflow * 5;
+      const endMs = Math.max(
+        startMs + 20,
+        Math.round((to - clipStart) * 1000),
+      );
 
-    if (cost < best.cost) {
-      best = { cost, cut };
+      return {
+        text: `${index === 0 ? "" : " "}${word.text}`,
+        startMs,
+        endMs,
+        timestampMs: Math.round((startMs + endMs) / 2),
+        confidence: null,
+      };
+    })
+    .filter(Boolean);
+}
+
+function pageFromTokens(tokens) {
+  const startMs = tokens[0].fromMs;
+  const endMs = Math.max(
+    startMs + 20,
+    ...tokens.map(token => token.toMs),
+  );
+
+  return {
+    text: tokens
+      .map(token => token.text)
+      .join("")
+      .trim(),
+    startMs,
+    durationMs: endMs - startMs,
+    tokens,
+  };
+}
+
+function splitOversizedPage(page, maxWords) {
+  if (page.tokens.length <= maxWords) return [page];
+
+  const result = [];
+  let index = 0;
+
+  while (index < page.tokens.length) {
+    let take = Math.min(
+      maxWords,
+      page.tokens.length - index,
+    );
+
+    if (
+      page.tokens.length - (index + take) === 1 &&
+      take > 2
+    ) {
+      take -= 1;
     }
+
+    result.push(
+      pageFromTokens(
+        page.tokens.slice(index, index + take)
+      )
+    );
+
+    index += take;
   }
 
-  return best.cut;
+  return result;
 }
 
-function plainText(words) {
-  const tokens = words.map(word =>
-    word.text.toUpperCase()
-  );
-
-  const cut = findBalancedLineCut(tokens);
-
-  if (!cut) {
-    return tokens.join(" ");
-  }
-
-  return (
-    tokens.slice(0,cut).join(" ") +
-    "\n" +
-    tokens.slice(cut).join(" ")
-  );
-}
-
-export function buildCaptionCues(
+export function buildRemotionCaptionPages(
   transcript,
   start,
   end,
   textOverride = null,
 ) {
+  const cfg = RENDER_CONFIG.captions;
+
   const words = collectTimedWords(
     transcript,
     start,
@@ -261,227 +187,23 @@ export function buildCaptionCues(
     textOverride,
   );
 
-  const groups = groupWords(words);
-
-  const cues = [];
-
-  for (const group of groups) {
-    for (
-      let activeIndex = 0;
-      activeIndex < group.length;
-      activeIndex += 1
-    ) {
-      const word = group[activeIndex];
-
-      const next =
-        group[activeIndex + 1];
-
-      const cueStart = Math.max(
-        start,
-        word.start,
-      );
-
-      let cueEnd =
-        next
-          ? Math.min(end,next.start)
-          : Math.min(
-              end,
-              Math.max(
-                word.end,
-                word.start + 0.08,
-              ),
-            );
-
-      if (cueEnd <= cueStart) {
-        cueEnd = Math.min(
-          end,
-          cueStart + 0.08,
-        );
-      }
-
-      if (cueEnd <= cueStart) continue;
-
-      cues.push({
-        start: cueStart - start,
-        end: cueEnd - start,
-
-        words: group.map(item => ({
-          ...item,
-          text: item.text,
-        })),
-
-        activeIndex,
-
-        text: plainText(group),
-      });
-    }
-  }
-
-  return cues;
-}
-
-function assTime(seconds) {
-  const centiseconds = Math.max(
-    0,
-    Math.round(Number(seconds) * 100),
+  const captions = toCaptionTokens(
+    words,
+    start,
+    end,
   );
 
-  const hours =
-    Math.floor(centiseconds / 360000);
+  if (!captions.length) return [];
 
-  const minutes =
-    Math.floor(
-      (centiseconds % 360000) / 6000,
-    );
+  const { pages } = createTikTokStyleCaptions({
+    captions,
+    combineTokensWithinMilliseconds:
+      cfg.combineTokensWithinMilliseconds,
+    breakOnSilenceAfterMilliseconds:
+      cfg.breakOnSilenceAfterMilliseconds,
+  });
 
-  const secs =
-    Math.floor(
-      (centiseconds % 6000) / 100,
-    );
-
-  const cs =
-    centiseconds % 100;
-
-  return (
-    `${hours}:` +
-    `${String(minutes).padStart(2,"0")}:` +
-    `${String(secs).padStart(2,"0")}.` +
-    String(cs).padStart(2,"0")
+  return pages.flatMap(page =>
+    splitOversizedPage(page, cfg.maxWords)
   );
-}
-
-const escapeAssToken = text =>
-  String(text)
-    .replace(/\\/g,"\\\\")
-    .replace(/[{}]/g,"");
-
-function renderCueText(
-  cue,
-  captionSettings,
-) {
-  const cfg = RENDER_CONFIG.captions;
-
-  const tokens = cue.words.map(word =>
-    String(word.text || "").toUpperCase()
-  );
-
-  const lineCut =
-    findBalancedLineCut(tokens);
-
-  const kinetic =
-    captionSettings.style !== "clean";
-
-  const activeScale =
-    Math.round(cfg.activeScale * 100);
-
-  let result = "";
-
-  for (
-    let index = 0;
-    index < tokens.length;
-    index += 1
-  ) {
-    if (index > 0) {
-      result +=
-        lineCut === index
-          ? "\\N"
-          : " ";
-    }
-
-    const token =
-      escapeAssToken(tokens[index]);
-
-    if (
-      kinetic &&
-      index === cue.activeIndex
-    ) {
-      result +=
-        `{\\c${cfg.activeColour}\\fscx${activeScale}\\fscy${activeScale}\\t(0,110,\\fscx100\\fscy100)}` +
-        token +
-        `{\\c${cfg.normalColour}\\fscx100\\fscy100}`;
-    }
-
-    else {
-      result +=
-        `{\\c${cfg.normalColour}\\fscx100\\fscy100}` +
-        token;
-    }
-  }
-
-  return result;
-}
-
-export function buildAssDocument(
-  cues,
-  captionSettings,
-) {
-  const cfg = RENDER_CONFIG;
-
-  const size = Math.round(
-    cfg.captions.fontSize *
-    Number(captionSettings.scale || 1)
-  );
-
-  const position =
-    captionSettings.position || "lower";
-
-  const alignment =
-    position === "center"
-      ? 5
-      : 2;
-
-  const marginV =
-    position === "lower_mid"
-      ? cfg.captions.lowerMidMargin
-      : cfg.captions.lowerMargin;
-
-  const header =
-    `[Script Info]
-ScriptType: v4.00+
-PlayResX: ${cfg.width}
-PlayResY: ${cfg.height}
-WrapStyle: 0
-ScaledBorderAndShadow: yes
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Caption,${cfg.captions.fontName},${size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,94,100,0,0,1,${cfg.captions.outline},${cfg.captions.shadow},${alignment},${cfg.safeArea.left},${cfg.safeArea.right},${marginV},1
-
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-`;
-
-  return (
-    header +
-    cues
-      .map(cue =>
-        `Dialogue: 0,${assTime(cue.start)},${assTime(cue.end)},Caption,,0,0,0,,${renderCueText(cue,captionSettings)}`
-      )
-      .join("\n") +
-    "\n"
-  );
-}
-
-export async function writeAssCaptions(
-  transcript,
-  settings,
-  file,
-) {
-  const cues = buildCaptionCues(
-    transcript,
-    settings.startSeconds,
-    settings.endSeconds,
-    settings.captions.text,
-  );
-
-  await writeFile(
-    file,
-    buildAssDocument(
-      cues,
-      settings.captions,
-    ),
-    "utf8",
-  );
-
-  return cues.length;
 }
