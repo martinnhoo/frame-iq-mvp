@@ -916,7 +916,7 @@ export default function ClipNetworkPage() {
                             ?"bg-sky-400/25"
                             :"bg-white/[.07]"
                     }`}>
-                      {active&&stage!=="done"&&stage!=="error"&&
+                      {active&&stage!=="done"&&(stage as string)!=="error"&&
                         <div className="h-full w-2/3 animate-pulse rounded-full bg-sky-300/90"/>
                       }
                     </div>
