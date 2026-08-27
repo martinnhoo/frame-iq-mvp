@@ -151,6 +151,11 @@ export default function ClipNetworkPage() {
   const primaryAccount = accounts[0];
   const instagram = socials.find(s => s.clip_account_id === primaryAccount?.id && s.platform === "instagram" && s.status === "active");
   const publicationByClip = useMemo(() => new Map(publications.map(p => [p.clip_id,p])),[publications]);
+  const publicationStatusByClip = useMemo(() => {
+    const map:Record<string,string> = {};
+    for (const p of publications) if (p.clip_id && p.status) map[p.clip_id] = p.status;
+    return map;
+  },[publications]);
   const accountById = useMemo(() => new Map(accounts.map(a => [a.id,a])),[accounts]);
   const sourceById = useMemo(() => new Map(sources.map(s => [s.id,s])),[sources]);
   const clipStatsByVideo = useMemo(() => {
