@@ -31,6 +31,9 @@ RUN mkdir -p /app/vision \
 # LR-ASD TalkSet checkpoint pinned to an immutable upstream commit (MIT repository).
 RUN python3 -c "import urllib.request, pathlib; u='https://raw.githubusercontent.com/Junhua-Liao/LR-ASD/1b6dcd2d8fc2895683de6508ec6294ec47d388ca/weight/finetuning_TalkSet.model'; p=pathlib.Path('/app/vision/lrasd_talkset.model'); urllib.request.urlretrieve(u, p); assert p.stat().st_size == 3426337, f'LR-ASD weight size invalido: {p.stat().st_size}'"
 
+# Lightweight 8-class facial emotion model (FER+, ONNX Model Zoo).
+RUN python3 -c "import urllib.request, pathlib, hashlib; u='https://huggingface.co/onnxmodelzoo/emotion-ferplus-8/resolve/4d016bfebdb4122b1f37511c5a9d40b5c87054a8/emotion-ferplus-8.onnx?download=true'; p=pathlib.Path('/app/vision/emotion-ferplus-8.onnx'); urllib.request.urlretrieve(u,p); d=p.read_bytes(); assert len(d)>30000000, f'FER+ invalido: {len(d)} bytes'; assert hashlib.sha256(d).hexdigest()=='a2a2ba6a335a3b29c21acb6272f962bd3d47f84952aaffa03b60986e04efa61c', 'SHA256 FER+ invalido'"
+
 COPY package.json ./
 RUN npm install --omit=dev --no-audit --no-fund
 
@@ -40,8 +43,9 @@ RUN node -e "import('@remotion/renderer').then(async ({ensureBrowser}) => { awai
 COPY index.mjs mediaResolver.mjs gateway.mjs ./
 COPY render ./render
 COPY vision ./vision
-RUN python3 -m py_compile /app/vision/ai_editor_v4.py /app/vision/ai_editor_v5.py /app/vision/ai_editor_v6_lrasd.py
+RUN python3 -m py_compile /app/vision/ai_editor_v4.py /app/vision/ai_editor_v5.py /app/vision/ai_editor_v6_lrasd.py /app/vision/multimodal_analyzer_light.py
 RUN python3 /app/vision/ai_editor_v6_lrasd.py --self-test --weights /app/vision/lrasd_talkset.model
+RUN python3 /app/vision/multimodal_analyzer_light.py --self-test --input /dev/null --yunet /app/vision/yunet.onnx --emotion-model /app/vision/emotion-ferplus-8.onnx
 COPY remotion ./remotion
 
 RUN mkdir -p /data/tmp

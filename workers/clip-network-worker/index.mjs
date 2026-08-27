@@ -34,6 +34,7 @@ import { renderCaptionedVideo, renderEditorialVideo } from "./render/remotionRen
 import { buildVisualPlan } from "./render/visualDirector.mjs";
 import { renderEditorialV4 } from "./render/v4Renderer.mjs";
 import { renderEditorialV5 } from "./render/v5Renderer.mjs";
+import { buildMultimodalTimeline } from "./vision/multimodalAnalyzer.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const WORKER_SECRET = process.env.CLIP_WORKER_SECRET;
@@ -1218,6 +1219,49 @@ async function processJob(job) {
       });
     }
 
+    // Multimodal Analyzer Light v1
+    stage = "analyzing";
+    await setStage(
+      job.id,
+      "analyzing",
+      "Multimodal Light: rostos, emocoes, audio e mudancas de cena",
+    );
+
+    let multimodal = {
+      version: "multimodal_light_v1",
+      backend: "unavailable",
+      features: [],
+      summary: { available: false },
+      events: [],
+    };
+
+    try {
+      multimodal = await buildMultimodalTimeline({
+        master,
+        sampleFps: Number(process.env.CLIP_MULTIMODAL_FPS || 1),
+      });
+      log(
+        `[video ${job.id}] multimodal: ${multimodal.events?.length || 0} eventos, ` +
+        `${multimodal.summary?.face_tracks_seen || 0} face tracks, ` +
+        `${multimodal.summary?.scene_changes || 0} scene changes`,
+      );
+    } catch (error) {
+      log(
+        `[video ${job.id}] multimodal indisponivel; seguindo text-only:`,
+        error?.message || error,
+      );
+      multimodal = {
+        version: "multimodal_light_v1",
+        backend: "error",
+        features: [],
+        summary: {
+          available: false,
+          error: String(error?.message || error).slice(0, 500),
+        },
+        events: [],
+      };
+    }
+
         // 3. Diretor Editorial v2.
     stage = "analyzing";
 
@@ -1240,6 +1284,7 @@ async function processJob(job) {
           duration_seconds: duration || transcript.duration,
         },
         transcript,
+        multimodal,
       },
       { timeoutMs: 10 * 60 * 1000 },
     );
