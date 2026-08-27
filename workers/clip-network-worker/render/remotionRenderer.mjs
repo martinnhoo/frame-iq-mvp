@@ -167,7 +167,7 @@ function buildZoomExpression(editPlan, durationSeconds, fps = FPS) {
   const camera = Array.isArray(editPlan?.camera) ? editPlan.camera : [];
   const maxFrame = Math.max(1, Math.ceil(Number(durationSeconds || 1) * fps) - 1);
 
-  let expression = "1.02";
+  let expression = "1";
 
   for (const event of [...camera].reverse()) {
     const start = clamp(event?.start ?? 0, 0, durationSeconds);
@@ -177,8 +177,8 @@ function buildZoomExpression(editPlan, durationSeconds, fps = FPS) {
     const startFrame = Math.max(0, Math.round(start * fps));
     const endFrame = Math.min(maxFrame, Math.max(startFrame + 1, Math.round(end * fps)));
     const span = Math.max(1, endFrame - startFrame);
-    const from = clamp(event?.scale_from ?? event?.scale ?? 1.02, 1, 1.16);
-    const to = clamp(event?.scale_to ?? event?.scale ?? from, 1, 1.16);
+    const from = clamp(event?.scale_from ?? event?.scale ?? 1.02, 1, 1.12);
+    const to = clamp(event?.scale_to ?? event?.scale ?? from, 1, 1.12);
     const progress = `(on-${startFrame})/${span}`;
     const eased = easeExpression(progress, String(event?.easing || "linear"));
     const zoom = `(${from}+(${to}-${from})*(${eased}))`;
@@ -197,7 +197,7 @@ function buildZoomExpression(editPlan, durationSeconds, fps = FPS) {
     const halfFrames = Math.max(1, Math.round((duration * fps) / 2));
     const startFrame = Math.max(0, centerFrame - halfFrames);
     const endFrame = Math.min(maxFrame, centerFrame + halfFrames);
-    const target = clamp(item?.scale ?? 1.1, 1, 1.16);
+    const target = clamp(item?.scale ?? 1.1, 1, 1.12);
     const pulse =
       `(1-abs(on-${centerFrame})/${halfFrames})`;
     const punch =
@@ -206,7 +206,7 @@ function buildZoomExpression(editPlan, durationSeconds, fps = FPS) {
     expression = `max(${expression},${punch})`;
   }
 
-  return `min(1.16,max(1,${expression}))`;
+  return `min(1.12,max(1,${expression}))`;
 }
 
 async function renderComposition({

@@ -13,17 +13,17 @@ export const RENDER_CONFIG = Object.freeze({
   fps: 30,
   captions: Object.freeze({
     fontFamily: '"Nimbus Sans Narrow", "Arial Narrow", Arial, sans-serif',
-    fontSize: 116,
-    outline: 15,
-    bottom: 350,
-    lowerMidBottom: 500,
-    targetWords: 3,
-    maxWords: 4,
+    fontSize: 96,
+    outline: 10,
+    bottom: 390,
+    lowerMidBottom: 520,
+    targetWords: 5,
+    maxWords: 6,
     combineTokensWithinMilliseconds: 1100,
-    breakOnSilenceAfterMilliseconds: 380,
-    blockEntranceFrames: 5,
-    blockEntranceScale: 0.84,
-    blockEntranceTranslateY: 35,
+    breakOnSilenceAfterMilliseconds: 420,
+    blockEntranceFrames: 4,
+    blockEntranceScale: 0.92,
+    blockEntranceTranslateY: 18,
     activeColour: "#FFD800",
     normalColour: "#FFFFFF",
   }),
@@ -62,11 +62,11 @@ export function normalizeRenderSettings(variantKey, raw = {}, clip = {}) {
   );
 
   const requestedPosition = String(
-    nestedCaptions.position ?? raw.caption_position ?? "lower",
+    nestedCaptions.position ?? raw.caption_position ?? "lower_mid",
   );
   const position = ["lower", "lower_mid", "center"].includes(requestedPosition)
     ? requestedPosition
-    : "lower";
+    : "lower_mid";
 
   return {
     startSeconds: start,
@@ -76,18 +76,27 @@ export function normalizeRenderSettings(variantKey, raw = {}, clip = {}) {
         nestedCaptions.enabled ?? raw.captions ?? preset.captions
       ),
       scale: Math.min(
-        1.2,
+        1.12,
         Math.max(
-          0.8,
-          finite(nestedCaptions.scale ?? raw.caption_scale, 1),
+          0.78,
+          finite(nestedCaptions.scale ?? raw.caption_scale, 0.9),
         ),
       ),
       position,
       text: nestedCaptions.text ?? raw.caption_text ?? null,
       style: preset.captionStyle,
+      uppercase: nestedCaptions.uppercase === true,
+      maxWords: Math.min(
+        7,
+        Math.max(3, Math.round(finite(nestedCaptions.max_words, 6))),
+      ),
+      phraseMode: nestedCaptions.phrase_mode !== false,
       highlightActiveWord: nestedCaptions.highlightActiveWord !== false,
     },
-    framing: { mode: "cover_center", zoomIntensity: "none" },
+    framing: {
+      mode: Array.isArray(raw.framing) ? "visual_director" : "cover_center",
+      zoomIntensity: "none",
+    },
     audio: { normalize: raw.audio?.normalize !== false },
     hookTitle: {
       enabled: Boolean(

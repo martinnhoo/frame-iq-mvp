@@ -1,10 +1,16 @@
-import { createTikTokStyleCaptions } from "@remotion/captions";
 import { RENDER_CONFIG } from "./config.mjs";
 
 const normalizeText = text =>
   String(text || "")
     .replace(/\s+/g, " ")
     .trim();
+
+const bare = text =>
+  normalizeText(text)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, "");
 
 function cleanTimedWords(rawWords = []) {
   const result = [];
@@ -53,7 +59,6 @@ function estimateWordsFromSegment(segment) {
     start + 0.02,
     Number(segment.end) || start,
   );
-
   const span = end - start;
 
   return tokens.map((text, index) => ({
@@ -63,67 +68,97 @@ function estimateWordsFromSegment(segment) {
   }));
 }
 
-function collectTimedWords(
-  transcript,
-  start,
-  end,
-  textOverride = null,
-) {
-  if (textOverride) {
-    return estimateWordsFromSegment({
-      start,
-      end,
-      text: textOverride,
-    });
-  }
+function timedWordsForSegment(allWords, segment, clipStart, clipEnd) {
+  const start = Math.max(clipStart, Number(segment.start) || clipStart);
+  const end = Math.min(clipEnd, Number(segment.end) || clipEnd);
 
-  const precise = cleanTimedWords(
-    transcript?.words || []
-  ).filter(word =>
-    word.end > start &&
-    word.start < end
+  let words = allWords.filter(
+    word => word.end > start && word.start < end,
   );
 
-  if (precise.length) return precise;
+  if (!words.length) {
+    words = estimateWordsFromSegment({
+      start,
+      end,
+      text: segment.text,
+    });
+  } else {
+    words = words.map(word => ({ ...word }));
+  }
 
-  return (transcript?.segments || [])
-    .filter(segment =>
-      Number(segment.end) > start &&
-      Number(segment.start) < end
+  const transcriptTokens = normalizeText(segment.text)
+    .split(" ")
+    .filter(Boolean);
+
+  if (
+    transcriptTokens.length === words.length &&
+    transcriptTokens.every((token, index) =>
+      !bare(token) || !bare(words[index].text) || bare(token) === bare(words[index].text)
     )
-    .flatMap(estimateWordsFromSegment);
+  ) {
+    words = words.map((word, index) => ({
+      ...word,
+      text: transcriptTokens[index],
+    }));
+  } else if (words.length) {
+    const ending = normalizeText(segment.text).match(/[!?….,;:]+$/)?.[0];
+    if (ending && !/[!?….,;:]$/.test(words.at(-1).text)) {
+      words[words.length - 1].text += ending;
+    }
+  }
+
+  return words;
 }
 
-function toCaptionTokens(words, clipStart, clipEnd) {
+function toPageTokens(words, clipStart, clipEnd) {
   return words
     .map((word, index) => {
       const from = Math.max(clipStart, Number(word.start));
       const to = Math.min(clipEnd, Number(word.end));
-
       if (!(to > from)) return null;
 
-      const startMs = Math.max(
+      const fromMs = Math.max(
         0,
         Math.round((from - clipStart) * 1000),
       );
-
-      const endMs = Math.max(
-        startMs + 20,
+      const toMs = Math.max(
+        fromMs + 20,
         Math.round((to - clipStart) * 1000),
       );
 
       return {
         text: `${index === 0 ? "" : " "}${word.text}`,
-        startMs,
-        endMs,
-        timestampMs: Math.round((startMs + endMs) / 2),
-        confidence: null,
+        fromMs,
+        toMs,
       };
     })
     .filter(Boolean);
 }
 
-function pageFromTokens(tokens) {
+function balancedGroups(words, maxWords) {
+  if (!words.length) return [];
+  if (words.length <= maxWords) return [words];
+
+  const groups = Math.ceil(words.length / maxWords);
+  const baseSize = Math.floor(words.length / groups);
+  let remainder = words.length % groups;
+  const result = [];
+  let cursor = 0;
+
+  for (let i = 0; i < groups; i += 1) {
+    const size = baseSize + (remainder > 0 ? 1 : 0);
+    remainder -= remainder > 0 ? 1 : 0;
+    result.push(words.slice(cursor, cursor + size));
+    cursor += size;
+  }
+
+  return result.filter(group => group.length);
+}
+
+function pageFromWords(words, clipStart, clipEnd) {
+  const tokens = toPageTokens(words, clipStart, clipEnd);
+  if (!tokens.length) return null;
+
   const startMs = tokens[0].fromMs;
   const endMs = Math.max(
     startMs + 20,
@@ -131,45 +166,11 @@ function pageFromTokens(tokens) {
   );
 
   return {
-    text: tokens
-      .map(token => token.text)
-      .join("")
-      .trim(),
+    text: tokens.map(token => token.text).join("").trim(),
     startMs,
     durationMs: endMs - startMs,
     tokens,
   };
-}
-
-function splitOversizedPage(page, maxWords) {
-  if (page.tokens.length <= maxWords) return [page];
-
-  const result = [];
-  let index = 0;
-
-  while (index < page.tokens.length) {
-    let take = Math.min(
-      maxWords,
-      page.tokens.length - index,
-    );
-
-    if (
-      page.tokens.length - (index + take) === 1 &&
-      take > 2
-    ) {
-      take -= 1;
-    }
-
-    result.push(
-      pageFromTokens(
-        page.tokens.slice(index, index + take)
-      )
-    );
-
-    index += take;
-  }
-
-  return result;
 }
 
 export function buildRemotionCaptionPages(
@@ -177,33 +178,59 @@ export function buildRemotionCaptionPages(
   start,
   end,
   textOverride = null,
+  captionSettings = {},
 ) {
-  const cfg = RENDER_CONFIG.captions;
-
-  const words = collectTimedWords(
-    transcript,
-    start,
-    end,
-    textOverride,
+  const maxWords = Math.min(
+    7,
+    Math.max(
+      3,
+      Number(captionSettings.maxWords || RENDER_CONFIG.captions.maxWords),
+    ),
   );
 
-  const captions = toCaptionTokens(
-    words,
-    start,
-    end,
-  );
+  if (textOverride) {
+    return balancedGroups(
+      estimateWordsFromSegment({ start, end, text: textOverride }),
+      maxWords,
+    )
+      .map(words => pageFromWords(words, start, end))
+      .filter(Boolean);
+  }
 
-  if (!captions.length) return [];
+  const preciseWords = cleanTimedWords(transcript?.words || []);
+  const segments = (transcript?.segments || [])
+    .filter(
+      segment =>
+        Number(segment.end) > start &&
+        Number(segment.start) < end &&
+        normalizeText(segment.text),
+    )
+    .sort((a, b) => Number(a.start) - Number(b.start));
 
-  const { pages } = createTikTokStyleCaptions({
-    captions,
-    combineTokensWithinMilliseconds:
-      cfg.combineTokensWithinMilliseconds,
-    breakOnSilenceAfterMilliseconds:
-      cfg.breakOnSilenceAfterMilliseconds,
-  });
+  if (!segments.length) {
+    return balancedGroups(
+      preciseWords.filter(word => word.end > start && word.start < end),
+      maxWords,
+    )
+      .map(words => pageFromWords(words, start, end))
+      .filter(Boolean);
+  }
 
-  return pages.flatMap(page =>
-    splitOversizedPage(page, cfg.maxWords)
-  );
+  const pages = [];
+
+  for (const segment of segments) {
+    const words = timedWordsForSegment(
+      preciseWords,
+      segment,
+      start,
+      end,
+    );
+
+    for (const group of balancedGroups(words, maxWords)) {
+      const page = pageFromWords(group, start, end);
+      if (page) pages.push(page);
+    }
+  }
+
+  return pages;
 }

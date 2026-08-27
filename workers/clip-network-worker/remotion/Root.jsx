@@ -10,8 +10,8 @@ const baseProps = {
   pages: [],
   durationSeconds: 1,
   captionSettings: {
-    scale: 1,
-    position: "lower",
+    scale: 0.9,
+    position: "lower_mid",
     highlightActiveWord: true,
   },
 };
@@ -29,7 +29,7 @@ const metadata = ({ props }) => ({
 const editorialDefaults = {
   ...baseProps,
   editPlan: {
-    version: 2,
+    version: 3,
     camera: [],
     overlays: [],
     emphasis: [],

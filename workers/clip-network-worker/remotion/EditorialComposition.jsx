@@ -11,12 +11,12 @@ import {
 
 const DESIGN = {
   fontFamily: '"Nimbus Sans Narrow", "Arial Narrow", Arial, sans-serif',
-  captionFontSize: 116,
-  captionOutline: 15,
+  captionFontSize: 96,
+  captionOutline: 10,
   normalColour: "#FFFFFF",
   activeColour: "#FFD800",
-  captionBottom: 350,
-  captionLowerMidBottom: 500,
+  captionBottom: 390,
+  captionLowerMidBottom: 520,
 };
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
@@ -30,7 +30,7 @@ function CameraVideo({ videoSrc, editPlan }) {
     item => time >= Number(item.start) && time < Number(item.end),
   );
 
-  let scale = 1.02;
+  let scale = 1;
   let x = 0;
   let y = 0;
 
@@ -42,8 +42,8 @@ function CameraVideo({ videoSrc, editPlan }) {
       progress,
       [0, 1],
       [
-        Number(event.scale_from ?? event.scale ?? 1.02),
-        Number(event.scale_to ?? event.scale ?? 1.02),
+        Number(event.scale_from ?? event.scale ?? 1),
+        Number(event.scale_to ?? event.scale ?? 1),
       ],
       { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
     );
@@ -58,11 +58,11 @@ function CameraVideo({ videoSrc, editPlan }) {
     const distance = Math.abs(time - center);
     if (distance > duration / 2) continue;
     const pulse = 1 - distance / (duration / 2);
-    const target = Number(emphasis.scale || 1.1);
+    const target = Number(emphasis.scale || 1.08);
     scale = Math.max(scale, 1 + (target - 1) * pulse);
   }
 
-  scale = clamp(scale, 1, 1.16);
+  scale = clamp(scale, 1, 1.12);
   const maxShift = Math.max(0, (scale - 1) * 42);
 
   return (
@@ -88,21 +88,22 @@ function CaptionPage({ page, captionSettings }) {
   const entrance = spring({
     fps,
     frame,
-    durationInFrames: 5,
+    durationInFrames: 4,
     config: { damping: 200 },
   });
 
-  const scale = interpolate(entrance, [0, 1], [0.84, 1], {
+  const scale = interpolate(entrance, [0, 1], [0.92, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const translateY = interpolate(entrance, [0, 1], [35, 0], {
+  const translateY = interpolate(entrance, [0, 1], [18, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   const nowMs = page.startMs + (frame / fps) * 1000;
-  const fontSize = DESIGN.captionFontSize * Number(captionSettings?.scale || 1);
+  const fontSize = DESIGN.captionFontSize * Number(captionSettings?.scale || 0.9);
+  const uppercase = captionSettings?.uppercase === true;
 
   const position =
     captionSettings?.position === "center"
@@ -118,8 +119,8 @@ function CaptionPage({ page, captionSettings }) {
     <div
       style={{
         position: "absolute",
-        left: "5%",
-        width: "90%",
+        left: "7%",
+        width: "86%",
         textAlign: "center",
         ...position,
       }}
@@ -131,13 +132,13 @@ function CaptionPage({ page, captionSettings }) {
           fontFamily: DESIGN.fontFamily,
           fontSize,
           fontWeight: 900,
-          lineHeight: 0.96,
-          letterSpacing: "-2.5px",
-          textTransform: "uppercase",
+          lineHeight: 0.98,
+          letterSpacing: "-1.4px",
+          textTransform: uppercase ? "uppercase" : "none",
           whiteSpace: "pre-wrap",
           WebkitTextStroke: `${DESIGN.captionOutline}px #000000`,
           paintOrder: "stroke fill",
-          filter: "drop-shadow(0 2px 1px rgba(0,0,0,0.12))",
+          filter: "drop-shadow(0 3px 2px rgba(0,0,0,0.18))",
         }}
       >
         {page.tokens.map((token, index) => {
@@ -146,6 +147,10 @@ function CaptionPage({ page, captionSettings }) {
             nowMs >= token.fromMs &&
             nowMs < token.toMs;
 
+          const text = uppercase
+            ? String(token.text || "").toUpperCase()
+            : String(token.text || "");
+
           return (
             <span
               key={`${token.fromMs}-${index}`}
@@ -153,7 +158,7 @@ function CaptionPage({ page, captionSettings }) {
                 color: active ? DESIGN.activeColour : DESIGN.normalColour,
               }}
             >
-              {String(token.text || "").toUpperCase()}
+              {text}
             </span>
           );
         })}
@@ -168,37 +173,36 @@ function Headline({ text }) {
   const entrance = spring({
     fps,
     frame,
-    config: { damping: 18, stiffness: 180 },
-    durationInFrames: 10,
+    config: { damping: 20, stiffness: 170 },
+    durationInFrames: 9,
   });
 
   return (
     <div
       style={{
         position: "absolute",
-        top: 150,
-        left: 70,
-        right: 70,
+        top: 120,
+        left: 80,
+        right: 80,
         textAlign: "center",
         opacity: entrance,
-        transform: `translateY(${interpolate(entrance, [0, 1], [-18, 0])}px)`,
+        transform: `translateY(${interpolate(entrance, [0, 1], [-12, 0])}px)`,
       }}
     >
       <span
         style={{
           display: "inline-block",
-          maxWidth: 900,
-          padding: "15px 23px",
-          borderRadius: 18,
-          backgroundColor: "rgba(0,0,0,0.72)",
+          maxWidth: 850,
+          padding: "11px 17px",
+          borderRadius: 12,
+          backgroundColor: "rgba(0,0,0,0.66)",
           color: "#FFFFFF",
           fontFamily: DESIGN.fontFamily,
-          fontSize: 60,
-          lineHeight: 1.02,
+          fontSize: 44,
+          lineHeight: 1.04,
           fontWeight: 900,
-          letterSpacing: "-1.4px",
-          textTransform: "uppercase",
-          boxShadow: "0 8px 28px rgba(0,0,0,0.22)",
+          letterSpacing: "-0.6px",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
         }}
       >
         {text}
@@ -214,13 +218,13 @@ function Overlay({ overlay }) {
     <div
       style={{
         position: "absolute",
-        left: 70,
-        right: 70,
+        left: 80,
+        right: 80,
         top:
           overlay.position === "upper_mid"
-            ? 400
+            ? 350
             : overlay.position === "lower_mid"
-              ? 1120
+              ? 1080
               : 170,
         textAlign: "center",
       }}
@@ -228,17 +232,16 @@ function Overlay({ overlay }) {
       <span
         style={{
           display: "inline-block",
-          padding: isEmphasis ? "12px 18px" : "10px 16px",
-          borderRadius: 14,
+          padding: isEmphasis ? "10px 15px" : "9px 14px",
+          borderRadius: 11,
           backgroundColor: isEmphasis
-            ? "rgba(0,0,0,0.78)"
-            : "rgba(0,0,0,0.64)",
+            ? "rgba(0,0,0,0.74)"
+            : "rgba(0,0,0,0.60)",
           color: isEmphasis ? "#FFD800" : "#FFFFFF",
           fontFamily: DESIGN.fontFamily,
-          fontSize: isEmphasis ? 56 : 46,
+          fontSize: isEmphasis ? 48 : 40,
           fontWeight: 900,
-          lineHeight: 1,
-          textTransform: "uppercase",
+          lineHeight: 1.02,
         }}
       >
         {overlay.text}

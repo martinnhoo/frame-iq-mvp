@@ -1,24 +1,24 @@
 /**
- * AdBrief Clip Network â€” worker da mÃ¡quina de cortes.
+ * AdBrief Clip Network Ã¢â‚¬â€ worker da mÃƒÂ¡quina de cortes.
  *
- * Um vÃ­deo por vez, do comeÃ§o ao fim, sem clique humano:
+ * Um vÃƒÂ­deo por vez, do comeÃƒÂ§o ao fim, sem clique humano:
  *
- *   descoberto â†’ baixando â†’ transcrevendo â†’ analisando â†’ renderizando â†’ concluÃ­do
+ *   descoberto Ã¢â€ â€™ baixando Ã¢â€ â€™ transcrevendo Ã¢â€ â€™ analisando Ã¢â€ â€™ renderizando Ã¢â€ â€™ concluÃƒÂ­do
  *
- * DivisÃ£o de responsabilidade (mudou de propÃ³sito):
- * - Fly: yt-dlp, ffmpeg, disco temporÃ¡rio. Nada mais.
- * - Lovable/Supabase: banco, storage privilegiado e IA (Gemini), atrÃ¡s da edge
+ * DivisÃƒÂ£o de responsabilidade (mudou de propÃƒÂ³sito):
+ * - Fly: yt-dlp, ffmpeg, disco temporÃƒÂ¡rio. Nada mais.
+ * - Lovable/Supabase: banco, storage privilegiado e IA (Gemini), atrÃƒÂ¡s da edge
  *   function clip-worker-gateway.
- * O worker conhece apenas SUPABASE_URL e CLIP_WORKER_SECRET â€” nem service role
- * nem chave de IA existem nesta mÃ¡quina.
+ * O worker conhece apenas SUPABASE_URL e CLIP_WORKER_SECRET Ã¢â‚¬â€ nem service role
+ * nem chave de IA existem nesta mÃƒÂ¡quina.
  *
- * Regras que o cÃ³digo respeita e que nÃ£o sÃ£o negociÃ¡veis:
- * - SÃ³ processa vÃ­deo cuja FONTE estÃ¡ marcada como autorizada (rights_confirmed).
- * - O master vive apenas no filesystem temporÃ¡rio do worker e Ã© apagado no fim.
- * - Nada Ã© publicado em rede social aqui. Autopilot nesta fase significa
+ * Regras que o cÃƒÂ³digo respeita e que nÃƒÂ£o sÃƒÂ£o negociÃƒÂ¡veis:
+ * - SÃƒÂ³ processa vÃƒÂ­deo cuja FONTE estÃƒÂ¡ marcada como autorizada (rights_confirmed).
+ * - O master vive apenas no filesystem temporÃƒÂ¡rio do worker e ÃƒÂ© apagado no fim.
+ * - Nada ÃƒÂ© publicado em rede social aqui. Autopilot nesta fase significa
  *   "deixar os cortes prontos sozinho".
- * - O bucket Ã© privado: o worker grava o caminho, nÃ£o uma URL pÃºblica.
- * - IdempotÃªncia: candidato tem dedupe_key, vÃ­deo concluÃ­do nÃ£o volta para a
+ * - O bucket ÃƒÂ© privado: o worker grava o caminho, nÃƒÂ£o uma URL pÃƒÂºblica.
+ * - IdempotÃƒÂªncia: candidato tem dedupe_key, vÃƒÂ­deo concluÃƒÂ­do nÃƒÂ£o volta para a
  *   fila, e o lock com lease permite recuperar job abandonado.
  */
 import { spawn } from "node:child_process";
@@ -31,6 +31,7 @@ import { normalizeRenderSettings, revisionStoragePath } from "./render/config.mj
 import { buildRemotionCaptionPages } from "./render/captions.mjs";
 import { buildAudioFilter, buildBaseVideoFilter } from "./render/filters.mjs";
 import { renderCaptionedVideo, renderEditorialVideo } from "./render/remotionRenderer.mjs";
+import { buildVisualPlan } from "./render/visualDirector.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const WORKER_SECRET = process.env.CLIP_WORKER_SECRET;
@@ -50,7 +51,7 @@ const log = (...a) => console.log(`[clip-worker ${new Date().toISOString()}]`, .
 const nowIso = () => new Date().toISOString();
 
 let shuttingDown = false;
-process.on("SIGTERM", () => { shuttingDown = true; log("SIGTERM: encerrando apÃ³s o job atual"); });
+process.on("SIGTERM", () => { shuttingDown = true; log("SIGTERM: encerrando apÃƒÂ³s o job atual"); });
 process.on("SIGINT", () => { shuttingDown = true; });
 
 function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
@@ -72,7 +73,7 @@ function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
 const updateVideo = (videoId, patch) => call("update_video", { video_id: videoId, patch });
 const updateRevision = (revisionId, patch) => call("update_revision", { revision_id: revisionId, patch });
 
-// â”€â”€ Estado do pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Estado do pipeline Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function setStage(videoId, stage, detail) {
   await call("touch_lease", {
@@ -81,7 +82,7 @@ async function setStage(videoId, stage, detail) {
   });
 }
 
-/** Heartbeat: renova o lease a 1/3 do tempo para o reaper nÃ£o roubar o job em curso. */
+/** Heartbeat: renova o lease a 1/3 do tempo para o reaper nÃƒÂ£o roubar o job em curso. */
 function startHeartbeat(videoId, getStage) {
   const interval = setInterval(() => {
     setStage(videoId, getStage(), null).catch((e) => log("heartbeat falhou", e?.message));
@@ -94,7 +95,7 @@ async function claimJob() {
   return job || null;
 }
 
-// â”€â”€ TranscriÃ§Ã£o (Gemini, via gateway) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ TranscriÃƒÂ§ÃƒÂ£o (Gemini, via gateway) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function transcribe(input, dir) {
   const audioDir = join(dir, "audio");
@@ -124,7 +125,7 @@ async function transcribe(input, dir) {
 
   if (!files.length) {
     throw new Error(
-      "Nenhum áudio extraído do master"
+      "Nenhum Ã¡udio extraÃ­do do master"
     );
   }
 
@@ -138,9 +139,9 @@ async function transcribe(input, dir) {
     const chunkPath =
       join(audioDir,file);
 
-    // Fundamental para não acumular drift entre chunks:
-    // o offset é a duração REAL do arquivo, não o fim
-    // da última palavra falada.
+    // Fundamental para nÃ£o acumular drift entre chunks:
+    // o offset Ã© a duraÃ§Ã£o REAL do arquivo, nÃ£o o fim
+    // da Ãºltima palavra falada.
     const chunkDuration =
       await probeDuration(chunkPath);
 
@@ -233,7 +234,7 @@ async function transcribe(input, dir) {
   };
 }
 
-// ── Render ──────────────────────────────────────────────────
+// â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function probeMedia(file) {
   const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file], { timeoutMs: 60_000 });
@@ -261,7 +262,7 @@ async function detectConservativeEdges(master, start, end, hasAudio) {
       ? Math.min(0.75, end - start - trailingStart) : 0;
     return { start: start + Math.max(0, leading), end: end - Math.max(0, trailing) };
   } catch (error) {
-    log("análise conservadora de silêncio ignorada", error?.message || error);
+    log("anÃ¡lise conservadora de silÃªncio ignorada", error?.message || error);
     return { start, end };
   }
 }
@@ -292,7 +293,7 @@ async function prepareBaseClip(
   }
 
   args.push(
-    "-vf", buildBaseVideoFilter(),
+    "-vf", buildBaseVideoFilter(settings.editPlan),
 
     "-c:v", "libx264",
     "-preset", "veryfast",
@@ -335,9 +336,31 @@ async function renderRevision(
   sourceMeta,
   effectiveBounds,
 ) {
+  let parameters = revision.parameters || {};
+
+  if (variant.variant_key === "editorial_master") {
+    try {
+      parameters = await buildVisualPlan({
+        run,
+        callFunction,
+        master,
+        clip,
+        revision,
+        dir,
+        sourceMeta,
+        log,
+      });
+    } catch (error) {
+      log(
+        `[clip ${clip.id}] AI Editor v3 indisponivel; fallback v2:`,
+        error?.message || error,
+      );
+    }
+  }
+
   const settings = normalizeRenderSettings(
     variant.variant_key,
-    revision.parameters,
+    parameters,
     clip,
   );
 
@@ -361,6 +384,7 @@ async function renderRevision(
           settings.startSeconds,
           settings.endSeconds,
           settings.captions.text,
+          settings.captions,
         )
       : [];
 
@@ -371,7 +395,7 @@ async function renderRevision(
         pages,
         durationSeconds: duration,
         captionSettings: settings.captions,
-        editPlan: revision.parameters || {},
+        editPlan: parameters || {},
       });
     } else if (settings.captions.enabled) {
       await renderCaptionedVideo({
@@ -406,11 +430,11 @@ async function renderRevision(
     throw new Error("MP4 invalido: faixa de audio ausente");
   }
 
-  return { out, settings };
+  return { out, settings, parameters };
 }
 
 /**
- * Renderiza e sobe. O bucket Ã© privado de propÃ³sito: gravamos apenas o caminho
+ * Renderiza e sobe. O bucket ÃƒÂ© privado de propÃƒÂ³sito: gravamos apenas o caminho
  * e o dashboard pede uma signed URL na hora de assistir/baixar. Persistir uma
  * URL assinada no banco criaria um link que expira e vira erro silencioso.
  */
@@ -423,11 +447,11 @@ async function renderAndUploadRevision(master, clip, variant, revision, transcri
     render_attempts: Number(revision.render_attempts || 0) + 1,
   });
   try {
-    const { out, settings } = await renderRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds);
+    const { out, settings, parameters: renderedParameters } = await renderRevision(master, clip, variant, revision, transcript, dir, sourceMeta, effectiveBounds);
     const path = revisionStoragePath(clip.user_id, clip.id, variant.variant_key, revision.revision_number);
     await uploadBytes(path, await readFile(out), "video/mp4");
     const parameters = {
-      ...(revision.parameters || {}),
+      ...(renderedParameters || revision.parameters || {}),
       start_seconds: Number(revision.parameters?.start_seconds ?? clip.start_seconds),
       end_seconds: Number(revision.parameters?.end_seconds ?? clip.end_seconds),
       effective_start_seconds: settings.startSeconds,
@@ -451,7 +475,7 @@ async function renderAndUploadRevision(master, clip, variant, revision, transcri
   }
 }
 
-// â”€â”€ Job completo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Job completo Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function failJob(job, error) {
   const retryable = !(error instanceof MediaResolverError) || error.retryable !== false;
@@ -464,7 +488,7 @@ async function failJob(job, error) {
         media_status: "blocked",
         stage_detail: error?.code === "source_too_short"
           ? "fonte curta ignorada"
-          : "fonte bloqueada: erro nÃ£o retentÃ¡vel",
+          : "fonte bloqueada: erro nÃƒÂ£o retentÃƒÂ¡vel",
         last_error: message.slice(0, 2000),
         locked_by: null,
         locked_at: null,
@@ -473,19 +497,19 @@ async function failJob(job, error) {
         processing_finished_at: nowIso(),
       });
     } catch (updateError) {
-      log("nÃ£o consegui registrar o bloqueio terminal", updateError?.message);
+      log("nÃƒÂ£o consegui registrar o bloqueio terminal", updateError?.message);
       await call("fail_job", {
         video_id: job.id,
         attempts: Number(job.attempts || 0),
         retryable,
         error: message,
-      }).catch((e) => log("nÃ£o consegui registrar a falha", e?.message));
+      }).catch((e) => log("nÃƒÂ£o consegui registrar a falha", e?.message));
     }
   } else {
     await call("fail_job", {
       video_id: job.id, attempts: Number(job.attempts || 0),
       retryable, error: message,
-    }).catch((e) => log("nÃ£o consegui registrar a falha", e?.message));
+    }).catch((e) => log("nÃƒÂ£o consegui registrar a falha", e?.message));
   }
 
   log("job falhou", job.id, message);
@@ -499,7 +523,7 @@ async function processJob(job) {
   try {
     const ctx = await call("context", { source_id: job.source_id });
 
-    // 1. MÃ­dia
+    // 1. MÃƒÂ­dia
     const { path: master, strategy } = await resolveMedia({
       video: job, source: ctx.source, dir, supabase: storageShim, bucket: BUCKET,
       onProgress: (detail) => setStage(job.id, "downloading", detail),
@@ -510,11 +534,11 @@ async function processJob(job) {
       stage_detail: `master obtido via ${strategy}`,
     });
 
-    // 2. TranscriÃ§Ã£o â€” reaproveitada se jÃ¡ existe (retry nÃ£o repaga a IA).
+    // 2. TranscriÃƒÂ§ÃƒÂ£o Ã¢â‚¬â€ reaproveitada se jÃƒÂ¡ existe (retry nÃƒÂ£o repaga a IA).
     stage = "transcribing";
     let transcript = job.transcript;
     if (!transcript?.segments?.length) {
-      await setStage(job.id, "transcribing", "transcrevendo Ã¡udio");
+      await setStage(job.id, "transcribing", "transcrevendo ÃƒÂ¡udio");
       transcript = await transcribe(master, dir);
       await updateVideo(job.id, {
         transcript, transcript_status: "ready",
@@ -568,8 +592,8 @@ async function processJob(job) {
 }
 
 /**
- * Backlog de aprovaÃ§Ã£o manual (modo revisÃ£o). Precisa reobter o master, entÃ£o
- * roda sÃ³ quando nÃ£o hÃ¡ vÃ­deo novo na fila.
+ * Backlog de aprovaÃƒÂ§ÃƒÂ£o manual (modo revisÃƒÂ£o). Precisa reobter o master, entÃƒÂ£o
+ * roda sÃƒÂ³ quando nÃƒÂ£o hÃƒÂ¡ vÃƒÂ­deo novo na fila.
  */
 async function processApprovedBacklog() {
   const response = await callFunction(
@@ -709,7 +733,7 @@ async function loop() {
         }
       }
     } catch (e) {
-      log("erro no laço", e?.message || e);
+      log("erro no laÃ§o", e?.message || e);
     }
 
     if (didWork) {
