@@ -2,16 +2,16 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-// manualChunks separa vendors estáveis (cache hit-rate alto entre deploys)
+// manualChunks separa vendors estÃ¡veis (cache hit-rate alto entre deploys)
 // do app code (que muda em cada deploy). Antes era 1 bundle de 715 KB com
-// tudo junto — qualquer commit de feature invalida cache de React inteiro.
-// Com chunks, vendors só re-baixam quando versão muda de fato.
+// tudo junto â€” qualquer commit de feature invalida cache de React inteiro.
+// Com chunks, vendors sÃ³ re-baixam quando versÃ£o muda de fato.
 //
-// Nota intencional: NÃO incluir @lovable.dev/cloud-auth-js junto de
+// Nota intencional: NÃƒO incluir @lovable.dev/cloud-auth-js junto de
 // @supabase/supabase-js. Lovable auth usa supabase-js internamente, e
-// agrupá-los manualmente já causou suspeita de duas instâncias do
-// cliente em produção (refresh_token quebrou). Deixa lovable cair no
-// chunk app default — só supabase-js fica isolado.
+// agrupÃ¡-los manualmente jÃ¡ causou suspeita de duas instÃ¢ncias do
+// cliente em produÃ§Ã£o (refresh_token quebrou). Deixa lovable cair no
+// chunk app default â€” sÃ³ supabase-js fica isolado.
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -26,11 +26,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Core React — quase nunca muda de versão
+          // Core React â€” quase nunca muda de versÃ£o
           "react-vendor": ["react", "react-dom", "react-router-dom"],
-          // Supabase isolado (sem cloud-auth-js — ver nota acima)
+          // Supabase isolado (sem cloud-auth-js â€” ver nota acima)
           "supabase": ["@supabase/supabase-js"],
-          // Radix UI — 24 pacotes pequenos juntos viram um chunk decente
+          // Radix UI â€” 24 pacotes pequenos juntos viram um chunk decente
           "radix": [
             "@radix-ui/react-accordion",
             "@radix-ui/react-alert-dialog",
@@ -62,8 +62,8 @@ export default defineConfig({
           ],
           "query": ["@tanstack/react-query"],
           "forms": ["react-hook-form", "@hookform/resolvers", "zod"],
-          // lucide-react sozinho — tree-shake ainda funciona, mas isolar
-          // garante que ícones não polluam o app chunk.
+          // lucide-react sozinho â€” tree-shake ainda funciona, mas isolar
+          // garante que Ã­cones nÃ£o polluam o app chunk.
           "icons": ["lucide-react"],
         },
       },
