@@ -323,8 +323,8 @@ export default function ClipNetworkPage() {
   const connectInstagram = async () => {
     if(!primaryAccount) return; setBusy("instagram"); setError(null);
     try {
-      const {data,error:e}=await supabase.functions.invoke("clip-network-instagram-oauth",{body:{action:"get_auth_url",clip_account_id:primaryAccount.id}});
-      if(e) throw e; if(!data?.url) throw new Error(data?.error||"Não foi possível iniciar Instagram OAuth"); window.location.href=data.url;
+      const data=await clipBridge(CLIP_INSTAGRAM_OAUTH_URL,{action:"get_auth_url",clip_account_id:primaryAccount.id});
+      if(!data?.url) throw new Error(data?.error||"Não foi possível iniciar Instagram OAuth"); window.location.href=data.url;
     }catch(e:any){setError(e.message||String(e)); setBusy(null);}
   };
 
