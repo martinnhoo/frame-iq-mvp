@@ -1,5 +1,6 @@
+import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { rm, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
@@ -12,6 +13,10 @@ import {
 const ENTRY_POINT = fileURLToPath(
   new URL("../remotion/index.jsx", import.meta.url),
 );
+
+const WIDTH = 1080;
+const HEIGHT = 1920;
+const FPS = 30;
 
 let bundlePromise = null;
 let browserPromise = null;
@@ -109,6 +114,101 @@ function startLocalMediaServer(file) {
   });
 }
 
+function run(bin, args, { timeoutMs = 20 * 60 * 1000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      reject(new Error(`${bin} excedeu o tempo limite`));
+    }, timeoutMs);
+
+    child.stdout.on("data", chunk => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on("data", chunk => {
+      stderr += chunk.toString();
+    });
+    child.on("error", error => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on("close", code => {
+      clearTimeout(timer);
+      if (code === 0) {
+        resolve({ stdout, stderr });
+      } else {
+        reject(
+          new Error(
+            `${bin} saiu com ${code}: ${stderr.slice(-2500)}`,
+          ),
+        );
+      }
+    });
+  });
+}
+
+const clamp = (value, min, max) =>
+  Math.min(max, Math.max(min, Number(value)));
+
+function easeExpression(progress, easing) {
+  switch (easing) {
+    case "out":
+      return `(1-(1-(${progress}))*(1-(${progress})))`;
+    case "in_out":
+      return `if(lt((${progress}),0.5),2*(${progress})*(${progress}),1-pow(-2*(${progress})+2,2)/2)`;
+    default:
+      return `(${progress})`;
+  }
+}
+
+function buildZoomExpression(editPlan, durationSeconds, fps = FPS) {
+  const camera = Array.isArray(editPlan?.camera) ? editPlan.camera : [];
+  const maxFrame = Math.max(1, Math.ceil(Number(durationSeconds || 1) * fps) - 1);
+
+  let expression = "1.02";
+
+  for (const event of [...camera].reverse()) {
+    const start = clamp(event?.start ?? 0, 0, durationSeconds);
+    const end = clamp(event?.end ?? start, start, durationSeconds);
+    if (end <= start) continue;
+
+    const startFrame = Math.max(0, Math.round(start * fps));
+    const endFrame = Math.min(maxFrame, Math.max(startFrame + 1, Math.round(end * fps)));
+    const span = Math.max(1, endFrame - startFrame);
+    const from = clamp(event?.scale_from ?? event?.scale ?? 1.02, 1, 1.16);
+    const to = clamp(event?.scale_to ?? event?.scale ?? from, 1, 1.16);
+    const progress = `(on-${startFrame})/${span}`;
+    const eased = easeExpression(progress, String(event?.easing || "linear"));
+    const zoom = `(${from}+(${to}-${from})*(${eased}))`;
+
+    expression =
+      `if(between(on,${startFrame},${endFrame}),${zoom},${expression})`;
+  }
+
+  const emphasis = Array.isArray(editPlan?.emphasis) ? editPlan.emphasis : [];
+  for (const item of emphasis) {
+    if (item?.type !== "punch_in") continue;
+
+    const centerSeconds = clamp(item?.time ?? 0, 0, durationSeconds);
+    const duration = Math.max(0.25, Number(item?.duration || 0.55));
+    const centerFrame = Math.round(centerSeconds * fps);
+    const halfFrames = Math.max(1, Math.round((duration * fps) / 2));
+    const startFrame = Math.max(0, centerFrame - halfFrames);
+    const endFrame = Math.min(maxFrame, centerFrame + halfFrames);
+    const target = clamp(item?.scale ?? 1.1, 1, 1.16);
+    const pulse =
+      `(1-abs(on-${centerFrame})/${halfFrames})`;
+    const punch =
+      `if(between(on,${startFrame},${endFrame}),1+(${target}-1)*(${pulse}),1)`;
+
+    expression = `max(${expression},${punch})`;
+  }
+
+  return `min(1.16,max(1,${expression}))`;
+}
+
 async function renderComposition({
   id,
   inputVideo,
@@ -160,6 +260,94 @@ async function renderComposition({
   }
 }
 
+async function renderEditorialOverlay({
+  outputVideo,
+  pages,
+  durationSeconds,
+  captionSettings,
+  editPlan,
+}) {
+  await ensureRenderBrowser();
+  const serveUrl = await getServeUrl();
+
+  const props = {
+    videoSrc: "",
+    overlayOnly: true,
+    pages,
+    durationSeconds,
+    captionSettings,
+    editPlan,
+  };
+
+  const composition = await selectComposition({
+    serveUrl,
+    id: "ClipNetworkEditorialOverlay",
+    inputProps: props,
+    logLevel: "warn",
+    chromiumOptions: {
+      enableMultiProcessOnLinux: true,
+    },
+  });
+
+  await renderMedia({
+    serveUrl,
+    composition,
+    codec: "prores",
+    proResProfile: "4444",
+    pixelFormat: "yuva444p10le",
+    imageFormat: "png",
+    outputLocation: outputVideo,
+    inputProps: props,
+    muted: true,
+    concurrency: 2,
+    disallowParallelEncoding: true,
+    chromiumOptions: {
+      enableMultiProcessOnLinux: true,
+    },
+    logLevel: "warn",
+  });
+}
+
+async function composeEditorialWithFfmpeg({
+  inputVideo,
+  overlayVideo,
+  outputVideo,
+  editPlan,
+  durationSeconds,
+}) {
+  const zoom = buildZoomExpression(editPlan, durationSeconds, FPS);
+
+  const filter = [
+    `[0:v]fps=${FPS},`,
+    `zoompan=z='${zoom}':`,
+    `x='iw/2-(iw/zoom/2)':`,
+    `y='ih/2-(ih/zoom/2)':`,
+    `d=1:s=${WIDTH}x${HEIGHT}:fps=${FPS},`,
+    `setsar=1[base];`,
+    `[1:v]fps=${FPS},format=rgba[overlay];`,
+    `[base][overlay]overlay=0:0:format=auto:shortest=1[v]`,
+  ].join("");
+
+  const args = [
+    "-y",
+    "-i", inputVideo,
+    "-i", overlayVideo,
+    "-filter_complex", filter,
+    "-map", "[v]",
+    "-map", "0:a?",
+    "-t", String(durationSeconds),
+    "-c:v", "libx264",
+    "-preset", "ultrafast",
+    "-crf", "20",
+    "-pix_fmt", "yuv420p",
+    "-c:a", "copy",
+    "-movflags", "+faststart",
+    outputVideo,
+  ];
+
+  await run("ffmpeg", args);
+}
+
 export async function renderCaptionedVideo({
   inputVideo,
   outputVideo,
@@ -187,15 +375,25 @@ export async function renderEditorialVideo({
   captionSettings,
   editPlan,
 }) {
-  return renderComposition({
-    id: "ClipNetworkEditorial",
-    inputVideo,
-    outputVideo,
-    inputProps: {
+  const overlayVideo = `${outputVideo}.overlay.mov`;
+
+  try {
+    await renderEditorialOverlay({
+      outputVideo: overlayVideo,
       pages,
       durationSeconds,
       captionSettings,
       editPlan,
-    },
-  });
+    });
+
+    await composeEditorialWithFfmpeg({
+      inputVideo,
+      overlayVideo,
+      outputVideo,
+      editPlan,
+      durationSeconds,
+    });
+  } finally {
+    await rm(overlayVideo, { force: true }).catch(() => {});
+  }
 }

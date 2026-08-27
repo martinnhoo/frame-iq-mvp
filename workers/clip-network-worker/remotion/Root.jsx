@@ -26,6 +26,16 @@ const metadata = ({ props }) => ({
   ),
 });
 
+const editorialDefaults = {
+  ...baseProps,
+  editPlan: {
+    version: 2,
+    camera: [],
+    overlays: [],
+    emphasis: [],
+  },
+};
+
 export const RemotionRoot = () => (
   <>
     <Composition
@@ -47,13 +57,22 @@ export const RemotionRoot = () => (
       fps={FPS}
       durationInFrames={FPS}
       defaultProps={{
-        ...baseProps,
-        editPlan: {
-          version: 2,
-          camera: [],
-          overlays: [],
-          emphasis: [],
-        },
+        ...editorialDefaults,
+        overlayOnly: false,
+      }}
+      calculateMetadata={metadata}
+    />
+
+    <Composition
+      id="ClipNetworkEditorialOverlay"
+      component={EditorialComposition}
+      width={1080}
+      height={1920}
+      fps={FPS}
+      durationInFrames={FPS}
+      defaultProps={{
+        ...editorialDefaults,
+        overlayOnly: true,
       }}
       calculateMetadata={metadata}
     />

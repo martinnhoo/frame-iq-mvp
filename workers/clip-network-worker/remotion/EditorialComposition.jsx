@@ -253,6 +253,7 @@ export function EditorialComposition({
   durationSeconds,
   captionSettings,
   editPlan,
+  overlayOnly = false,
 }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -264,8 +265,15 @@ export function EditorialComposition({
   );
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#000000", overflow: "hidden" }}>
-      <CameraVideo videoSrc={videoSrc} editPlan={editPlan || {}} />
+    <AbsoluteFill
+      style={{
+        backgroundColor: overlayOnly ? "transparent" : "#000000",
+        overflow: "hidden",
+      }}
+    >
+      {!overlayOnly && videoSrc ? (
+        <CameraVideo videoSrc={videoSrc} editPlan={editPlan || {}} />
+      ) : null}
 
       {editPlan?.hook_overlay?.enabled && editPlan.hook_overlay.text && (
         <Sequence
