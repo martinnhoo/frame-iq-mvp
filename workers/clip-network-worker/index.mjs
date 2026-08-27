@@ -449,17 +449,28 @@ async function renderAndUploadV4Revision(
   dir,
 ) {
   const startedAtMs = Date.now();
+  const {
+    v4_progress: _previousV4Progress,
+    render_duration_ms: _previousRenderDurationMs,
+    render_started_at: _previousRenderStartedAt,
+    render_finished_at: _previousRenderFinishedAt,
+    ...baseParameters
+  } = revision.parameters || {};
+
+  const attemptNumber =
+    Number(revision.render_attempts || 0) + 1;
+
   let parameters = {
-    ...(revision.parameters || {}),
+    ...baseParameters,
     editor: "ai_editor_v4_open_source",
     editor_version: 4,
     renderer: "ffmpeg_one_pass_v4",
+    render_attempt_number: attemptNumber,
   };
+
   let activePhase = null;
   let activePhaseStartedAt = null;
-  const phaseTimings = {
-    ...(parameters?.v4_progress?.phase_timings || {}),
-  };
+  const phaseTimings = {};
   let lastPersistAt = 0;
   let lastPersistPct = -1;
 
@@ -538,7 +549,6 @@ async function renderAndUploadV4Revision(
             ? null
             : event.eta_seconds,
         started_at:
-          parameters?.v4_progress?.started_at ||
           new Date(startedAtMs).toISOString(),
         updated_at: new Date(now).toISOString(),
         elapsed_ms: elapsedMs,
@@ -573,8 +583,7 @@ async function renderAndUploadV4Revision(
     lease_expires_at: new Date(
       Date.now() + LEASE_SECS * 1000,
     ).toISOString(),
-    render_attempts:
-      Number(revision.render_attempts || 0) + 1,
+    render_attempts: attemptNumber,
     parameters,
     last_error: null,
   });

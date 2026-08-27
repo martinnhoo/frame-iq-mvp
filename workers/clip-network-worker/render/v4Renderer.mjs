@@ -239,38 +239,241 @@ async function writeAss({
   };
 }
 
-function interpolateExpression(points, key, maxValue, cropSize) {
-  if (!Array.isArray(points) || !points.length) {
-    return String(Math.max(0, (maxValue - cropSize) / 2));
+function computeCropGeometry(sourceMeta) {
+  const sourceW = Number(sourceMeta.width || 0);
+  const sourceH = Number(sourceMeta.height || 0);
+
+  if (!sourceW || !sourceH) {
+    throw new Error(
+      "Dimensoes da fonte indisponiveis para o AI Editor v4",
+    );
   }
 
-  const values = points
+  const targetAspect = OUTPUT_W / OUTPUT_H;
+  const sourceAspect = sourceW / sourceH;
+
+  if (sourceAspect >= targetAspect) {
+    const cropH = sourceH - (sourceH % 2);
+    const cropW =
+      Math.floor((cropH * targetAspect) / 2) * 2;
+
+    return {
+      sourceW,
+      sourceH,
+      cropW,
+      cropH,
+      dynamicAxis: "x",
+    };
+  }
+
+  const cropW = sourceW - (sourceW % 2);
+  const cropH =
+    Math.floor((cropW / targetAspect) / 2) * 2;
+
+  return {
+    sourceW,
+    sourceH,
+    cropW,
+    cropH,
+    dynamicAxis: "y",
+  };
+}
+
+function pixelFromFocus(value, maxValue, cropSize) {
+  return clamp(
+    Number(value ?? 0.5) * maxValue - cropSize / 2,
+    0,
+    Math.max(0, maxValue - cropSize),
+  );
+}
+
+function normalizedCamera(camera, durationSeconds) {
+  const values = (Array.isArray(camera) ? camera : [])
     .map((point) => ({
-      t: Math.max(0, Number(point.time || 0)),
-      value: clamp(Number(point[key] ?? 0.5), 0, 1),
+      time: clamp(
+        Number(point.time || 0),
+        0,
+        durationSeconds,
+      ),
+      focus_x: clamp(
+        Number(point.focus_x ?? 0.5),
+        0,
+        1,
+      ),
+      focus_y: clamp(
+        Number(point.focus_y ?? 0.43),
+        0,
+        1,
+      ),
     }))
-    .sort((a, b) => a.t - b.t);
+    .filter(
+      (point) =>
+        Number.isFinite(point.time) &&
+        Number.isFinite(point.focus_x) &&
+        Number.isFinite(point.focus_y),
+    )
+    .sort((a, b) => a.time - b.time);
 
-  const pixel = (value) =>
-    clamp(value * maxValue - cropSize / 2, 0, maxValue - cropSize);
+  const deduped = [];
+  for (const point of values) {
+    const previous = deduped.at(-1);
 
-  let expression = pixel(values.at(-1).value).toFixed(3);
-
-  for (let i = values.length - 2; i >= 0; i -= 1) {
-    const a = values[i];
-    const b = values[i + 1];
-    const ta = a.t.toFixed(3);
-    const tb = Math.max(a.t + 0.001, b.t).toFixed(3);
-    const pa = pixel(a.value);
-    const pb = pixel(b.value);
-    const span = Math.max(0.001, b.t - a.t);
-    const linear =
-      `(${pa.toFixed(3)}+(${(pb - pa).toFixed(3)})*(t-${ta})/${span.toFixed(3)})`;
-    expression =
-      `if(between(t,${ta},${tb}),${linear},${expression})`;
+    if (
+      previous &&
+      Math.abs(previous.time - point.time) < 0.001
+    ) {
+      deduped[deduped.length - 1] = point;
+    } else {
+      deduped.push(point);
+    }
   }
 
-  return expression;
+  if (!deduped.length) {
+    return [
+      { time: 0, focus_x: 0.5, focus_y: 0.43 },
+      {
+        time: durationSeconds,
+        focus_x: 0.5,
+        focus_y: 0.43,
+      },
+    ];
+  }
+
+  if (deduped[0].time > 0.001) {
+    deduped.unshift({
+      ...deduped[0],
+      time: 0,
+    });
+  } else {
+    deduped[0].time = 0;
+  }
+
+  const last = deduped.at(-1);
+  if (last.time < durationSeconds - 0.001) {
+    deduped.push({
+      ...last,
+      time: durationSeconds,
+    });
+  } else {
+    last.time = durationSeconds;
+  }
+
+  return deduped;
+}
+
+async function writeCameraCommands({
+  outputPath,
+  sourceMeta,
+  camera,
+  durationSeconds,
+}) {
+  const geometry = computeCropGeometry(sourceMeta);
+  const points = normalizedCamera(
+    camera,
+    durationSeconds,
+  );
+
+  const first = points[0];
+
+  const initialX =
+    geometry.dynamicAxis === "x"
+      ? pixelFromFocus(
+          first.focus_x,
+          geometry.sourceW,
+          geometry.cropW,
+        )
+      : Math.max(
+          0,
+          (geometry.sourceW - geometry.cropW) / 2,
+        );
+
+  const initialY =
+    geometry.dynamicAxis === "y"
+      ? pixelFromFocus(
+          first.focus_y,
+          geometry.sourceH,
+          geometry.cropH,
+        )
+      : Math.max(
+          0,
+          (geometry.sourceH - geometry.cropH) / 2,
+        );
+
+  const lines = [];
+
+  for (
+    let index = 0;
+    index < points.length - 1;
+    index += 1
+  ) {
+    const from = points[index];
+    const to = points[index + 1];
+
+    const intervalStart = clamp(
+      from.time,
+      0,
+      durationSeconds,
+    );
+    const intervalEnd = clamp(
+      to.time,
+      intervalStart,
+      durationSeconds,
+    );
+
+    if (intervalEnd <= intervalStart + 0.001) {
+      continue;
+    }
+
+    if (geometry.dynamicAxis === "x") {
+      const fromPx = pixelFromFocus(
+        from.focus_x,
+        geometry.sourceW,
+        geometry.cropW,
+      );
+      const toPx = pixelFromFocus(
+        to.focus_x,
+        geometry.sourceW,
+        geometry.cropW,
+      );
+
+      lines.push(
+        `${intervalStart.toFixed(3)}-${intervalEnd.toFixed(3)} ` +
+          `[expr] crop@v4crop x ` +
+          `'lerp(${fromPx.toFixed(3)},${toPx.toFixed(3)},TI)';`,
+      );
+    } else {
+      const fromPx = pixelFromFocus(
+        from.focus_y,
+        geometry.sourceH,
+        geometry.cropH,
+      );
+      const toPx = pixelFromFocus(
+        to.focus_y,
+        geometry.sourceH,
+        geometry.cropH,
+      );
+
+      lines.push(
+        `${intervalStart.toFixed(3)}-${intervalEnd.toFixed(3)} ` +
+          `[expr] crop@v4crop y ` +
+          `'lerp(${fromPx.toFixed(3)},${toPx.toFixed(3)},TI)';`,
+      );
+    }
+  }
+
+  await writeFile(
+    outputPath,
+    lines.join("\n"),
+    "utf8",
+  );
+
+  return {
+    ...geometry,
+    initialX,
+    initialY,
+    commandCount: lines.length,
+    cameraPoints: points.length,
+  };
 }
 
 function escapeFilterPath(path) {
@@ -281,43 +484,33 @@ function escapeFilterPath(path) {
 }
 
 function buildVideoFilter({
-  sourceMeta,
-  camera,
   assPath,
+  cameraCommandPath,
+  cameraRuntime,
 }) {
-  const sourceW = Number(sourceMeta.width || 0);
-  const sourceH = Number(sourceMeta.height || 0);
-  if (!sourceW || !sourceH) {
-    throw new Error("Dimensoes da fonte indisponiveis para o AI Editor v4");
+  const filters = [];
+
+  if (cameraRuntime.commandCount > 0) {
+    filters.push(
+      `sendcmd=f='${escapeFilterPath(cameraCommandPath)}'`,
+    );
   }
 
-  const targetAspect = OUTPUT_W / OUTPUT_H;
-  const sourceAspect = sourceW / sourceH;
+  filters.push(
+    `crop@v4crop=` +
+      `w=${cameraRuntime.cropW}:` +
+      `h=${cameraRuntime.cropH}:` +
+      `x=${cameraRuntime.initialX.toFixed(3)}:` +
+      `y=${cameraRuntime.initialY.toFixed(3)}`,
+  );
 
-  let cropW;
-  let cropH;
-  let xExpression = "0";
-  let yExpression = "0";
-
-  if (sourceAspect >= targetAspect) {
-    cropH = sourceH - (sourceH % 2);
-    cropW = Math.floor((cropH * targetAspect) / 2) * 2;
-    xExpression = interpolateExpression(camera, "focus_x", sourceW, cropW);
-    yExpression = String(Math.max(0, (sourceH - cropH) / 2));
-  } else {
-    cropW = sourceW - (sourceW % 2);
-    cropH = Math.floor((cropW / targetAspect) / 2) * 2;
-    xExpression = String(Math.max(0, (sourceW - cropW) / 2));
-    yExpression = interpolateExpression(camera, "focus_y", sourceH, cropH);
-  }
-
-  return [
-    "setpts=PTS-STARTPTS",
-    `crop=${cropW}:${cropH}:x='${xExpression}':y='${yExpression}'`,
+  filters.push(
     `scale=${OUTPUT_W}:${OUTPUT_H}:flags=lanczos`,
     `subtitles='${escapeFilterPath(assPath)}'`,
     "format=yuv420p",
-  ].join(",");
+  );
+
+  return filters.join(",");
 }
 
 function parseOutTime(value) {
@@ -635,10 +828,22 @@ export async function renderEditorialV4({
       `${captionMeta.words} palavras · ${captionMeta.caption_groups} grupos`,
   });
 
-  const filter = buildVideoFilter({
+  const cameraCommandPath = join(
+    dir,
+    `${revision.id}-camera-v4.cmd`,
+  );
+
+  const cameraRuntime = await writeCameraCommands({
+    outputPath: cameraCommandPath,
     sourceMeta,
     camera: vision.camera || [],
+    durationSeconds,
+  });
+
+  const filter = buildVideoFilter({
     assPath,
+    cameraCommandPath,
+    cameraRuntime,
   });
 
   await report({
@@ -673,6 +878,14 @@ export async function renderEditorialV4({
       vision_backend: vision.vision_backend,
       camera: vision.camera,
       vision_stats: vision.stats,
+      camera_runtime: {
+        backend: "ffmpeg_sendcmd_lerp",
+        command_count: cameraRuntime.commandCount,
+        camera_points: cameraRuntime.cameraPoints,
+        crop_width: cameraRuntime.cropW,
+        crop_height: cameraRuntime.cropH,
+        dynamic_axis: cameraRuntime.dynamicAxis,
+      },
       caption_v4: captionMeta,
       effective_start_seconds: startSeconds,
       effective_end_seconds: endSeconds,
