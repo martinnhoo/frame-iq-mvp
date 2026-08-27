@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
+const CLIP_INSTAGRAM_OAUTH_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-instagram-oauth";
+
 export default function ClipNetworkOAuthCallback(){
   const {platform}=useParams<{platform:string}>(); const navigate=useNavigate(); const [state,setState]=useState<"loading"|"ok"|"error">("loading"); const [message,setMessage]=useState("Conectando conta…");
   useEffect(()=>{const timers: ReturnType<typeof setTimeout>[]=[];(async()=>{try{
