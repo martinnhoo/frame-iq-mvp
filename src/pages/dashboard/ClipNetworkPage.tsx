@@ -13,6 +13,7 @@ const db = supabase as any;
 const CLIP_NETWORK_API_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-api";
 const CLIP_NETWORK_REVIEW_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-review";
 const CLIP_NETWORK_SIGN_MEDIA_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-sign-media";
+const CLIP_WORKER_STATUS_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-worker-status";
 
 async function clipApi(action:string, payload:Record<string,unknown> = {}) {
   const { data:{ session }, error } = await supabase.auth.getSession();
@@ -85,6 +86,21 @@ type Publication = { id:string; clip_id:string; platform:string; status:string; 
 type ClipVariant = DeskVariant;
 type ClipRevision = DeskRevision;
 type ClipFeedback = DeskFeedback;
+type WorkerStatus = {
+  configured:boolean;
+  machine_state:string;
+  online:boolean;
+  needs_worker:boolean;
+  issue:boolean;
+  pending_source_jobs:number;
+  pending_render_jobs:number;
+  total_jobs:number;
+  machine_id?:string;
+  app?:string;
+  updated_at?:string|null;
+  checked_at?:string;
+  error?:string|null;
+};
 
 const fmt = (v?:string) => v ? new Intl.DateTimeFormat("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }).format(new Date(v)) : "—";
 const statusLabel: Record<string,string> = {
@@ -132,6 +148,7 @@ export default function ClipNetworkPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [playing,setPlaying] = useState<Record<string,string>>({});
   const [reviewMessage,setReviewMessage] = useState<string|null>(null);
+  const [workerStatus,setWorkerStatus] = useState<WorkerStatus|null>(null);
 
   const primaryAccount = accounts[0];
   const instagram = socials.find(s => s.clip_account_id === primaryAccount?.id && s.platform === "instagram" && s.status === "active");
@@ -157,11 +174,33 @@ export default function ClipNetworkPage() {
     () => legacyClips.filter(c => c.render_status === "ready" && !!(c.rendered_storage_path || c.rendered_url)),
     [legacyClips]
   );
-  const ready = editorialClips.filter(clip => variants.filter(variant=>variant.clip_id===clip.id&&variant.render_status==="ready").length===3).length + readyClips.length;
+  const ready = editorialClips.filter(clip => variants.some(variant => variant.clip_id===clip.id && variant.variant_key==="editorial_master" && variant.render_status==="ready")).length + readyClips.length;
   const running = videos.filter(v => ["downloading","transcribing","analyzing","rendering"].includes(v.pipeline_stage)).length
     + variants.filter(variant=>["pending","rendering"].includes(variant.render_status)).length;
 
 
+  const loadWorkerStatus = async () => {
+    try {
+      const data = await clipBridge(
+        CLIP_WORKER_STATUS_URL,
+        {}
+      );
+
+      setWorkerStatus(data as WorkerStatus);
+    } catch(e:any) {
+      setWorkerStatus({
+        configured:false,
+        machine_state:"unknown",
+        online:false,
+        needs_worker:false,
+        issue:false,
+        pending_source_jobs:0,
+        pending_render_jobs:0,
+        total_jobs:0,
+        error:e?.message || String(e),
+      });
+    }
+  };
   const load = async (showLoading=false) => {
     if(showLoading) setLoading(true);
     setError(null);
@@ -201,6 +240,15 @@ export default function ClipNetworkPage() {
   };
 
   useEffect(()=>{ load(true); },[]);
+  useEffect(()=>{
+    loadWorkerStatus();
+
+    const workerStatusTimer=setInterval(()=>{
+      loadWorkerStatus();
+    },10000);
+
+    return ()=>clearInterval(workerStatusTimer);
+  },[]);
 
   const createPilot = async () => {
     setBusy("pilot"); setError(null);
@@ -483,6 +531,39 @@ export default function ClipNetworkPage() {
 
 
 
+  const workerStateLabel =
+    workerStatus?.machine_state === "started" ? "Ligado" :
+    workerStatus?.machine_state === "starting" ? "Ligando" :
+    workerStatus?.machine_state === "replacing" ? "Atualizando" :
+    workerStatus?.machine_state === "stopping" ? "Desligando" :
+    workerStatus?.machine_state === "stopped" ? "Desligado" :
+    "Status indisponível";
+
+  const workerTone:
+    "neutral"|"good"|"warn"|"bad"|"blue" =
+      workerStatus?.issue ? "bad" :
+      workerStatus?.machine_state === "started" ? "good" :
+      ["starting","replacing"].includes(workerStatus?.machine_state || "") ? "blue" :
+      workerStatus?.machine_state === "stopping" ? "warn" :
+      workerStatus?.error ? "bad" :
+      "neutral";
+
+  const workerDetail =
+    workerStatus?.issue
+      ? `ERRO: ${workerStatus.total_jobs} trabalho(s) na fila e o worker está desligado.`
+      : workerStatus?.error
+        ? workerStatus.error
+        : workerStatus?.machine_state === "started" && workerStatus.total_jobs > 0
+          ? `${workerStatus.total_jobs} trabalho(s) aguardando ou processando`
+          : workerStatus?.machine_state === "started"
+            ? "Ligado, sem trabalho no momento"
+            : workerStatus?.machine_state === "stopped" && workerStatus.total_jobs === 0
+              ? "Sem trabalho — liga automaticamente quando necessário"
+              : workerStatus?.machine_state === "starting"
+                ? "A máquina está iniciando"
+                : workerStatus?.machine_state === "stopping"
+                  ? "Fila vazia — máquina desligando"
+                  : "Consultando estado da máquina";
   if(loading) return <div className="flex min-h-[60vh] items-center justify-center text-white/60"><Loader2 className="mr-2 h-5 w-5 animate-spin"/>Carregando Clip Network…</div>;
 
   if(!network) return <div className="mx-auto max-w-5xl p-6 lg:p-10">
@@ -508,6 +589,74 @@ export default function ClipNetworkPage() {
     </div>
 
     {error&&<div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0"/>{error}</div>}
+    {/* Status real da Fly Machine */}
+    <div
+      className={`rounded-2xl border p-4 ${
+        workerStatus?.issue
+          ? "border-red-500/30 bg-red-500/[.08]"
+          : workerStatus?.machine_state === "started"
+            ? "border-emerald-500/20 bg-emerald-500/[.05]"
+            : "border-white/10 bg-white/[.035]"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-4">
+
+        <div className="flex min-w-0 items-center gap-3">
+
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+              workerStatus?.machine_state === "started"
+                ? "bg-emerald-500/10 text-emerald-300"
+                : workerStatus?.issue
+                  ? "bg-red-500/10 text-red-300"
+                  : "bg-white/5 text-white/50"
+            }`}
+          >
+            {workerStatus?.machine_state === "started"
+              ? <Power className="h-4 w-4"/>
+              : <PowerOff className="h-4 w-4"/>
+            }
+          </div>
+
+          <div className="min-w-0">
+            <div className="text-xs font-medium text-white/45">
+              Worker Fly
+            </div>
+
+            <div
+              className={`mt-0.5 text-sm font-medium ${
+                workerStatus?.issue
+                  ? "text-red-200"
+                  : "text-white/80"
+              }`}
+            >
+              {workerDetail}
+            </div>
+
+            {workerStatus && (
+              <div className="mt-1 text-[10px] text-white/30">
+                Fly: {workerStatus.machine_state}
+                {" · "}
+                fontes: {workerStatus.pending_source_jobs}
+                {" · "}
+                renders: {workerStatus.pending_render_jobs}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Pill tone={workerTone}>
+          {workerStateLabel}
+        </Pill>
+      </div>
+
+      {workerStatus?.issue && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-200">
+          <AlertTriangle className="h-4 w-4 shrink-0"/>
+          O worker deveria estar ligado. O auto-wake pode ter falhado.
+        </div>
+      )}
+    </div>
 
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {[['Processando agora',running,'vídeos na máquina'],['Clips prontos',ready,'renderizados'],['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}

@@ -20,11 +20,12 @@ type DeskSource = { id:string; label:string };
 type DeskAccount = { id:string; label:string };
 
 const LABELS:Record<string,string> = {
-  blur_caption:"Legenda dinâmica",
-  zoom_caption:"Legenda clean",
-  zoom_clean:"Sem legenda",
+  editorial_master:"Edicao final - AI Editor",
+  blur_caption:"Legenda dinamica - legado",
+  zoom_caption:"Legenda clean - legado",
+  zoom_clean:"Sem legenda - legado",
 };
-const ORDER = ["blur_caption","zoom_caption","zoom_clean"];
+const ORDER = ["editorial_master","blur_caption","zoom_caption","zoom_clean"];
 
 const PIPELINE_LABELS:Record<string,string> = {
   downloading:"Baixando vídeo",
@@ -49,7 +50,7 @@ function FeedbackBox({busy,targetLabel,onSubmit,onCancel}:{busy:boolean;targetLa
   return <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[.06] p-4">
     <div className="text-xs font-medium text-white">O que precisa mudar?</div>
     <div className="mt-1 text-[11px] text-violet-200/60">Aplicar em: {targetLabel}</div>
-    <textarea autoFocus value={text} onChange={event=>setText(event.target.value)} rows={3} placeholder="Ex.: corta 3 segundos do começo e deixa a legenda menor" className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-xs text-white outline-none placeholder:text-white/25"/>
+    <textarea autoFocus value={text} onChange={event=>setText(event.target.value)} rows={3} placeholder="Ex.: troque a headline, tire o emoji, baixe a legenda ou faca zoom nessa reacao" className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-xs text-white outline-none placeholder:text-white/25"/>
     <div className="mt-3 flex gap-2"><button onClick={()=>onSubmit(text)} disabled={busy||!text.trim()} className="inline-flex items-center rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black disabled:opacity-40">{busy&&<Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>}Interpretar e gerar revisão</button><button onClick={onCancel} className="rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/55">Cancelar</button></div>
   </div>;
 }
@@ -72,8 +73,8 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
   },[variants]);
   const review=clips.filter(clip=>clip.status==="candidate");
   const discarded=clips.filter(clip=>clip.status==="rejected");
-  const approved=clips.filter(clip=>clip.status==="approved"&&!(variantsByClip.get(clip.id)||[]).some(variant=>variant.render_attempts>0||variant.render_status!=="pending"));
-  const ready=clips.filter(clip=>clip.status==="approved"&&(variantsByClip.get(clip.id)||[]).length===3&&(variantsByClip.get(clip.id)||[]).every(variant=>variant.render_status==="ready"));
+  const approved=clips.filter(clip=>clip.status==="approved"&&(variantsByClip.get(clip.id)||[]).length===0);
+  const ready=clips.filter(clip=>clip.status==="approved"&&(variantsByClip.get(clip.id)||[]).some(variant=>variant.variant_key==="editorial_master"&&variant.render_status==="ready"));
   const rendering=clips.filter(clip=>clip.status==="approved"&&!ready.includes(clip)&&!approved.includes(clip));
   const groups:Record<string,DeskClip[]>={review,approved,rendering,ready,discarded};
   const counters=[{key:"review",label:"Revisão",count:review.length},{key:"approved",label:"Aprovados",count:approved.length},{key:"rendering",label:"Renderizando",count:rendering.length},{key:"ready",label:"Prontos",count:ready.length},{key:"discarded",label:"Descartados",count:discarded.length}];
@@ -93,7 +94,7 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
   };
 
   return <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5 lg:p-6">
-    <div><h2 className="text-base font-semibold text-white">Mesa de revisão</h2><p className="mt-1 text-xs text-white/40">Decida primeiro se o momento funciona. Compare versões somente depois da aprovação.</p></div>
+    <div><h2 className="text-base font-semibold text-white">Mesa de revisão</h2><p className="mt-1 text-xs text-white/40">Decida primeiro se o momento funciona. Depois da aprovacao, o AI Editor cria uma edicao nativa especifica para aquele corte.</p></div>
     <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">{counters.map(item=><button key={item.key} onClick={()=>setTab(item.key)} className={`rounded-xl border px-3 py-3 text-left transition ${tab===item.key?"border-violet-400/40 bg-violet-500/10":"border-white/10 bg-black/20 hover:bg-white/5"}`}><div className="text-[10px] uppercase tracking-wide text-white/35">{item.label}</div><div className="mt-1 text-xl font-semibold text-white">{item.count}</div></button>)}</div>
     {message&&<div className="mt-4 rounded-xl border border-violet-400/20 bg-violet-500/10 px-3 py-2.5 text-xs text-violet-100">{message}</div>}
 
