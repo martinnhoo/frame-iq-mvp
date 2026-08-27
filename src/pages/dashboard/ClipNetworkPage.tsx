@@ -144,8 +144,6 @@ export default function ClipNetworkPage() {
   const [sourceLabel,setSourceLabel] = useState("");
   const [rightsConfirmed,setRightsConfirmed] = useState(false);
   const [showSourceForm,setShowSourceForm] = useState(false);
-  const [testCaption,setTestCaption] = useState("Treino de verdade é consistência. #fitness #treino");
-  const fileRef = useRef<HTMLInputElement>(null);
   const [playing,setPlaying] = useState<Record<string,string>>({});
   const [reviewMessage,setReviewMessage] = useState<string|null>(null);
   const [workerStatus,setWorkerStatus] = useState<WorkerStatus|null>(null);
