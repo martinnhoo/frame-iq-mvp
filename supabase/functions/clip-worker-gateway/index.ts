@@ -246,53 +246,396 @@ async function ensureAllApprovedVariants() {
   return ensureClipVariants(data || []);
 }
 
-async function orchestrate(_network: Record<string, any>, accounts: Record<string, any>[], transcript: { segments?: { start: number; end: number; text: string }[]; duration?: number }) {
-  const timestamped = (transcript.segments || []).map((s) => `[${Number(s.start).toFixed(1)}-${Number(s.end).toFixed(1)}] ${s.text}`).join("\n").slice(0, 240_000);
-  const opportunityPrompt = [
-    "Você é um Creative Strategist especializado em encontrar oportunidades de short-form em vídeos long-form.",
-    "Nesta etapa IGNORE contas, nichos e routing. Analise o vídeo por mérito editorial próprio.",
-    "Crie um pool exploratório de até 20 momentos para que o sistema selecione os 10 melhores e realmente distintos.",
-    "Em um vídeo rico de 30–60 minutos, procure ativamente várias oportunidades ao longo de toda a duração; não retorne zero apenas porque os momentos não são perfeitos ou não chegam a 90/100.",
+async function orchestrate(
+  _network: Record<string, any>,
+  accounts: Record<string, any>[],
+  transcript: {
+    segments?: {
+      start:number;
+      end:number;
+      text:string;
+    }[];
+    duration?:number;
+  },
+) {
+  const segments =
+    transcript.segments || [];
+
+  const timestamped =
+    segments
+      .map(
+        segment =>
+          `[${Number(segment.start).toFixed(1)}-${Number(segment.end).toFixed(1)}] ${segment.text}`
+      )
+      .join("\n")
+      .slice(0,240_000);
+
+
+  // ----------------------------------------------------------
+  // PASSAGEM 1 — CAÇADOR DE MOMENTOS
+  // ----------------------------------------------------------
+
+  const discoveryPrompt=[
+    "Você é um editor de short-form de altíssimo nível.",
+    "Analise o vídeo inteiro e encontre oportunidades reais para Reels, Shorts e TikTok.",
+    "",
+    "OBJETIVO:",
+    "- Gere entre 15 e 20 candidatos quando houver material suficiente.",
+    "- Nesta etapa seja exploratório. O editor-chefe fará a seleção final depois.",
+    "",
+    "O QUE É UM BOM CORTE:",
+    "- O primeiro 1–3 segundos já têm algo acontecendo.",
+    "- Funciona sem precisar assistir ao vídeo anterior.",
+    "- Existe desenvolvimento e payoff.",
+    "- Tem reação, conflito, humor, tensão, surpresa, opinião forte, história, informação ou interação interessante.",
+    "- A fala inicial é utilizável como hook real — não invente hook.",
+    "- Começa e termina em limites naturais da conversa.",
+    "",
+    "REJEITE COMO IDEIA:",
+    "- introdução morna;",
+    "- frase isolada que parece interessante no texto mas não vira história;",
+    "- momento que depende demais do contexto anterior;",
+    "- conversa sem conclusão;",
+    "- repetição do mesmo acontecimento;",
+    "- trecho que começa depois do momento interessante;",
+    "- trecho que termina antes do payoff.",
     "",
     "REGRAS:",
-    "- Procure conflito, reação, história, revelação, opinião, humor, tensão, curiosidade, transformação, bastidor, informação forte e interação entre pessoas.",
-    "- Não limite a busca a fitness ou ao tema aparente de uma conta editorial.",
-    "- Os primeiros 1–3 segundos precisam conter um hook real e forte, sem saudação, introdução morna ou segundos mortos.",
-    "- O corte precisa funcionar sozinho: hook → desenvolvimento necessário → payoff/conclusão.",
-    "- Nunca comece ou termine no meio de uma frase, explicação ou pensamento.",
-    "- Duração permitida: 5–90 segundos. Use somente o tempo necessário.",
-    "- Não invente, reescreva ou reorganize falas; use timestamps existentes.",
-    "- Cada candidato deve representar um acontecimento diferente. Não repita a mesma conversa com início ou final alternativo.",
-    "- Prefira oportunidades distribuídas pelo vídeo quando houver qualidade.",
-    "- Score real de 0–100 considera hook, retenção provável, clareza standalone, payoff e compartilhamento.",
-    "- Qualidade continua acima de quantidade, mas este pool serve para avaliação manual: seja exploratório, não excessivamente conservador.",
-    "- Caption curta e natural, sem inventar fatos.",
+    "- duração entre 5 e 90 segundos;",
+    "- use somente timestamps e falas reais;",
+    "- nunca invente ou reorganize falas;",
+    "- distribua oportunidades ao longo de todo o vídeo;",
+    "- score inicial de 0–100;",
     "- on_screen_title com no máximo 9 palavras.",
     "",
-    "TRANSCRIÇÃO COM TIMESTAMPS:", timestamped, "",
-    'Responda SOMENTE JSON: {"clips":[{"start_seconds":0,"end_seconds":40,"topic":"","hook":"","on_screen_title":"","caption":"","score":85,"reason":""}]}'
+    "TRANSCRIÇÃO:",
+    timestamped,
+    "",
+    'Responda SOMENTE JSON: {"clips":[{"start_seconds":0,"end_seconds":40,"topic":"","hook":"","on_screen_title":"","caption":"","score":80,"reason":""}]}',
   ].join("\n");
-  const parsed = await openAiJson(opportunityPrompt, "Encontre oportunidades de short-form antes de pensar em conta editorial. Explore o vídeo inteiro, preserve falas e responda apenas JSON.");
-  const opportunities = selectDistinctOpportunities(parsed.clips || [], transcript.duration, 10);
-  if (!opportunities.length) return [];
-  const fallbackAccount = chooseFallbackAccount(accounts);
-  const accountIds = new Set(accounts.map((a) => a.id));
-  const routingPrompt = [
-    "Roteie cada momento abaixo para exatamente uma conta editorial ativa.",
-    "Não descarte nenhum momento. Se não houver encaixe perfeito, indique a conta mais ampla/próxima; o sistema possui fallback seguro.", "",
-    "CONTAS ATIVAS:",
-    ...accounts.map((account) => `- id=${account.id} | ${account.label} | nicho=${account.niche} | tom=${account.tone || "natural"} | regras=${JSON.stringify(account.rules || {})}`), "",
-    "MOMENTOS:",
-    ...opportunities.map((clip, index) => `${index}: ${JSON.stringify({ start_seconds: clip.start_seconds, end_seconds: clip.end_seconds, topic: clip.topic, hook: clip.hook, reason: clip.reason })}`), "",
-    'Responda SOMENTE JSON: {"routes":[{"moment_index":0,"account_id":"uuid"}]}'
-  ].join("\n");
-  const routed = await openAiJson(routingPrompt, "Você faz routing editorial depois que os momentos já foram escolhidos. Roteie todos, sem removê-los, e responda apenas JSON.");
-  const routes = new Map<number,string>();
-  for (const route of routed.routes || []) {
-    const index = Number(route.moment_index);
-    if (Number.isInteger(index) && accountIds.has(route.account_id)) routes.set(index, route.account_id);
+
+  const discovered=
+    await openAiJson(
+      discoveryPrompt,
+      "Você encontra oportunidades reais de short-form em vídeo longo. Seja rigoroso com timestamps e responda apenas JSON.",
+    );
+
+  // Aqui agora preservamos até 20.
+  const exploration=
+    selectDistinctOpportunities(
+      discovered.clips || [],
+      transcript.duration,
+      20,
+    );
+
+  if(!exploration.length){
+    return [];
   }
-  return opportunities.map((clip, index) => ({ ...clip, account_id: routes.get(index) || fallbackAccount.id }));
+
+
+  // ----------------------------------------------------------
+  // PASSAGEM 2 — EDITOR-CHEFE / CRÍTICO
+  // ----------------------------------------------------------
+
+  const candidatePayload=
+    exploration.map(
+      (clip:any,index:number)=>{
+        const start=
+          Number(clip.start_seconds);
+
+        const end=
+          Number(clip.end_seconds);
+
+        const opening=
+          segments
+            .filter(
+              segment =>
+                Number(segment.end) > start &&
+                Number(segment.start) <
+                  Math.min(end,start+4)
+            )
+            .map(segment=>segment.text)
+            .join(" ")
+            .slice(0,700);
+
+        const excerpt=
+          segments
+            .filter(
+              segment =>
+                Number(segment.end) >
+                  start-3 &&
+                Number(segment.start) <
+                  end+3
+            )
+            .map(segment=>segment.text)
+            .join(" ")
+            .slice(0,1800);
+
+        return {
+          moment_index:index,
+          start_seconds:start,
+          end_seconds:end,
+          duration_seconds:
+            Math.round(
+              (end-start)*10
+            )/10,
+          original_score:
+            Number(clip.score)||0,
+          hook:clip.hook||"",
+          topic:clip.topic||"",
+          title:
+            clip.on_screen_title||"",
+          opening_4_seconds:opening,
+          transcript_excerpt:excerpt,
+        };
+      }
+    );
+
+  const rankingPrompt=[
+    "Você agora é o EDITOR-CHEFE de uma operação profissional de short-form.",
+    "Uma primeira IA encontrou candidatos. Sua função é ser muito mais crítica.",
+    "",
+    "Avalie se cada momento realmente merece ser publicado.",
+    "",
+    "PESO DA NOTA:",
+    "- 30: hook real nos primeiros segundos;",
+    "- 20: payoff/conclusão;",
+    "- 20: funciona sozinho sem contexto;",
+    "- 15: emoção, humor, tensão, reação ou curiosidade;",
+    "- 10: facilidade de editar em um short forte;",
+    "- 5: novidade em relação aos outros candidatos.",
+    "",
+    "PENALIZE FORTEMENTE:",
+    "- começa tarde demais;",
+    "- começa antes demais e demora para chegar ao ponto;",
+    "- termina sem conclusão;",
+    "- depende de explicação anterior;",
+    "- só é interessante lendo a frase fora do vídeo;",
+    "- mesmo assunto/momento de outro candidato;",
+    "- conversa genérica;",
+    "- payoff fraco.",
+    "",
+    "IMPORTANTE:",
+    "- Não tente salvar candidato ruim.",
+    "- keep=false é esperado para momentos medianos.",
+    "- 65 significa publicável.",
+    "- 75 significa bom.",
+    "- 85+ deve ser raro e realmente forte.",
+    "- Não premie o score da primeira IA; julgue novamente.",
+    "",
+    "CANDIDATOS:",
+    JSON.stringify(candidatePayload),
+    "",
+    'Responda SOMENTE JSON: {"ranked":[{"moment_index":0,"editorial_score":78,"keep":true,"hook_score":24,"payoff_score":16,"standalone_score":17,"reason":"..."}]}',
+  ].join("\n");
+
+  let rankedPool=
+    exploration.map(
+      (clip:any)=>({
+        ...clip,
+        editorial_keep:true,
+      })
+    );
+
+  try{
+    const ranked=
+      await openAiJson(
+        rankingPrompt,
+        "Você é um editor-chefe extremamente seletivo. Julgue qualidade real de short-form e responda apenas JSON.",
+      );
+
+    const evaluations=
+      new Map<number,any>();
+
+    for(
+      const evaluation of
+      ranked.ranked || []
+    ){
+      const index=
+        Number(
+          evaluation.moment_index
+        );
+
+      if(Number.isInteger(index)){
+        evaluations.set(
+          index,
+          evaluation
+        );
+      }
+    }
+
+    rankedPool=
+      exploration
+        .map(
+          (clip:any,index:number)=>{
+            const evaluation=
+              evaluations.get(index);
+
+            if(!evaluation){
+              return {
+                ...clip,
+                editorial_keep:true,
+              };
+            }
+
+            const editorialScore=
+              Math.max(
+                0,
+                Math.min(
+                  100,
+                  Number(
+                    evaluation.editorial_score
+                  ) ||
+                  Number(clip.score) ||
+                  0
+                )
+              );
+
+            return {
+              ...clip,
+
+              // A nota do editor-chefe substitui a nota
+              // exploratória da primeira IA.
+              score:editorialScore,
+
+              editorial_keep:
+                evaluation.keep !== false,
+
+              reason:
+                evaluation.reason
+                  ? `Editor-chefe: ${String(evaluation.reason)}`
+                  : clip.reason,
+            };
+          }
+        )
+        .sort(
+          (a:any,b:any)=>
+            Number(b.score)-
+            Number(a.score)
+        );
+  }catch(error){
+    // Falha do crítico não deve perder um vídeo inteiro.
+    console.warn(
+      "[editorial-ranker] fallback para scores da descoberta:",
+      String(
+        (error as Error)?.message ||
+        error
+      )
+    );
+  }
+
+
+  // Qualidade acima de quantidade.
+  // Se só 6 forem realmente bons, mostramos 6.
+  const strongCandidates=
+    rankedPool.filter(
+      (clip:any)=>
+        clip.editorial_keep !== false &&
+        Number(clip.score) >= 65
+    );
+
+  const finalPool=
+    strongCandidates.length
+      ? strongCandidates
+      : rankedPool.slice(
+          0,
+          Math.min(
+            5,
+            rankedPool.length
+          )
+        );
+
+  const opportunities=
+    selectDistinctOpportunities(
+      finalPool,
+      transcript.duration,
+      10,
+    );
+
+  if(!opportunities.length){
+    return [];
+  }
+
+
+  // ----------------------------------------------------------
+  // PASSAGEM 3 — ROUTING DE CONTA
+  // ----------------------------------------------------------
+
+  const fallbackAccount=
+    chooseFallbackAccount(accounts);
+
+  const accountIds=
+    new Set(
+      accounts.map(
+        account=>account.id
+      )
+    );
+
+  const routingPrompt=[
+    "Roteie cada momento abaixo para exatamente uma conta editorial ativa.",
+    "Não descarte nenhum momento nesta etapa.",
+    "",
+    "CONTAS ATIVAS:",
+    ...accounts.map(
+      account =>
+        `- id=${account.id} | ${account.label} | nicho=${account.niche} | tom=${account.tone || "natural"} | regras=${JSON.stringify(account.rules || {})}`
+    ),
+    "",
+    "MOMENTOS:",
+    ...opportunities.map(
+      (clip:any,index:number)=>
+        `${index}: ${JSON.stringify({
+          start_seconds:
+            clip.start_seconds,
+          end_seconds:
+            clip.end_seconds,
+          topic:clip.topic,
+          hook:clip.hook,
+          score:clip.score,
+          reason:clip.reason,
+        })}`
+    ),
+    "",
+    'Responda SOMENTE JSON: {"routes":[{"moment_index":0,"account_id":"uuid"}]}',
+  ].join("\n");
+
+  const routed=
+    await openAiJson(
+      routingPrompt,
+      "Você faz somente routing editorial depois que os momentos já foram escolhidos. Responda apenas JSON.",
+    );
+
+  const routes=
+    new Map<number,string>();
+
+  for(
+    const route of
+    routed.routes || []
+  ){
+    const index=
+      Number(route.moment_index);
+
+    if(
+      Number.isInteger(index) &&
+      accountIds.has(
+        route.account_id
+      )
+    ){
+      routes.set(
+        index,
+        route.account_id
+      );
+    }
+  }
+
+  return opportunities.map(
+    (clip:any,index:number)=>({
+      ...clip,
+      account_id:
+        routes.get(index) ||
+        fallbackAccount.id,
+    })
+  );
 }
 
 async function autoApprove(network: Record<string, any>, accounts: Record<string, any>[], clips: any[]) {

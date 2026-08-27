@@ -16,7 +16,14 @@
  * - O master é temporário: vive no diretório do job e é apagado pelo chamador.
  */
 import { spawn } from "node:child_process";
-import { stat, readdir } from "node:fs/promises";
+import {
+  stat,
+  readdir,
+  mkdir,
+  copyFile,
+  rename,
+  rm,
+} from "node:fs/promises";
 import { join } from "node:path";
 
 export class MediaResolverError extends Error {
@@ -76,6 +83,180 @@ function classifyDownloadError(raw) {
 function minimumSourceDuration() {
   const configured = Number(process.env.CLIP_MIN_SOURCE_DURATION_SECONDS || 181);
   return Number.isFinite(configured) && configured > 0 ? configured : 181;
+}
+
+
+let lastCachePruneAt = 0;
+
+function mediaCacheRoot() {
+  return process.env.CLIP_MASTER_CACHE_DIR || "/data/cache/clip-masters";
+}
+
+function mediaCacheTtlMs() {
+  const hours = Number(
+    process.env.CLIP_MASTER_CACHE_TTL_HOURS || 48
+  );
+
+  return Math.max(1,hours) * 60 * 60 * 1000;
+}
+
+function mediaCacheMaxBytes() {
+  const gb = Number(
+    process.env.CLIP_MASTER_CACHE_MAX_GB || 6
+  );
+
+  return Math.max(1,gb) * 1024 * 1024 * 1024;
+}
+
+function cacheId(video) {
+  return String(
+    video?.id ||
+    video?.provider_video_id ||
+    ""
+  ).replace(/[^a-zA-Z0-9_-]/g,"");
+}
+
+function cachePath(video) {
+  const id=cacheId(video);
+
+  return id
+    ? join(mediaCacheRoot(), id + ".mp4")
+    : null;
+}
+
+async function pruneMediaCache() {
+  // No máximo uma limpeza a cada 10 minutos.
+  if(
+    Date.now() - lastCachePruneAt <
+    10 * 60 * 1000
+  ){
+    return;
+  }
+
+  lastCachePruneAt=Date.now();
+
+  const root=mediaCacheRoot();
+
+  await mkdir(root,{recursive:true});
+
+  const names=await readdir(root);
+
+  const entries=[];
+
+  for(const name of names){
+    if(!name.endsWith(".mp4")) continue;
+
+    const path=join(root,name);
+
+    try{
+      const info=await stat(path);
+
+      if(
+        info.size < 100000 ||
+        Date.now() - info.mtimeMs >
+          mediaCacheTtlMs()
+      ){
+        await rm(path,{force:true});
+        continue;
+      }
+
+      entries.push({
+        path,
+        size:info.size,
+        mtimeMs:info.mtimeMs,
+      });
+    }catch{
+      // arquivo desapareceu durante limpeza
+    }
+  }
+
+  let total=entries.reduce(
+    (sum,item)=>sum+item.size,
+    0
+  );
+
+  if(total <= mediaCacheMaxBytes()){
+    return;
+  }
+
+  // Remove primeiro os masters mais antigos.
+  entries.sort(
+    (a,b)=>a.mtimeMs-b.mtimeMs
+  );
+
+  for(const item of entries){
+    if(total <= mediaCacheMaxBytes()){
+      break;
+    }
+
+    await rm(item.path,{force:true});
+
+    total-=item.size;
+  }
+}
+
+async function getCachedMaster(
+  video,
+  onProgress
+){
+  const path=cachePath(video);
+
+  if(!path) return null;
+
+  try{
+    const info=await stat(path);
+
+    if(
+      info.size < 100000 ||
+      Date.now() - info.mtimeMs >
+        mediaCacheTtlMs()
+    ){
+      await rm(path,{force:true});
+      return null;
+    }
+
+    onProgress?.(
+      "reutilizando master do cache local"
+    );
+
+    return path;
+  }catch{
+    return null;
+  }
+}
+
+async function persistMasterCache(
+  video,
+  sourcePath
+){
+  const finalPath=cachePath(video);
+
+  if(!finalPath){
+    return sourcePath;
+  }
+
+  await mkdir(
+    mediaCacheRoot(),
+    {recursive:true}
+  );
+
+  const tempPath=
+    finalPath +
+    "." +
+    process.pid +
+    ".tmp";
+
+  await copyFile(
+    sourcePath,
+    tempPath
+  );
+
+  await rename(
+    tempPath,
+    finalPath
+  );
+
+  return finalPath;
 }
 
 /** Validação pura para o guard long-form; metadata sem duração segue o fluxo normal. */
@@ -189,34 +370,127 @@ const strategies = [storageStrategy, youtubeStrategy];
  * @returns {Promise<{path:string, strategy:string}>} caminho local do master.
  * O chamador é responsável por apagar o diretório ao terminar.
  */
-export async function resolveMedia({ video, source, dir, supabase, bucket = "clip-network", onProgress }) {
-  if (!source?.rights_confirmed || !video?.rights_confirmed) {
+export async function resolveMedia({
+  video,
+  source,
+  dir,
+  supabase,
+  bucket = "clip-network",
+  onProgress,
+}) {
+  if (
+    !source?.rights_confirmed ||
+    !video?.rights_confirmed
+  ) {
     throw new MediaResolverError(
       "Fonte sem autorização confirmada. A obtenção de mídia só roda em fontes marcadas como autorizadas.",
-      { code: "rights_not_confirmed", retryable: false },
+      {
+        code: "rights_not_confirmed",
+        retryable: false,
+      },
     );
   }
-  // Um master já materializado tem prioridade: reprocessar não deve rebaixar
-  // nem repagar a obtenção.
-  const ordered = (video.media_storage_path || video.media_url)
-    ? strategies
-    : strategies.filter((s) => s !== storageStrategy);
 
-  let lastError = null;
-  for (const strategy of ordered) {
-    if (!strategy.supports(source)) continue;
-    try {
-      const path = await strategy.download({ video, source, dir, supabase, bucket, onProgress });
-      return { path, strategy: strategy.id };
-    } catch (e) {
-      lastError = e;
-      // Erro não-retentável para essa estratégia não deve ser mascarado por um
-      // fallback silencioso: se o YouTube bloqueou, o job precisa parar com o
-      // motivo real na tela.
-      if (e instanceof MediaResolverError && e.retryable === false) throw e;
+  await pruneMediaCache().catch(
+    () => {}
+  );
+
+  // Primeiro tenta o volume persistente do Fly.
+  const cached =
+    await getCachedMaster(
+      video,
+      onProgress,
+    );
+
+  if(cached){
+    return {
+      path: cached,
+      strategy: "cache:fly-volume",
+    };
+  }
+
+  const ordered =
+    (
+      video.media_storage_path ||
+      video.media_url
+    )
+      ? strategies
+      : strategies.filter(
+          strategy =>
+            strategy !== storageStrategy
+        );
+
+  let lastError=null;
+
+  for(const strategy of ordered){
+    if(!strategy.supports(source)){
+      continue;
+    }
+
+    try{
+      const downloaded =
+        await strategy.download({
+          video,
+          source,
+          dir,
+          supabase,
+          bucket,
+          onProgress,
+        });
+
+      let finalPath=downloaded;
+
+      try{
+        finalPath=
+          await persistMasterCache(
+            video,
+            downloaded,
+          );
+
+        if(finalPath !== downloaded){
+          onProgress?.(
+            "master salvo no cache local"
+          );
+        }
+      }catch(cacheError){
+        console.warn(
+          "[media-cache] não foi possível persistir master:",
+          cacheError?.message || cacheError
+        );
+
+        // Cache nunca pode quebrar o pipeline.
+        finalPath=downloaded;
+      }
+
+      return {
+        path: finalPath,
+        strategy:
+          finalPath === downloaded
+            ? strategy.id
+            : strategy.id + "+cache",
+      };
+    }catch(error){
+      lastError=error;
+
+      if(
+        error instanceof MediaResolverError &&
+        error.retryable === false
+      ){
+        throw error;
+      }
     }
   }
-  throw lastError || new MediaResolverError("Nenhuma estratégia de obtenção aplicável", { code: "no_strategy", retryable: false });
+
+  throw (
+    lastError ||
+    new MediaResolverError(
+      "Nenhuma estratégia de obtenção aplicável",
+      {
+        code:"no_strategy",
+        retryable:false,
+      },
+    )
+  );
 }
 
 export async function probeDuration(file) {
