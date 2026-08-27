@@ -326,11 +326,30 @@ export default function ClipNetworkPage() {
   };
 
   const connectInstagram = async () => {
-    if(!primaryAccount) return; setBusy("instagram"); setError(null);
+    if(!primaryAccount){setError("Crie uma conta editorial antes de conectar o Instagram.");return;}
+    setBusy("instagram"); setError(null);
+    const oauthWindow=window.open(
+      "about:blank",
+      "adbrief-instagram-oauth",
+      "popup,width=520,height=760,resizable=yes,scrollbars=yes",
+    );
     try {
       const data=await clipBridge(CLIP_INSTAGRAM_OAUTH_URL,{action:"get_auth_url",clip_account_id:primaryAccount.id});
-      if(!data?.url) throw new Error(data?.error||"Não foi possível iniciar Instagram OAuth"); window.location.href=data.url;
-    }catch(e:any){setError(e.message||String(e)); setBusy(null);}
+      if(!data?.url) throw new Error(data?.error||"Não foi possível iniciar Instagram OAuth");
+      const authUrl=new URL(data.url);
+      if(authUrl.protocol!=="https:"||!["instagram.com","www.instagram.com"].includes(authUrl.hostname)||authUrl.pathname.replace(/\/$/,"")!=="/oauth/authorize"){
+        throw new Error("A conexão retornou um endereço inválido do Instagram.");
+      }
+      if(oauthWindow&&!oauthWindow.closed){
+        oauthWindow.location.replace(authUrl.toString());
+        oauthWindow.focus();
+      }else{
+        window.location.assign(authUrl.toString());
+      }
+    }catch(e:any){
+      if(oauthWindow&&!oauthWindow.closed) oauthWindow.close();
+      setError(e.message||String(e));
+    }finally{setBusy(null);}
   };
 
   const toggleAutopilot = async () => {
@@ -762,7 +781,7 @@ export default function ClipNetworkPage() {
         <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
           <h2 className="text-sm font-semibold text-white">Conta piloto</h2>
           <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4"><div className="text-sm font-medium text-white">{primaryAccount?.label}</div><p className="mt-1 text-xs leading-5 text-white/40">{primaryAccount?.niche}</p></div>
-          <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 p-4"><div className="flex items-center gap-3"><div className="rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-orange-500/20 p-2"><Instagram className="h-4 w-4 text-pink-300"/></div><div><div className="text-xs font-medium text-white">Instagram</div><div className="text-[11px] text-white/35">{instagram?`@${instagram.username||instagram.display_name||'conectado'}`:'não conectado'}</div></div></div>{instagram?<Pill tone="good"><CheckCircle2 className="mr-1 h-3 w-3"/>API</Pill>:<button onClick={connectInstagram} disabled={busy==='instagram'} className="rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black">Conectar</button>}</div>
+          <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 p-4"><div className="flex items-center gap-3"><div className="rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-orange-500/20 p-2"><Instagram className="h-4 w-4 text-pink-300"/></div><div><div className="text-xs font-medium text-white">Instagram</div><div className="text-[11px] text-white/35">{instagram?`@${instagram.username||instagram.display_name||'conectado'}`:'não conectado'}</div></div></div>{instagram?<Pill tone="good"><CheckCircle2 className="mr-1 h-3 w-3"/>API</Pill>:<button onClick={connectInstagram} disabled={busy==='instagram'} className="inline-flex items-center rounded-lg bg-white px-3 py-2 text-[11px] font-semibold text-black disabled:opacity-60">{busy==='instagram'?<><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin"/>Conectando...</>:"Conectar"}</button>}</div>
           <div className="mt-2 rounded-2xl border border-white/10 p-4"><div className="flex items-center justify-between"><div><div className="text-xs font-medium text-white">TikTok</div><div className="mt-1 text-[11px] text-white/35">Exportar vídeo + caption pelo painel</div></div><Pill tone="warn">manual</Pill></div><p className="mt-3 text-[10px] leading-4 text-white/30">O Direct Post oficial não aceita o caso de uso de ferramenta interna para contas gerenciadas pela própria equipe. Mantemos a fila pronta sem arriscar bloqueio.</p></div>
         </section>
 

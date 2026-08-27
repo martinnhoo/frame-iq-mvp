@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Meta Graph responses are runtime payloads. */
 import { clipCors, json, requireClipUser, signClipState, verifyClipState } from "../_shared/clip-network.ts";
+import { buildInstagramAuthorizationUrl } from "./oauth-url.ts";
 
 const APP_URL = (Deno.env.get("APP_URL") || "https://adbrief.pro").replace(/\/+$/, "");
-const APP_ID = Deno.env.get("INSTAGRAM_APP_ID") || Deno.env.get("META_APP_ID") || "";
-const APP_SECRET = Deno.env.get("INSTAGRAM_APP_SECRET") || Deno.env.get("META_APP_SECRET") || "";
+// Instagram Publishing is intentionally independent from Meta Ads OAuth.
+const APP_ID = Deno.env.get("INSTAGRAM_APP_ID") || "";
+const APP_SECRET = Deno.env.get("INSTAGRAM_APP_SECRET") || "";
 const GRAPH_VERSION = Deno.env.get("META_GRAPH_VERSION") || "v25.0";
 const REDIRECT_URI = `${APP_URL}/dashboard/clips/connect/instagram/callback`;
 const SCOPES = ["instagram_business_basic", "instagram_business_content_publish"].join(",");
@@ -15,7 +17,9 @@ async function currentUser(req: Request) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: clipCors });
   try {
-    if (!APP_ID || !APP_SECRET) return json({ error: "Instagram app credentials missing" }, 500);
+    if (!APP_ID || !APP_SECRET) return json({
+      error: "Configure INSTAGRAM_APP_ID e INSTAGRAM_APP_SECRET para usar o login nativo do Instagram.",
+    }, 500);
     const body = await req.json().catch(() => ({}));
     const { action, clip_account_id, code, state } = body;
 
@@ -29,16 +33,8 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!ownedAccount) return json({ error: "clip account not found" }, 404);
       const stateParam = await signClipState({ user_id: user.id, clip_account_id });
-      const url = new URL("https://www.instagram.com/oauth/authorize");
-      url.searchParams.set("client_id", APP_ID);
-      url.searchParams.set("redirect_uri", REDIRECT_URI);
-      url.searchParams.set("scope", SCOPES);
-      url.searchParams.set("response_type", "code");
-      url.searchParams.set("state", stateParam);
-      url.searchParams.set("enable_fb_login", "0");
-      url.searchParams.set("force_authentication", "1");
-      url.searchParams.set("force_reauth", "true");
-      return json({ url: url.toString() });
+      const url = buildInstagramAuthorizationUrl({ appId: APP_ID, redirectUri: REDIRECT_URI, scopes: SCOPES, state: stateParam });
+      return json({ url: url.toString(), provider: "instagram", auth_mode: "instagram_login" });
     }
 
     if (action === "exchange_code") {
