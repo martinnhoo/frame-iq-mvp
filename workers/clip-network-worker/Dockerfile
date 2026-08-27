@@ -20,7 +20,7 @@ RUN apt-get update \
 WORKDIR /app
 
 RUN mkdir -p /app/vision \
- && python3 -c "import urllib.request; urllib.request.urlretrieve('https://raw.githubusercontent.com/ShiqiYu/libfacedetection.train/a61a428929148171b488f024b5d6774f93cdbc13/tasks/task1/onnx/yunet.onnx', '/app/vision/yunet.onnx')"
+ && python3 -c "import urllib.request; urllib.request.urlretrieve('https://huggingface.co/opencv/face_detection_yunet/resolve/main/face_detection_yunet_2023mar.onnx?download=true', '/app/vision/yunet.onnx'); import hashlib, pathlib; p=pathlib.Path('/app/vision/yunet.onnx'); d=p.read_bytes(); assert len(d)>200000, f'YuNet invalido: {len(d)} bytes'; assert hashlib.sha256(d).hexdigest()=='8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4', 'SHA256 YuNet invalido'"
 
 COPY package.json ./
 RUN npm install --omit=dev --no-audit --no-fund
