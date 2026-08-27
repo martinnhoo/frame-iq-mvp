@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, stat, rename, unlink } from "node:fs/promises";
 import { join } from "node:path";
 
 const OUTPUT_W = 1080;
@@ -262,8 +262,8 @@ async function writeAss({
     "",
     "[V4+ Styles]",
     "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-    `Style: Caption,DejaVu Sans,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,2,96,96,${marginV},1`,
-    "Style: Headline,DejaVu Sans,58,&H00FFFFFF,&H00FFFFFF,&H00000000,&H98000000,-1,0,0,0,100,100,0,0,3,12,0,8,110,110,150,1",
+    `Style: Caption,Inter,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,2,96,96,${marginV},1`,
+    "Style: Headline,Inter,58,&H00FFFFFF,&H00FFFFFF,&H00000000,&H98000000,-1,0,0,0,100,100,0,0,3,12,0,8,110,110,150,1",
     "",
     "[Events]",
     "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -618,7 +618,7 @@ function parseOutTime(value) {
   );
 }
 
-async function runVision({
+export async function runVision({
   master,
   dir,
   startSeconds,
@@ -637,7 +637,7 @@ async function runVision({
     const child = spawn(
       "python3",
       [
-        "/app/vision/ai_editor_v5.py",
+        "/app/vision/ai_editor_v6_lrasd.py",
         "--input",
         master,
         "--model",
@@ -650,6 +650,12 @@ async function runVision({
         String(durationSeconds),
         "--sample-fps",
         String(sampleFps),
+        "--weights",
+        process.env.V4_LR_ASD_WEIGHTS || "/app/vision/lrasd_talkset.model",
+        "--torch-threads",
+        String(process.env.V4_ASD_THREADS || 2),
+        "--proxy-max-side",
+        String(process.env.V4_ASD_PROXY_MAX_SIDE || 640),
       ],
       {
         stdio: ["ignore", "pipe", "pipe"],
@@ -846,6 +852,116 @@ async function runFfmpegRender({
   });
 }
 
+export async function ensureUploadBudget({
+  output,
+  durationSeconds,
+  hasAudio,
+  report,
+}) {
+  const maxBytes = Number(
+    process.env.V4_MAX_OUTPUT_BYTES || 47185920,
+  );
+
+  const before = await stat(output);
+  if (!Number.isFinite(maxBytes) || maxBytes <= 0 || before.size <= maxBytes) {
+    return {
+      compacted: false,
+      bytes_before: before.size,
+      bytes_after: before.size,
+      max_bytes: maxBytes,
+    };
+  }
+
+  await report({
+    phase: "render",
+    phase_pct: 100,
+    detail: `MP4 acima do budget (${(before.size / 1048576).toFixed(1)} MB); compactando`,
+  });
+
+  const tempOutput = `${output}.storage-budget.mp4`;
+  const audioBps = hasAudio ? 96000 : 0;
+  const totalBps = Math.max(
+    650000,
+    Math.floor((maxBytes * 8 * 0.88) / Math.max(1, durationSeconds)),
+  );
+  const videoBps = Math.max(550000, totalBps - audioBps);
+  const videoK = Math.max(550, Math.floor(videoBps / 1000));
+
+  const args = [
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-y",
+    "-i",
+    output,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "superfast",
+    "-b:v",
+    `${videoK}k`,
+    "-maxrate",
+    `${videoK}k`,
+    "-bufsize",
+    `${videoK * 2}k`,
+    "-pix_fmt",
+    "yuv420p",
+    "-threads",
+    String(process.env.V4_FFMPEG_THREADS || 2),
+  ];
+
+  if (hasAudio) {
+    args.push("-c:a", "aac", "-b:a", "96k");
+  } else {
+    args.push("-an");
+  }
+
+  args.push("-movflags", "+faststart", tempOutput);
+
+  try {
+    await new Promise((resolve, reject) => {
+      const child = spawn("ffmpeg", args, {
+        stdio: ["ignore", "ignore", "pipe"],
+      });
+
+      let stderr = "";
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk.toString();
+      });
+      child.on("error", reject);
+      child.on("close", (code) => {
+        if (code === 0) resolve();
+        else {
+          reject(
+            new Error(
+              `FFmpeg storage-budget falhou (${code}): ${stderr.slice(-1400)}`,
+            ),
+          );
+        }
+      });
+    });
+
+    const after = await stat(tempOutput);
+    if (after.size > maxBytes) {
+      throw new Error(
+        `MP4 continua acima do budget: ${after.size} > ${maxBytes}`,
+      );
+    }
+
+    await rename(tempOutput, output);
+    return {
+      compacted: true,
+      bytes_before: before.size,
+      bytes_after: after.size,
+      max_bytes: maxBytes,
+      target_video_kbps: videoK,
+    };
+  } catch (error) {
+    await unlink(tempOutput).catch(() => {});
+    throw error;
+  }
+}
+
 export async function renderEditorialV4({
   master,
   clip,
@@ -881,7 +997,7 @@ export async function renderEditorialV4({
   await report({
     phase: "vision",
     phase_pct: 0,
-    detail: "YuNet + active-speaker iniciando",
+    detail: "YuNet + LR-ASD neural active-speaker iniciando",
   });
 
   const vision = await runVision({
@@ -955,6 +1071,13 @@ export async function renderEditorialV4({
     report,
   });
 
+  const uploadBudget = await ensureUploadBudget({
+    output,
+    durationSeconds,
+    hasAudio: Boolean(sourceMeta.hasAudio),
+    report,
+  });
+
   await report({
     phase: "render",
     phase_pct: 100,
@@ -980,6 +1103,7 @@ export async function renderEditorialV4({
         dynamic_axis: cameraRuntime.dynamicAxis,
       },
       caption_v4: captionMeta,
+      upload_budget: uploadBudget,
       effective_start_seconds: startSeconds,
       effective_end_seconds: endSeconds,
     },

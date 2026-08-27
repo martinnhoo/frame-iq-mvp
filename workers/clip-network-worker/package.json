@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node index.mjs",
     "once": "node index.mjs --once",
-    "check": "node --check index.mjs && node --check mediaResolver.mjs && node --check gateway.mjs && node --check render/config.mjs && node --check render/captions.mjs && node --check render/filters.mjs && node --check render/remotionRenderer.mjs && node --check render/v4Renderer.mjs",
+    "check": "node --check index.mjs && node --check mediaResolver.mjs && node --check gateway.mjs && node --check render/config.mjs && node --check render/captions.mjs && node --check render/filters.mjs && node --check render/remotionRenderer.mjs && node --check render/v4Renderer.mjs && node --check render/v5Renderer.mjs",
     "test": "node --test *.test.mjs render/*.test.mjs"
   },
   "dependencies": {

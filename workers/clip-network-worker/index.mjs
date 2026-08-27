@@ -33,6 +33,7 @@ import { buildAudioFilter, buildBaseVideoFilter } from "./render/filters.mjs";
 import { renderCaptionedVideo, renderEditorialVideo } from "./render/remotionRenderer.mjs";
 import { buildVisualPlan } from "./render/visualDirector.mjs";
 import { renderEditorialV4 } from "./render/v4Renderer.mjs";
+import { renderEditorialV5 } from "./render/v5Renderer.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const WORKER_SECRET = process.env.CLIP_WORKER_SECRET;
@@ -459,12 +460,18 @@ async function renderAndUploadV4Revision(
 
   const attemptNumber =
     Number(revision.render_attempts || 0) + 1;
+  const useV5 =
+    String(process.env.CLIP_AI_EDITOR_VERSION || "4") === "5";
 
   let parameters = {
     ...baseParameters,
-    editor: "ai_editor_v4_open_source",
-    editor_version: 4,
-    renderer: "ffmpeg_one_pass_v4",
+    editor: useV5
+      ? "ai_editor_v5_semantic_multimodal"
+      : "ai_editor_v4_open_source",
+    editor_version: useV5 ? 5 : 4,
+    renderer: useV5
+      ? "ffmpeg_hardcut_v5"
+      : "ffmpeg_one_pass_v4",
     render_attempt_number: attemptNumber,
   };
 
@@ -475,10 +482,12 @@ async function renderAndUploadV4Revision(
   let lastPersistPct = -1;
 
   const ranges = {
-    acquire: [0, 10],
-    vision: [10, 45],
-    captions: [45, 50],
-    render: [50, 95],
+    planning: [0, 10],
+    acquire: [10, 20],
+    vision: [20, 45],
+    timeline: [45, 50],
+    captions: [50, 55],
+    render: [55, 95],
     qa: [95, 98],
     upload: [98, 100],
     done: [100, 100],
@@ -591,6 +600,59 @@ async function renderAndUploadV4Revision(
   let out = null;
 
   try {
+    if (useV5) {
+      await report(
+        {
+          phase: "planning",
+          phase_pct: 0,
+          detail: "Diretor V5 assistindo ao corte e montando 3 timelines",
+        },
+        true,
+      );
+
+      const planned = await callFunction(
+        "clip-ai-editor-v5",
+        "plan",
+        {
+          clip_id: clip.id,
+          revision_id: revision.id,
+        },
+        { timeoutMs: 5 * 60 * 1000 },
+      );
+
+      if (!planned?.recommended) {
+        throw new Error("Diretor V5 nao retornou plano recomendado");
+      }
+
+      parameters = {
+        ...parameters,
+        editor: "ai_editor_v5_semantic_multimodal",
+        editor_version: 5,
+        renderer: "ffmpeg_hardcut_v5",
+        v5_plan: {
+          version: planned.version || 5,
+          editor: planned.editor,
+          model: planned.model,
+          visual_source_method: planned.visual_source_method,
+          selected_plan_id: planned.selected_plan_id,
+          recommended: planned.recommended,
+          alternatives: planned.alternatives || [],
+          original_candidate_ids: planned.original_candidate_ids || [],
+          generated_at: planned.generated_at,
+        },
+      };
+
+      await report(
+        {
+          phase: "planning",
+          phase_pct: 100,
+          detail:
+            `V5 ${planned.recommended.editing_style} · viral ${Math.round(Number(planned.recommended.viral_score || 0))} · ${planned.recommended.output_duration_estimate}s`,
+        },
+        true,
+      );
+    }
+
     await report(
       {
         phase: "acquire",
@@ -633,18 +695,31 @@ async function renderAndUploadV4Revision(
     const sourceMeta = await probeMedia(master);
     const transcript = video.transcript || {};
 
-    const rendered = await renderEditorialV4({
-      master,
-      clip,
-      revision: {
-        ...revision,
-        parameters,
-      },
-      transcript,
-      dir,
-      sourceMeta,
-      report,
-    });
+    const rendered = useV5
+      ? await renderEditorialV5({
+          master,
+          clip,
+          revision: {
+            ...revision,
+            parameters,
+          },
+          transcript,
+          dir,
+          sourceMeta,
+          report,
+        })
+      : await renderEditorialV4({
+          master,
+          clip,
+          revision: {
+            ...revision,
+            parameters,
+          },
+          transcript,
+          dir,
+          sourceMeta,
+          report,
+        });
 
     out = rendered.out;
     parameters = {
@@ -763,7 +838,7 @@ async function renderAndUploadV4Revision(
     if (out) await rm(out, { force: true });
 
     log(
-      `[clip ${clip.id}] editorial_master v${revision.revision_number} ready via AI Editor v4 in ${Math.round((finishedAtMs - startedAtMs) / 1000)}s`,
+      `[clip ${clip.id}] editorial_master v${revision.revision_number} ready via AI Editor v${useV5 ? 5 : 4} in ${Math.round((finishedAtMs - startedAtMs) / 1000)}s`,
     );
 
     return {
@@ -813,7 +888,7 @@ async function renderAndUploadV4Revision(
     }
 
     log(
-      `[clip ${clip.id}] AI Editor v4 failed`,
+      `[clip ${clip.id}] AI Editor v${useV5 ? 5 : 4} failed`,
       error?.message || error,
     );
 
