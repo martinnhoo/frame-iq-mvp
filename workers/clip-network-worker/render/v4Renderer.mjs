@@ -84,24 +84,45 @@ function relativeWords(transcript, startSeconds, endSeconds) {
   return approximated;
 }
 
-function groupWords(words, maxWords = 4) {
+function groupWords(
+  words,
+  {
+    maxWords = 7,
+    maxChars = 44,
+    maxDuration = 2.5,
+  } = {},
+) {
   const groups = [];
   let current = [];
+
+  const textLength = (items) =>
+    items.map((item) => String(item.word || "")).join(" ").length;
 
   for (const word of words) {
     const prev = current.at(-1);
     const pause = prev ? word.start - prev.end : 0;
     const sentenceBreak =
-      prev &&
-      /[.!?…]["')\]]?$/.test(prev.word);
+      prev && /[.!?…]["')\]]?$/.test(prev.word);
+    const proposed = [...current, word];
+    const proposedDuration =
+      current.length > 0
+        ? word.end - current[0].start
+        : 0;
 
     if (
       current.length &&
-      (current.length >= maxWords || pause > 0.48 || sentenceBreak)
+      (
+        current.length >= maxWords ||
+        textLength(proposed) > maxChars ||
+        proposedDuration > maxDuration ||
+        pause > 0.55 ||
+        sentenceBreak
+      )
     ) {
       groups.push(current);
       current = [];
     }
+
     current.push(word);
   }
 
@@ -109,16 +130,85 @@ function groupWords(words, maxWords = 4) {
   return groups;
 }
 
+function captionBreakIndex(group, maxLineChars = 24) {
+  if (!Array.isArray(group) || group.length < 2) return -1;
+  const full = group.map((item) => String(item.word || "")).join(" ");
+  if (full.length <= maxLineChars) return -1;
+
+  let bestIndex = 1;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let index = 1; index < group.length; index += 1) {
+    const left = group
+      .slice(0, index)
+      .map((item) => String(item.word || ""))
+      .join(" ").length;
+    const right = group
+      .slice(index)
+      .map((item) => String(item.word || ""))
+      .join(" ").length;
+    const overflow =
+      Math.max(0, left - maxLineChars) +
+      Math.max(0, right - maxLineChars);
+    const score = overflow * 12 + Math.abs(left - right);
+    if (score < bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  }
+
+  return bestIndex;
+}
+
 function phraseWithActiveWord(group, activeIndex) {
-  return group
-    .map((item, index) => {
-      const word = escapeAss(item.word);
-      if (index === activeIndex) {
-        return `{\\c&H0000D8FF&}${word}{\\c&H00FFFFFF&}`;
-      }
-      return word;
-    })
-    .join(" ");
+  const rendered = group.map((item, index) => {
+    const word = escapeAss(item.word);
+    if (index === activeIndex) {
+      return `{\\c&H0000D8FF&}${word}{\\c&H00FFFFFF&}`;
+    }
+    return word;
+  });
+
+  const breakAt = captionBreakIndex(group, 24);
+  if (breakAt <= 0) return rendered.join(" ");
+
+  return (
+    rendered.slice(0, breakAt).join(" ") +
+    "\\N" +
+    rendered.slice(breakAt).join(" ")
+  );
+}
+
+function wrapHeadline(text, maxLineChars = 26) {
+  const words = String(text || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!words.length) return "";
+  const full = words.join(" ");
+  if (full.length <= maxLineChars || words.length === 1) {
+    return escapeAss(full);
+  }
+
+  let bestIndex = 1;
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (let index = 1; index < words.length; index += 1) {
+    const left = words.slice(0, index).join(" ");
+    const right = words.slice(index).join(" ");
+    const overflow =
+      Math.max(0, left.length - maxLineChars) +
+      Math.max(0, right.length - maxLineChars);
+    const score = overflow * 12 + Math.abs(left.length - right.length);
+    if (score < bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  }
+
+  const left = words.slice(0, bestIndex).join(" ");
+  const right = words.slice(bestIndex).join(" ");
+  return `${escapeAss(left)}\\N${escapeAss(right)}`;
 }
 
 function overlapRatio(a, b) {
@@ -153,11 +243,14 @@ async function writeAss({
   const duration = endSeconds - startSeconds;
   const words = relativeWords(transcript, startSeconds, endSeconds);
   const energy = clamp(parameters?.style?.energy ?? 3, 1, 5);
-  const maxWords = energy >= 4 ? 3 : 4;
-  const groups = groupWords(words, maxWords);
+  const groups = groupWords(words, {
+    maxWords: energy >= 4 ? 6 : 7,
+    maxChars: energy >= 4 ? 40 : 44,
+    maxDuration: energy >= 4 ? 2.15 : 2.55,
+  });
 
-  const fontSize = energy >= 4 ? 92 : 86;
-  const marginV = energy >= 4 ? 420 : 390;
+  const fontSize = energy >= 4 ? 70 : 66;
+  const marginV = energy >= 4 ? 330 : 315;
 
   const lines = [
     "[Script Info]",
@@ -165,12 +258,12 @@ async function writeAss({
     `PlayResX: ${OUTPUT_W}`,
     `PlayResY: ${OUTPUT_H}`,
     "ScaledBorderAndShadow: yes",
-    "WrapStyle: 2",
+    "WrapStyle: 0",
     "",
     "[V4+ Styles]",
     "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-    `Style: Caption,DejaVu Sans Condensed,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H64000000,-1,0,0,0,100,100,0,0,1,8,1,2,80,80,${marginV},1`,
-    "Style: Headline,DejaVu Sans Condensed,74,&H00FFFFFF,&H00FFFFFF,&H00101010,&H78000000,-1,0,0,0,100,100,0,0,1,7,1,8,80,80,160,1",
+    `Style: Caption,DejaVu Sans,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,2,96,96,${marginV},1`,
+    "Style: Headline,DejaVu Sans,58,&H00FFFFFF,&H00FFFFFF,&H00000000,&H98000000,-1,0,0,0,100,100,0,0,3,12,0,8,110,110,150,1",
     "",
     "[Events]",
     "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -224,7 +317,7 @@ async function writeAss({
       Math.min(2.8, duration),
     );
     lines.push(
-      `Dialogue: 1,${assTime(0)},${assTime(headlineEnd)},Headline,,0,0,0,,${escapeAss(headlineText)}`,
+      `Dialogue: 1,${assTime(0)},${assTime(headlineEnd)},Headline,,0,0,0,,${wrapHeadline(headlineText, 26)}`,
     );
   }
 
@@ -233,7 +326,7 @@ async function writeAss({
   return {
     words: words.length,
     caption_groups: groups.length,
-    style: energy >= 4 ? "viral_clean_high_energy" : "viral_clean",
+    style: "premium_dynamic_v2",
     headline_enabled:
       lines.some((line) => line.includes(",Headline,")),
   };
@@ -537,14 +630,14 @@ async function runVision({
     process.env.V4_YUNET_MODEL ||
     "/app/vision/yunet.onnx";
   const sampleFps = Number(
-    process.env.V4_VISION_SAMPLE_FPS || 3,
+    process.env.V4_VISION_SAMPLE_FPS || 6,
   );
 
   await new Promise((resolve, reject) => {
     const child = spawn(
       "python3",
       [
-        "/app/vision/ai_editor_v4.py",
+        "/app/vision/ai_editor_v5.py",
         "--input",
         master,
         "--model",

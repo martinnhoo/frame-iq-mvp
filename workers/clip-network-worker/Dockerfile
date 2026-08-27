@@ -31,7 +31,7 @@ RUN node -e "import('@remotion/renderer').then(async ({ensureBrowser}) => { awai
 COPY index.mjs mediaResolver.mjs gateway.mjs ./
 COPY render ./render
 COPY vision ./vision
-RUN python3 -m py_compile /app/vision/ai_editor_v4.py
+RUN python3 -m py_compile /app/vision/ai_editor_v4.py /app/vision/ai_editor_v5.py
 COPY remotion ./remotion
 
 RUN mkdir -p /data/tmp
