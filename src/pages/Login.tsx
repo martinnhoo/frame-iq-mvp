@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -26,9 +25,9 @@ const Login = () => {
     const oauthError = searchParams.get("oauth_error");
     if (!oauthError) return;
     const message = language === "pt"
-      ? "O Google recusou a autenticação agora. Tente novamente em alguns segundos."
+      ? "O Google recusou a autenticaÃ§Ã£o agora. Tente novamente em alguns segundos."
       : language === "es"
-        ? "Google rechazó la autenticación por ahora. Inténtalo de nuevo en unos segundos."
+        ? "Google rechazÃ³ la autenticaciÃ³n por ahora. IntÃ©ntalo de nuevo en unos segundos."
         : "Google sign-in failed for now. Try again in a few seconds.";
     toast.error(message);
     setSearchParams({}, { replace: true });
@@ -37,24 +36,20 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/dashboard/hub",
-        extraParams: { prompt: "select_account" },
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard/hub`,
+          queryParams: { prompt: "select_account" },
+        },
       });
 
-      if (result.error) {
-        console.error("[google-login] error:", result.error);
-        toast.error(result.error.message);
+      if (error) {
+        console.error("[google-login] error:", error);
+        toast.error(error.message);
         setLoading(false);
-        return;
       }
-
-      if (result.redirected) {
-        return;
-      }
-
-      trackEvent("login_completed");
-      navigate("/dashboard/hub");
+      // No browser, o supabase-js redireciona automaticamente ao provider.
     } catch (e) {
       console.error("[google-login] exception:", e);
       toast.error(String(e).slice(0, 100));
@@ -74,18 +69,18 @@ const Login = () => {
 
     if (error) {
       if (error.message.includes("Email not confirmed")) {
-        toast.error(language === "pt" ? "Confirme seu email antes de entrar." : language === "es" ? "Confirma tu email antes de iniciar sesión." : "Please confirm your email before signing in.");
+        toast.error(language === "pt" ? "Confirme seu email antes de entrar." : language === "es" ? "Confirma tu email antes de iniciar sesiÃ³n." : "Please confirm your email before signing in.");
         navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
       } else if (error.message.includes("Invalid login credentials")) {
-        toast.error(language === "pt" ? "Email ou senha inválidos. Tente novamente." : language === "es" ? "Email o contraseña incorrectos. Inténtalo de nuevo." : "Invalid email or password. Please try again.");
+        toast.error(language === "pt" ? "Email ou senha invÃ¡lidos. Tente novamente." : language === "es" ? "Email o contraseÃ±a incorrectos. IntÃ©ntalo de nuevo." : "Invalid email or password. Please try again.");
       } else {
         toast.error(error.message);
       }
     } else {
       trackEvent("login_completed");
-      // Pivot interno: /dashboard/hub é a home (BrilliantHub Painel).
+      // Pivot interno: /dashboard/hub Ã© a home (BrilliantHub Painel).
       // /dashboard/ai (Estrategista AdBrief) era usado quando AdBrief ainda
-      // era SaaS público — hoje não é a tela inicial.
+      // era SaaS pÃºblico â€” hoje nÃ£o Ã© a tela inicial.
       navigate("/dashboard/hub");
     }
     setEmailLoading(false);
@@ -221,7 +216,7 @@ const Login = () => {
                 <div style={{ position: 'relative' }}>
                   <input
                     id="login-password"
-                    type={showPassword ? "text" : "password"} placeholder="••••••••"
+                    type={showPassword ? "text" : "password"} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={password} onChange={e => setPassword(e.target.value)} required disabled={isFormDisabled}
                     style={{
                       width: '100%', height: 48, borderRadius: 12, paddingLeft: 16, paddingRight: 48, boxSizing: 'border-box' as const,
@@ -276,3 +271,4 @@ const Login = () => {
 };
 
 export default Login;
+

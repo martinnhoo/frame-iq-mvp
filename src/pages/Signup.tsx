@@ -1,13 +1,12 @@
-/**
- * Signup — aberto ao público (Creative Hub).
+﻿/**
+ * Signup â€” aberto ao pÃºblico (Creative Hub).
  *
- * Cadastro livre por email/senha ou Google. O gate de código de convite
+ * Cadastro livre por email/senha ou Google. O gate de cÃ³digo de convite
  * foi removido: qualquer pessoa pode criar conta.
  */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail, User } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -29,17 +28,19 @@ const Signup = () => {
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/dashboard/hub",
-        extraParams: { prompt: "select_account" },
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard/hub`,
+          queryParams: { prompt: "select_account" },
+        },
       });
-      if (result.error) {
-        toast.error(result.error.message);
+
+      if (error) {
+        toast.error(error.message);
         setLoading(false);
-        return;
       }
-      if (result.redirected) return;
-      navigate("/dashboard/hub");
+      // No browser, o supabase-js redireciona automaticamente ao provider.
     } catch (e) {
       toast.error(String(e).slice(0, 100));
       setLoading(false);
@@ -51,7 +52,7 @@ const Signup = () => {
     if (!email.trim() || !password || !name.trim()) return;
 
     if (password.length < 8) {
-      toast.error(tr("Senha deve ter ao menos 8 caracteres.", "Password must be at least 8 characters.", "La contraseña debe tener al menos 8 caracteres.", "密码至少需要8个字符。"));
+      toast.error(tr("Senha deve ter ao menos 8 caracteres.", "Password must be at least 8 characters.", "La contraseÃ±a debe tener al menos 8 caracteres.", "å¯†ç è‡³å°‘éœ€è¦8ä¸ªå­—ç¬¦ã€‚"));
       return;
     }
 
@@ -70,22 +71,22 @@ const Signup = () => {
       const isDup = /already|registered|exists/i.test(error.message);
       toast.error(
         isDup
-          ? tr("Este email já está cadastrado.", "This email is already registered.", "Este email ya está registrado.", "此邮箱已注册。")
+          ? tr("Este email jÃ¡ estÃ¡ cadastrado.", "This email is already registered.", "Este email ya estÃ¡ registrado.", "æ­¤é‚®ç®±å·²æ³¨å†Œã€‚")
           : error.message
       );
       setLoading(false);
       return;
     }
 
-    // Se o projeto exigir confirmação de email, não haverá sessão ativa.
+    // Se o projeto exigir confirmaÃ§Ã£o de email, nÃ£o haverÃ¡ sessÃ£o ativa.
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) {
-      toast.success(tr("Conta criada. Confirme seu email para continuar.", "Account created. Confirm your email to continue.", "Cuenta creada. Confirma tu email para continuar.", "账号已创建，请确认邮箱后继续。"));
+      toast.success(tr("Conta criada. Confirme seu email para continuar.", "Account created. Confirm your email to continue.", "Cuenta creada. Confirma tu email para continuar.", "è´¦å·å·²åˆ›å»ºï¼Œè¯·ç¡®è®¤é‚®ç®±åŽç»§ç»­ã€‚"));
       navigate("/login");
       return;
     }
 
-    toast.success(tr("Bem-vindo!", "Welcome!", "¡Bienvenido!", "欢迎！"));
+    toast.success(tr("Bem-vindo!", "Welcome!", "Â¡Bienvenido!", "æ¬¢è¿Žï¼"));
     navigate("/dashboard/hub");
   };
 
@@ -121,9 +122,9 @@ const Signup = () => {
       {/* Animated grid */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
-      {/* fixed em vez de absolute — no mobile o form é maior que o
+      {/* fixed em vez de absolute â€” no mobile o form Ã© maior que o
           viewport e o ancestral 'absolute' deixava o switcher fora
-          da tela. fixed mantém top-right do viewport sempre. */}
+          da tela. fixed mantÃ©m top-right do viewport sempre. */}
       <div className="fixed top-4 right-4 z-50" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <LanguageSwitcher />
       </div>
@@ -146,10 +147,10 @@ const Signup = () => {
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <h1 style={{ fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', margin: '0 0 8px' }}>
-                {tr("Criar conta", "Create account", "Crear cuenta", "创建账号")}
+                {tr("Criar conta", "Create account", "Crear cuenta", "åˆ›å»ºè´¦å·")}
               </h1>
               <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.5 }}>
-                {tr("Crie sua conta e comece a gerar criativos.", "Create your account and start generating creatives.", "Crea tu cuenta y empieza a generar creativos.", "创建账号，开始生成创意。")}
+                {tr("Crie sua conta e comece a gerar criativos.", "Create your account and start generating creatives.", "Crea tu cuenta y empieza a generar creativos.", "åˆ›å»ºè´¦å·ï¼Œå¼€å§‹ç”Ÿæˆåˆ›æ„ã€‚")}
               </p>
             </div>
 
@@ -171,12 +172,12 @@ const Signup = () => {
                 <path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
               </svg>
-              {tr("Continuar com Google", "Continue with Google", "Continuar con Google", "使用 Google 继续")}
+              {tr("Continuar com Google", "Continue with Google", "Continuar con Google", "ä½¿ç”¨ Google ç»§ç»­")}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{tr("ou", "or", "o", "或")}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{tr("ou", "or", "o", "æˆ–")}</span>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
             </div>
 
@@ -187,14 +188,14 @@ const Signup = () => {
               {/* Name */}
               <div>
                 <label htmlFor="signup-name" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
-                  {tr("Nome", "Name", "Nombre", "姓名")}
+                  {tr("Nome", "Name", "Nombre", "å§“å")}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <User style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(255,255,255,0.35)' }} />
                   <input
                     id="signup-name"
                     type="text"
-                    placeholder={tr("Seu nome", "Your name", "Tu nombre", "您的姓名")}
+                    placeholder={tr("Seu nome", "Your name", "Tu nombre", "æ‚¨çš„å§“å")}
                     autoComplete="name"
                     value={name}
                     onChange={e => setName(e.target.value)}
@@ -234,13 +235,13 @@ const Signup = () => {
               {/* Password */}
               <div>
                 <label htmlFor="signup-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
-                  {tr("Senha", "Password", "Contraseña", "密码")}
+                  {tr("Senha", "Password", "ContraseÃ±a", "å¯†ç ")}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
                     id="signup-password"
                     type={showPassword ? "text" : "password"}
-                    placeholder={tr("Mín. 8 caracteres", "Min. 8 characters", "Mín. 8 caracteres", "至少8个字符")}
+                    placeholder={tr("MÃ­n. 8 caracteres", "Min. 8 characters", "MÃ­n. 8 caracteres", "è‡³å°‘8ä¸ªå­—ç¬¦")}
                     autoComplete="new-password"
                     value={password} onChange={e => setPassword(e.target.value)} required minLength={8} disabled={isFormDisabled}
                     style={{
@@ -295,24 +296,24 @@ const Signup = () => {
                   }}
                 >
                   {loading && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
-                  {tr("Criar conta", "Create account", "Crear cuenta", "创建账号")}
+                  {tr("Criar conta", "Create account", "Crear cuenta", "åˆ›å»ºè´¦å·")}
                 </button>
               </div>
             </form>
 
             {/* Legal */}
             <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 20, lineHeight: 1.6 }}>
-              {tr("Ao criar conta você concorda com nossos", "By creating an account you agree to our", "Al crear cuenta aceptas nuestros", "创建账号即表示您同意我们的")}{" "}
-              <Link to="/terms" style={{ color: '#38bdf8', textDecoration: 'none' }}>{tr("Termos", "Terms", "Términos", "条款")}</Link>
-              {" "}{tr("e", "and", "y", "和")}{" "}
-              <Link to="/privacy" style={{ color: '#38bdf8', textDecoration: 'none' }}>{tr("Privacidade", "Privacy", "Privacidad", "隐私政策")}</Link>.
+              {tr("Ao criar conta vocÃª concorda com nossos", "By creating an account you agree to our", "Al crear cuenta aceptas nuestros", "åˆ›å»ºè´¦å·å³è¡¨ç¤ºæ‚¨åŒæ„æˆ‘ä»¬çš„")}{" "}
+              <Link to="/terms" style={{ color: '#38bdf8', textDecoration: 'none' }}>{tr("Termos", "Terms", "TÃ©rminos", "æ¡æ¬¾")}</Link>
+              {" "}{tr("e", "and", "y", "å’Œ")}{" "}
+              <Link to="/privacy" style={{ color: '#38bdf8', textDecoration: 'none' }}>{tr("Privacidade", "Privacy", "Privacidad", "éšç§æ”¿ç­–")}</Link>.
             </p>
 
             {/* Sign in link */}
             <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 12 }}>
-              {tr("Já tem conta?", "Already have an account?", "¿Ya tienes cuenta?", "已有账号？")}{" "}
+              {tr("JÃ¡ tem conta?", "Already have an account?", "Â¿Ya tienes cuenta?", "å·²æœ‰è´¦å·ï¼Ÿ")}{" "}
               <Link to="/login" style={{ color: '#38bdf8', fontWeight: 600, textDecoration: 'none' }}>
-                {tr("Entrar", "Sign in", "Iniciar sesión", "登录")}
+                {tr("Entrar", "Sign in", "Iniciar sesiÃ³n", "ç™»å½•")}
               </Link>
             </p>
           </div>
@@ -323,3 +324,4 @@ const Signup = () => {
 };
 
 export default Signup;
+
