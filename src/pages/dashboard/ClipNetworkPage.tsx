@@ -680,6 +680,9 @@ export default function ClipNetworkPage() {
       onWatchRevision={revision=>watchVariant(revision,true)}
       onDownload={(item,isRevision)=>downloadVariant(item,isRevision)}
       onRetry={(clip,revision)=>retryRevision(clip as Clip,revision)}
+      canPublishInstagram={!!instagram}
+      onPublish={clip=>publishNow(clip as Clip)}
+      publicationStatusByClip={publicationStatusByClip}
     />
 
     {readyClips.length>0&&<section className="rounded-3xl border border-emerald-500/15 bg-emerald-500/[.035] p-5">
