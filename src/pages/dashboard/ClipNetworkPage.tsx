@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Supabase generated types are updated by Lovable after the migration is applied. */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ReviewDesk, { type DeskFeedback, type DeskRevision, type DeskVariant } from "@/components/clip-network/ReviewDesk";
 import {
   AlertTriangle, CheckCircle2, Clapperboard, Clock3, Copy, Download, ExternalLink,
-  Instagram, Link2, Loader2, Play, Plus, Power, PowerOff, RefreshCw, RotateCcw, Sparkles, Trash2, Upload, Youtube, Zap,
+  Instagram, Link2, Loader2, Play, Plus, Power, PowerOff, RefreshCw, RotateCcw, Sparkles, Trash2, Youtube, Zap,
 
 } from "lucide-react";
 
@@ -14,6 +14,8 @@ const CLIP_NETWORK_API_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions
 const CLIP_NETWORK_REVIEW_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-review-wake";
 const CLIP_NETWORK_SIGN_MEDIA_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-sign-media";
 const CLIP_WORKER_STATUS_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-worker-status";
+const CLIP_INSTAGRAM_OAUTH_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-instagram-oauth";
+const CLIP_INSTAGRAM_PUBLISH_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-publish-instagram";
 
 async function clipApi(action:string, payload:Record<string,unknown> = {}) {
   const { data:{ session }, error } = await supabase.auth.getSession();
@@ -144,8 +146,6 @@ export default function ClipNetworkPage() {
   const [sourceLabel,setSourceLabel] = useState("");
   const [rightsConfirmed,setRightsConfirmed] = useState(false);
   const [showSourceForm,setShowSourceForm] = useState(false);
-  const [testCaption,setTestCaption] = useState("Treino de verdade é consistência. #fitness #treino");
-  const fileRef = useRef<HTMLInputElement>(null);
   const [playing,setPlaying] = useState<Record<string,string>>({});
   const [reviewMessage,setReviewMessage] = useState<string|null>(null);
   const [workerStatus,setWorkerStatus] = useState<WorkerStatus|null>(null);
@@ -153,6 +153,11 @@ export default function ClipNetworkPage() {
   const primaryAccount = accounts[0];
   const instagram = socials.find(s => s.clip_account_id === primaryAccount?.id && s.platform === "instagram" && s.status === "active");
   const publicationByClip = useMemo(() => new Map(publications.map(p => [p.clip_id,p])),[publications]);
+  const publicationStatusByClip = useMemo(() => {
+    const map:Record<string,string> = {};
+    for (const p of publications) if (p.clip_id && p.status) map[p.clip_id] = p.status;
+    return map;
+  },[publications]);
   const accountById = useMemo(() => new Map(accounts.map(a => [a.id,a])),[accounts]);
   const sourceById = useMemo(() => new Map(sources.map(s => [s.id,s])),[sources]);
   const clipStatsByVideo = useMemo(() => {
@@ -323,8 +328,8 @@ export default function ClipNetworkPage() {
   const connectInstagram = async () => {
     if(!primaryAccount) return; setBusy("instagram"); setError(null);
     try {
-      const {data,error:e}=await supabase.functions.invoke("clip-network-instagram-oauth",{body:{action:"get_auth_url",clip_account_id:primaryAccount.id}});
-      if(e) throw e; if(!data?.url) throw new Error(data?.error||"Não foi possível iniciar Instagram OAuth"); window.location.href=data.url;
+      const data=await clipBridge(CLIP_INSTAGRAM_OAUTH_URL,{action:"get_auth_url",clip_account_id:primaryAccount.id});
+      if(!data?.url) throw new Error(data?.error||"Não foi possível iniciar Instagram OAuth"); window.location.href=data.url;
     }catch(e:any){setError(e.message||String(e)); setBusy(null);}
   };
 
@@ -337,32 +342,17 @@ export default function ClipNetworkPage() {
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
-  const uploadTestClip = async (file:File) => {
-    if(!primaryAccount) return; setBusy("upload"); setError(null);
-    try {
-      const {data:{user}}=await supabase.auth.getUser(); if(!user) throw new Error("Faça login novamente");
-      const id=crypto.randomUUID(); const path=`${user.id}/manual-${id}.mp4`;
-      const {error:upErr}=await supabase.storage.from("clip-network").upload(path,file,{contentType:file.type||"video/mp4",upsert:false}); if(upErr)throw upErr;
-      const {data:pub}=supabase.storage.from("clip-network").getPublicUrl(path);
-      const {data:clip,error:cErr}=await db.from("clips").insert({user_id:user.id,clip_account_id:primaryAccount.id,hook:"Teste de publicação",caption:testCaption,score:100,status:"approved",render_status:"not_needed",rendered_storage_path:path,rendered_url:pub.publicUrl}).select("*").single(); if(cErr)throw cErr;
-      if(instagram){ await db.from("clip_publications").insert({user_id:user.id,clip_id:clip.id,social_account_id:instagram.id,platform:"instagram",status:"queued",scheduled_at:new Date().toISOString()}); }
-      await load();
-    }catch(e:any){setError(e.message||String(e));}finally{setBusy(null); if(fileRef.current)fileRef.current.value="";}
-  };
-
   const publishNow = async (clip:Clip) => {
     if(!instagram){setError("Conecte o Instagram antes de publicar.");return;} setBusy(`publish:${clip.id}`); setError(null);
     try{
-      const {data:{user}}=await supabase.auth.getUser(); if(!user)throw new Error("Faça login novamente");
-      let pub=publicationByClip.get(clip.id);
-      if(!pub){const {data,error:e}=await db.from("clip_publications").insert({user_id:user.id,clip_id:clip.id,social_account_id:instagram.id,platform:"instagram",status:"queued",scheduled_at:new Date().toISOString()}).select("*").single();if(e)throw e;pub=data;}
-      const {data,error:e}=await supabase.functions.invoke("clip-network-publish-instagram",{body:{publication_id:pub.id,action:"publish"}});if(e)throw e;if(data?.error)throw new Error(data.error);await load();
+      await clipBridge(CLIP_INSTAGRAM_PUBLISH_URL,{action:"publish",clip_id:clip.id,social_account_id:instagram.id});
+      await load();
     }catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
 
   const approve = async (clip:Clip) => {
     setBusy(`approve:${clip.id}`); setError(null);
-    try{const data=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"approve",payload:{clip_id:clip.id}});setReviewMessage("Momento aprovado. Criando as três variantes v1…");await load();}
+    try{await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"approve",payload:{clip_id:clip.id}});setReviewMessage("Momento aprovado. AI Editor preparando a edição final…");await load();}
     catch(e:any){setError(e.message||String(e));}finally{setBusy(null);}
   };
   const reject = async (clip:Clip) => {
@@ -680,6 +670,9 @@ export default function ClipNetworkPage() {
       onWatchRevision={revision=>watchVariant(revision,true)}
       onDownload={(item,isRevision)=>downloadVariant(item,isRevision)}
       onRetry={(clip,revision)=>retryRevision(clip as Clip,revision)}
+      canPublishInstagram={!!instagram}
+      onPublish={clip=>publishNow(clip as Clip)}
+      publicationStatusByClip={publicationStatusByClip}
     />
 
     {readyClips.length>0&&<section className="rounded-3xl border border-emerald-500/15 bg-emerald-500/[.035] p-5">
@@ -815,13 +808,6 @@ export default function ClipNetworkPage() {
               </div>
             </div>)}
           </div>
-        </section>
-
-        <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
-          <h2 className="text-sm font-semibold text-white">Teste rápido da publicação</h2><p className="mt-1 text-xs leading-5 text-white/40">Suba um MP4 vertical pronto para validar a conexão Instagram antes do crawler/worker.</p>
-          <textarea value={testCaption} onChange={e=>setTestCaption(e.target.value)} rows={3} className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-white outline-none"/>
-          <input ref={fileRef} type="file" accept="video/mp4,video/quicktime" className="hidden" onChange={e=>e.target.files?.[0]&&uploadTestClip(e.target.files[0])}/>
-          <button onClick={()=>fileRef.current?.click()} disabled={busy==='upload'} className="mt-3 inline-flex items-center rounded-xl bg-violet-500 px-3 py-2 text-xs font-medium text-white">{busy==='upload'?<Loader2 className="mr-2 h-3.5 w-3.5 animate-spin"/>:<Upload className="mr-2 h-3.5 w-3.5"/>}Enviar MP4 de teste</button>
         </section>
       </div>
     </div>

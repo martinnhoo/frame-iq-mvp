@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- revision settings are persisted JSON with preset-specific keys. */
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Download, History, Loader2, MessageSquareText, Play, RotateCcw, Trash2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Download, History, Instagram, Loader2, MessageSquareText, Play, RotateCcw, Trash2 } from "lucide-react";
 
 export type DeskClip = { id:string; clip_account_id:string; source_video_id?:string; hook?:string; topic?:string; caption?:string; score:number; status:string; render_status:string; start_seconds?:number; end_seconds?:number; on_screen_title?:string };
 export type DeskVariant = { id:string; clip_id:string; variant_key:string; current_revision:number; current_revision_id?:string; render_status:string; rendered_storage_path?:string; last_error?:string; render_attempts:number; parameters?:Record<string,unknown> };
@@ -21,11 +21,8 @@ type DeskAccount = { id:string; label:string };
 
 const LABELS:Record<string,string> = {
   editorial_master:"Edicao final - AI Editor",
-  blur_caption:"Legenda dinamica - legado",
-  zoom_caption:"Legenda clean - legado",
-  zoom_clean:"Sem legenda - legado",
 };
-const ORDER = ["editorial_master","blur_caption","zoom_caption","zoom_clean"];
+const ORDER = ["editorial_master"];
 
 const PIPELINE_LABELS:Record<string,string> = {
   downloading:"Baixando vídeo",
@@ -55,9 +52,10 @@ function FeedbackBox({busy,targetLabel,onSubmit,onCancel}:{busy:boolean;targetLa
   </div>;
 }
 
-export default function ReviewDesk({clips,variants,revisions,feedback,videos,sources,accounts,mediaUrls,busy,message,onApprove,onDiscard,onFeedback,onWatchVariant,onWatchRevision,onDownload,onRetry}:{
+export default function ReviewDesk({clips,variants,revisions,feedback,videos,sources,accounts,mediaUrls,busy,message,onApprove,onDiscard,onFeedback,onWatchVariant,onWatchRevision,onDownload,onRetry,canPublishInstagram,onPublish,publicationStatusByClip}:{
   clips:DeskClip[];variants:DeskVariant[];revisions:DeskRevision[];feedback:DeskFeedback[];videos:DeskVideo[];sources:DeskSource[];accounts:DeskAccount[];mediaUrls:Record<string,string>;busy:string|null;message?:string|null;
   onApprove:(clip:DeskClip)=>void;onDiscard:(clip:DeskClip)=>void;onFeedback:(clip:DeskClip,text:string,variant?:DeskVariant)=>void;onWatchVariant:(variant:DeskVariant)=>void;onWatchRevision:(revision:DeskRevision)=>void;onDownload:(item:DeskVariant|DeskRevision,isRevision?:boolean)=>void;onRetry:(clip:DeskClip,revision:DeskRevision)=>void;
+  canPublishInstagram?:boolean;onPublish?:(clip:DeskClip)=>void;publicationStatusByClip?:Record<string,string>;
 }) {
   const [tab,setTab]=useState("review");
   const [reviewIndex,setReviewIndex]=useState(0);
@@ -159,11 +157,11 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
           <div>{clipHeader(clip)}</div>
           {clip.status==="approved"&&
-            <span className="shrink-0 text-xs text-white/40">{readyCount}/3 prontos</span>
+            <span className="shrink-0 text-xs text-white/40">{readyCount}/1 pronto</span>
           }
         </div>
 
-        {clip.status==="approved"&&readyCount<3&&
+        {clip.status==="approved"&&readyCount<1&&
           <div className="mt-4 flex items-start gap-3 rounded-xl border border-white/[.07] bg-white/[.025] px-3 py-3">
             <span className="relative mt-1 flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-35"/>
@@ -173,8 +171,8 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
             <div>
               <div className="text-[11px] font-medium text-white/75">
                 {clipVariants.some(variant=>variant.render_status==="rendering")
-                  ? `Renderizando · ${readyCount}/3 prontas`
-                  : `Aguardando render · ${readyCount}/3 prontas`}
+                  ? `Renderizando · ${readyCount}/1 pronta`
+                  : `Aguardando render · ${readyCount}/1 pronta`}
               </div>
 
               <div className="mt-1 text-[10px] text-white/35">
@@ -187,9 +185,9 @@ export default function ReviewDesk({clips,variants,revisions,feedback,videos,sou
             </div>
           </div>
         }
-        {clip.status==="rejected"?<div className="mt-4 text-xs text-white/35">Este momento foi descartado e não será regenerado automaticamente.</div>:<div className="mt-5 grid gap-3 lg:grid-cols-3">{ORDER.map(key=>{const variant=clipVariants.find(item=>item.variant_key===key);if(!variant)return <div key={key} className="rounded-xl border border-dashed border-white/10 p-5 text-xs text-white/30">{LABELS[key]} · criando variante…</div>;const currentRevision=revisions.find(revision=>revision.id===variant.current_revision_id);return <div key={variant.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/35">
+        {clip.status==="rejected"?<div className="mt-4 text-xs text-white/35">Este momento foi descartado e não será regenerado automaticamente.</div>:<div className="mt-5 grid gap-3 lg:grid-cols-2">{ORDER.map(key=>{const variant=clipVariants.find(item=>item.variant_key===key);if(!variant)return <div key={key} className="rounded-xl border border-dashed border-white/10 p-5 text-xs text-white/30">{LABELS[key]} · criando variante…</div>;const currentRevision=revisions.find(revision=>revision.id===variant.current_revision_id);return <div key={variant.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/35">
           {mediaUrls[variant.id]?<video src={mediaUrls[variant.id]} controls playsInline preload="metadata" className="aspect-[9/16] max-h-[560px] w-full bg-black object-contain"/>:<button onClick={()=>variant.render_status==="ready"&&onWatchVariant(variant)} disabled={variant.render_status!=="ready"||!!busy} className="flex aspect-[9/16] max-h-[560px] w-full items-center justify-center bg-black/50 text-xs text-white/35">{variant.render_status==="ready"?<><Play className="mr-2 h-4 w-4"/>Carregar preview</>:variant.render_status==="rendering"?<><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Gerando v{variant.current_revision}</>:"Preview indisponível"}</button>}
-          <div className="p-3"><div className="flex items-center justify-between gap-2"><div className="text-xs font-medium text-white">{LABELS[key]}</div><Status status={variant.render_status}/></div><div className="mt-1 text-[10px] text-white/30">v{variant.current_revision}</div>{variant.last_error&&<div className="mt-2 text-[10px] leading-4 text-red-300">{variant.last_error}</div>}<div className="mt-3 flex flex-wrap gap-2">{variant.render_status==="ready"&&<button onClick={()=>onDownload(variant)} className="inline-flex items-center rounded-lg border border-white/10 px-2.5 py-2 text-[10px] text-white/65"><Download className="mr-1.5 h-3.5 w-3.5"/>Baixar</button>}<button onClick={()=>setFeedbackTarget({clip,variant})} className="inline-flex items-center rounded-lg border border-violet-400/20 px-2.5 py-2 text-[10px] text-violet-200"><MessageSquareText className="mr-1.5 h-3.5 w-3.5"/>Pedir ajuste</button>{variant.render_status==="error"&&currentRevision&&<button onClick={()=>onRetry(clip,currentRevision)} className="inline-flex items-center rounded-lg border border-red-500/20 px-2.5 py-2 text-[10px] text-red-300"><RotateCcw className="mr-1.5 h-3.5 w-3.5"/>Tentar novamente</button>}</div></div>
+          <div className="p-3"><div className="flex items-center justify-between gap-2"><div className="text-xs font-medium text-white">{LABELS[key]}</div><Status status={variant.render_status}/></div><div className="mt-1 text-[10px] text-white/30">v{variant.current_revision}</div>{variant.last_error&&<div className="mt-2 text-[10px] leading-4 text-red-300">{variant.last_error}</div>}<div className="mt-3 flex flex-wrap gap-2">{variant.render_status==="ready"&&canPublishInstagram&&onPublish&&(()=>{const pubStatus=publicationStatusByClip?.[clip.id];const done=pubStatus==="published";const running=pubStatus==="publishing"||pubStatus==="processing"||pubStatus==="queued";return <button onClick={()=>onPublish(clip)} disabled={done||running||!!busy} className="inline-flex items-center rounded-lg border border-pink-400/25 bg-pink-500/10 px-2.5 py-2 text-[10px] text-pink-200 disabled:opacity-40"><Instagram className="mr-1.5 h-3.5 w-3.5"/>{done?"Publicado":running?"Publicando…":"Publicar IG"}</button>;})()}{variant.render_status==="ready"&&<button onClick={()=>onDownload(variant)} className="inline-flex items-center rounded-lg border border-white/10 px-2.5 py-2 text-[10px] text-white/65"><Download className="mr-1.5 h-3.5 w-3.5"/>Baixar</button>}<button onClick={()=>setFeedbackTarget({clip,variant})} className="inline-flex items-center rounded-lg border border-violet-400/20 px-2.5 py-2 text-[10px] text-violet-200"><MessageSquareText className="mr-1.5 h-3.5 w-3.5"/>Pedir ajuste</button>{variant.render_status==="error"&&currentRevision&&<button onClick={()=>onRetry(clip,currentRevision)} className="inline-flex items-center rounded-lg border border-red-500/20 px-2.5 py-2 text-[10px] text-red-300"><RotateCcw className="mr-1.5 h-3.5 w-3.5"/>Tentar novamente</button>}</div></div>
         </div>;})}</div>}
         {feedbackTarget?.clip.id===clip.id&&<div className="mt-4"><FeedbackBox busy={!!busy} targetLabel={feedbackTarget.variant?LABELS[feedbackTarget.variant.variant_key]:"Todas as variantes compatíveis"} onSubmit={submitFeedback} onCancel={()=>setFeedbackTarget(null)}/></div>}
         {clip.status!=="rejected"&&<div className="mt-4 flex flex-wrap gap-2"><button onClick={()=>setFeedbackTarget({clip})} className="inline-flex items-center rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60"><MessageSquareText className="mr-1.5 h-3.5 w-3.5"/>Ajuste geral</button></div>}
