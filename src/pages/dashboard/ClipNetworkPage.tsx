@@ -816,13 +816,6 @@ export default function ClipNetworkPage() {
             </div>)}
           </div>
         </section>
-
-        <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
-          <h2 className="text-sm font-semibold text-white">Teste rápido da publicação</h2><p className="mt-1 text-xs leading-5 text-white/40">Suba um MP4 vertical pronto para validar a conexão Instagram antes do crawler/worker.</p>
-          <textarea value={testCaption} onChange={e=>setTestCaption(e.target.value)} rows={3} className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-white outline-none"/>
-          <input ref={fileRef} type="file" accept="video/mp4,video/quicktime" className="hidden" onChange={e=>e.target.files?.[0]&&uploadTestClip(e.target.files[0])}/>
-          <button onClick={()=>fileRef.current?.click()} disabled={busy==='upload'} className="mt-3 inline-flex items-center rounded-xl bg-violet-500 px-3 py-2 text-xs font-medium text-white">{busy==='upload'?<Loader2 className="mr-2 h-3.5 w-3.5 animate-spin"/>:<Upload className="mr-2 h-3.5 w-3.5"/>}Enviar MP4 de teste</button>
-        </section>
       </div>
     </div>
 
