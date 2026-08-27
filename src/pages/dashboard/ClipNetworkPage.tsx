@@ -14,6 +14,8 @@ const CLIP_NETWORK_API_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions
 const CLIP_NETWORK_REVIEW_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-review-wake";
 const CLIP_NETWORK_SIGN_MEDIA_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-sign-media";
 const CLIP_WORKER_STATUS_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-worker-status";
+const CLIP_INSTAGRAM_OAUTH_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-instagram-oauth";
+const CLIP_INSTAGRAM_PUBLISH_URL = "https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/clip-network-publish-instagram";
 
 async function clipApi(action:string, payload:Record<string,unknown> = {}) {
   const { data:{ session }, error } = await supabase.auth.getSession();
