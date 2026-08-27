@@ -107,11 +107,24 @@ export function normalizeRenderSettings(variantKey, raw = {}, clip = {}) {
   };
 }
 
-export function revisionStoragePath(userId, clipId, variantKey, revisionNumber) {
+export function revisionStoragePath(
+  userId,
+  clipId,
+  variantKey,
+  revisionNumber,
+  renderToken = Date.now(),
+) {
   if (!ALL_STORAGE_KEYS.includes(variantKey)) {
     throw new Error(`variant_key desconhecida: ${variantKey}`);
   }
-  return `${userId}/${clipId}/${variantKey}/v${Number(revisionNumber)}.mp4`;
+
+  // Cada render vira um objeto imutavel. Reutilizar v1.mp4/v2.mp4
+  // permite bytes antigos de browser/CDN e sobrescreve o render anterior.
+  const safeToken = String(renderToken)
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .slice(0, 80) || String(Date.now());
+
+  return `${userId}/${clipId}/${variantKey}/revisions/v${Number(revisionNumber)}-${safeToken}.mp4`;
 }
 
 export function aggregateVariantProgress(variants) {

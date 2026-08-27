@@ -16,10 +16,10 @@ test("v2 usa editorial_master", () => {
   assert.deepEqual(VARIANT_KEYS, ["editorial_master"]);
 });
 
-test("storage path editorial master", () => {
+test("storage path editorial master e imutavel por render", () => {
   assert.equal(
-    revisionStoragePath("u", "c", "editorial_master", 2),
-    "u/c/editorial_master/v2.mp4",
+    revisionStoragePath("u", "c", "editorial_master", 2, "attempt-2"),
+    "u/c/editorial_master/revisions/v2-attempt-2.mp4",
   );
 });
 
