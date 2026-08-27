@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { __v5Test } from "./v5Renderer.mjs";
 
-test("V5 trims dead pauses and retimes words monotonically", () => {
+test("V5.2 preserves pauses by default and retimes words monotonically", () => {
   const transcript = {
     words: [
       { word: "Hook", start: 0.20, end: 0.55 },
@@ -16,20 +16,44 @@ test("V5 trims dead pauses and retimes words monotonically", () => {
   const ranges = __v5Test.addOutputOffsets(
     __v5Test.normalizeContentRanges(
       {
-        content_timeline: [{ start: 0, end: 3.2, purpose: "build" }],
+        content_timeline: [{ start: 0, end: 3.2, purpose: "story" }],
         pacing: { silence_trim: true, pause_threshold: 0.42 },
       },
       words,
       4,
     ),
   );
-  assert.ok(ranges.length >= 2);
+  assert.equal(ranges.length, 1);
+  assert.equal(ranges[0].start, 0);
+  assert.ok(ranges[0].end >= 3.19);
   const mapped = __v5Test.retimeWords(words, ranges);
   assert.equal(mapped.length, 5);
   for (let i = 1; i < mapped.length; i += 1) {
     assert.ok(mapped[i].start >= mapped[i - 1].start);
   }
-  assert.ok(ranges.at(-1).output_end < 3.2);
+});
+
+test("V5.2 only trims long pauses with explicit aggressive opt-in", () => {
+  const transcript = {
+    words: [
+      { word: "antes", start: 0.20, end: 0.50 },
+      { word: "depois", start: 2.80, end: 3.10 },
+    ],
+  };
+  const words = __v5Test.relativeWords(transcript, 0, 4);
+  const ranges = __v5Test.normalizeContentRanges(
+    {
+      content_timeline: [{ start: 0, end: 3.4, purpose: "build" }],
+      pacing: {
+        silence_trim: true,
+        aggressive_silence_trim: true,
+        pause_threshold: 1.4,
+      },
+    },
+    words,
+    4,
+  );
+  assert.ok(ranges.length >= 2);
 });
 
 test("V5 creates hard-cut shots around speaker switches and emphasis", () => {

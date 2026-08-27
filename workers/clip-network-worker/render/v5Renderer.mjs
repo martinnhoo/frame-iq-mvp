@@ -79,11 +79,31 @@ function snapRangeToWords(range, words, duration) {
 }
 
 function splitSilences(ranges, words, pacing) {
-  if (pacing?.silence_trim === false || !words.length) return ranges;
-  const threshold = clamp(pacing?.pause_threshold ?? 0.42, 0.28, 0.85);
+  // Story-first default: pauses are part of delivery/comedic timing.
+  // Internal silence removal is opt-in only, never implicit.
+  if (
+    pacing?.silence_trim !== true ||
+    pacing?.aggressive_silence_trim !== true ||
+    !words.length
+  ) {
+    return ranges;
+  }
+
+  const threshold = clamp(
+    pacing?.pause_threshold ?? 1.4,
+    1.2,
+    2.8,
+  );
   const output = [];
+  let trims = 0;
 
   for (const range of ranges) {
+    // Never micro-cut payoff/reaction/story ranges.
+    if (["payoff", "reaction", "story"].includes(String(range.purpose))) {
+      output.push(range);
+      continue;
+    }
+
     const local = words.filter(
       (word) => word.end > range.start && word.start < range.end,
     );
@@ -94,26 +114,31 @@ function splitSilences(ranges, words, pacing) {
 
     let cursor = range.start;
     for (let index = 1; index < local.length; index += 1) {
+      if (trims >= 4) break;
       const prev = local[index - 1];
       const next = local[index];
       const gap = next.start - prev.end;
-      if (gap <= threshold) continue;
+      if (gap < threshold) continue;
 
-      const cutEnd = clamp(prev.end + 0.07, cursor, range.end);
-      const nextStart = clamp(next.start - 0.07, range.start, range.end);
+      const cutEnd = clamp(prev.end + 0.28, cursor, range.end);
+      const nextStart = clamp(next.start - 0.28, range.start, range.end);
 
-      if (cutEnd - cursor >= 0.45) {
+      // Only remove a genuinely long dead gap.
+      if (nextStart - cutEnd < 0.7) continue;
+
+      if (cutEnd - cursor >= 0.75) {
         output.push({
           start: cursor,
           end: cutEnd,
           purpose: range.purpose,
-          reason: `${range.reason || ""} silence_trim`.trim(),
+          reason: `${range.reason || ""} long_dead_pause_trim`.trim(),
         });
       }
       cursor = nextStart;
+      trims += 1;
     }
 
-    if (range.end - cursor >= 0.45) {
+    if (range.end - cursor >= 0.75) {
       output.push({
         start: cursor,
         end: range.end,
@@ -123,8 +148,7 @@ function splitSilences(ranges, words, pacing) {
     }
   }
 
-  if (!output.length) return ranges;
-  return output.slice(0, 28);
+  return output.length ? output : ranges;
 }
 
 function normalizeContentRanges(plan, words, duration) {
@@ -285,32 +309,49 @@ function buildShotBreaks(range, vision, plan) {
 
   const camera = Array.isArray(vision?.camera) ? vision.camera : [];
   let previousSpeaker = null;
+  let lastSpeakerCut = range.start;
 
+  // Speaker changes are cues, not automatic edit points.
   for (const point of camera) {
     const time = Number(point.time || 0);
-    if (time <= range.start + 0.35 || time >= range.end - 0.35) continue;
-    if (point.mode !== "speaker" || Number(point.confidence || 0) < 0.42) continue;
+    if (time <= range.start + 0.7 || time >= range.end - 0.7) continue;
+    if (point.mode !== "speaker" || Number(point.confidence || 0) < 0.55) continue;
+
     const id = point.speaker_id ?? null;
-    if (previousSpeaker !== null && id !== previousSpeaker) {
+    if (
+      previousSpeaker !== null &&
+      id !== previousSpeaker &&
+      time - lastSpeakerCut >= 1.35
+    ) {
       points.add(Number(time.toFixed(3)));
+      lastSpeakerCut = time;
     }
     previousSpeaker = id;
   }
 
+  // Semantic beats are allowed, but still avoid jitter.
+  let lastBeatCut = range.start;
   for (const beat of plan?.beats || []) {
     const time = Number(beat.time || 0);
-    if (time > range.start + 0.35 && time < range.end - 0.35) {
-      points.add(Number(time.toFixed(3)));
-    }
+    if (time <= range.start + 0.7 || time >= range.end - 0.7) continue;
+    if (time - lastBeatCut < 1.1) continue;
+    points.add(Number(time.toFixed(3)));
+    lastBeatCut = time;
   }
 
-  const targetMax = clamp(plan?.pacing?.target_shot_max ?? 3.4, 1.8, 6.5);
+  // Only protect against shots becoming excessively long.
+  const targetMax = clamp(
+    plan?.pacing?.target_shot_max ?? 4.8,
+    3.8,
+    8.0,
+  );
   for (
     let time = range.start + targetMax;
-    time < range.end - 0.45;
+    time < range.end - 0.9;
     time += targetMax
   ) {
-    points.add(Number(time.toFixed(3)));
+    const near = [...points].some((p) => Math.abs(p - time) < 0.85);
+    if (!near) points.add(Number(time.toFixed(3)));
   }
 
   return [...points].sort((a, b) => a - b);
@@ -356,7 +397,7 @@ function cropForShot(sourceMeta, focusX, focusY, zoom, headlineActive) {
   cropW = Math.max(2, Math.min(sourceW - (sourceW % 2), cropW));
   cropH = Math.max(2, Math.min(sourceH - (sourceH % 2), cropH));
 
-  const desiredY = headlineActive ? 0.58 : 0.50;
+  const desiredY = 0.50;
   const x = clamp(
     Number(focusX ?? 0.5) * sourceW - cropW * 0.5,
     0,
@@ -421,7 +462,7 @@ function buildShots(ranges, vision, plan, sourceMeta) {
         mode,
         headlineActive,
       );
-      if (headlineActive) zoom = Math.max(zoom, 1.055);
+      // Headline must not force a camera zoom.
 
       const crop = cropForShot(
         sourceMeta,
@@ -915,7 +956,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
   }
 
   return {
-    version: "5.1.1",
+    version: "5.2",
     preset,
     words: words.length,
     caption_groups: groups.length,
@@ -1377,7 +1418,7 @@ export async function renderEditorialV5({
     phase: "render",
     phase_pct: 0,
     detail:
-      `V5.1.1 hard-cut renderer · ${shots.length} decisões visuais · headline ${captionMeta?.headline?.preset || "none"}`,
+      `V5.2 story-first renderer · ${shots.length} decisões visuais · headline ${captionMeta?.headline?.preset || "none"}`,
   });
 
   await runFfmpeg({
