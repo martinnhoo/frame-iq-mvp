@@ -635,8 +635,8 @@ export default function ClipNetworkPage() {
   if(!network) return <div className="mx-auto max-w-5xl p-6 lg:p-10">
     <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[.07] to-white/[.02] p-8 lg:p-12">
       <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-300"><Clapperboard className="h-7 w-7"/></div>
-      <h1 className="text-3xl font-semibold tracking-tight text-white">Clip Network</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">Uma fábrica de cortes dentro do AdBrief: fontes, seleção por IA, render, fila, calendário e publicação em um único painel.</p>
+      <h1 className="text-3xl font-semibold tracking-tight text-white">Rede de Cortes</h1>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">Da descoberta à publicação: encontre bons momentos, revise e acompanhe cada edição em um único fluxo.</p>
       <div className="mt-8 grid gap-3 md:grid-cols-3">
         {[['1','1 conta piloto','Fitness, até 10 posts/dia'],['2','Qualidade primeiro','Score + revisão antes do autopilot'],['3','Escala depois','Duplica a lógica para novas contas']].map(x=><div key={x[0]} className="rounded-2xl border border-white/10 bg-black/20 p-4"><div className="text-xs text-violet-300">{x[0]}</div><div className="mt-2 text-sm font-medium text-white">{x[1]}</div><div className="mt-1 text-xs text-white/45">{x[2]}</div></div>)}
       </div>
@@ -646,18 +646,17 @@ export default function ClipNetworkPage() {
   </div>;
 
   return <div className="mx-auto max-w-[1500px] space-y-6 p-5 lg:p-8">
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div><div className="flex items-center gap-2"><h1 className="text-2xl font-semibold tracking-tight text-white">Clip Network</h1><Pill tone={network.approval_mode==='auto'?'good':'warn'}>{network.approval_mode==='auto'?'Autopilot':'Revisão manual'}</Pill></div><p className="mt-1 text-sm text-white/45">{primaryAccount?.label || network.name} · limite {network.daily_limit}/dia</p></div>
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div><div className="flex flex-wrap items-center gap-2.5"><h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Rede de Cortes</h1><Pill tone={network.approval_mode==='auto'?'good':'warn'}>{network.approval_mode==='auto'?'Autopilot ativo':'Revisão manual'}</Pill>{instagram&&<Pill tone="good"><Instagram className="mr-1 h-3 w-3"/>Instagram conectado</Pill>}</div><p className="mt-2 text-sm text-white/45">{primaryAccount?.label || network.name} · até {network.daily_limit} publicações por dia</p></div>
       <div className="flex flex-wrap gap-2">
-        <button onClick={()=>load()} className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 hover:bg-white/10"><RefreshCw className="mr-2 h-3.5 w-3.5"/>Atualizar</button>
-        <button onClick={toggleAutopilot} disabled={busy==='auto'} className={`inline-flex items-center rounded-xl px-4 py-2 text-xs font-medium ${network.approval_mode==='auto'?'bg-emerald-500/15 text-emerald-300':'bg-violet-500 text-white'}`}><Zap className="mr-2 h-3.5 w-3.5"/>{network.approval_mode==='auto'?'Pausar autopilot':'Ativar autopilot'}</button>
+        <button type="button" onClick={()=>load()} className="inline-flex min-h-10 items-center rounded-xl border border-white/10 bg-white/[.04] px-3.5 text-xs text-white/65 transition hover:bg-white/[.08]"><RefreshCw className="mr-2 h-3.5 w-3.5"/>Atualizar</button>
+        <button type="button" onClick={toggleAutopilot} disabled={busy==='auto'} className={`inline-flex min-h-10 items-center rounded-xl px-4 text-xs font-semibold transition disabled:opacity-40 ${network.approval_mode==='auto'?'border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15':'bg-violet-500 text-white shadow-[0_10px_28px_rgba(124,58,237,.2)] hover:bg-violet-400'}`}><Zap className="mr-2 h-3.5 w-3.5"/>{network.approval_mode==='auto'?'Pausar autopilot':'Ativar autopilot'}</button>
       </div>
     </div>
 
     {error&&<div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0"/>{error}</div>}
-    {/* Status real da Fly Machine */}
     <div
-      className={`rounded-2xl border p-4 ${
+      className={`rounded-2xl border px-4 py-3.5 ${
         workerStatus?.issue
           ? "border-red-500/30 bg-red-500/[.08]"
           : workerStatus?.machine_state === "started"
@@ -685,8 +684,8 @@ export default function ClipNetworkPage() {
           </div>
 
           <div className="min-w-0">
-            <div className="text-xs font-medium text-white/45">
-              Worker Fly
+            <div className="text-[11px] font-medium uppercase tracking-[.08em] text-white/35">
+              Sistema de processamento
             </div>
 
             <div
@@ -701,7 +700,7 @@ export default function ClipNetworkPage() {
 
             {workerStatus && (
               <div className="mt-1 text-[10px] text-white/30">
-                Fly: {workerStatus.machine_state}
+                Estado: {workerStatus.machine_state}
                 {" · "}
                 fontes: {workerStatus.pending_source_jobs}
                 {" · "}
@@ -725,7 +724,12 @@ export default function ClipNetworkPage() {
     </div>
 
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {[['Processando agora',running,'vídeos na máquina'],['Clips prontos',ready,'renderizados'],['Publicados hoje',publishedToday,'de '+network.daily_limit],['Fontes',sources.length,'monitoradas']].map(([a,b,c])=><div key={String(a)} className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><div className="text-xs text-white/40">{a}</div><div className="mt-2 text-2xl font-semibold text-white">{b}</div><div className="mt-1 text-[11px] text-white/35">{c}</div></div>)}
+      {[
+        {label:'Em produção',value:running,detail:'vídeos sendo processados',icon:<Clock3 className="h-4 w-4"/>,tone:'text-sky-300 bg-sky-500/10'},
+        {label:'Cortes prontos',value:ready,detail:'edições finalizadas',icon:<CheckCircle2 className="h-4 w-4"/>,tone:'text-emerald-300 bg-emerald-500/10'},
+        {label:'Publicados hoje',value:publishedToday,detail:`de ${network.daily_limit} disponíveis`,icon:<Instagram className="h-4 w-4"/>,tone:'text-pink-300 bg-pink-500/10'},
+        {label:'Fontes monitoradas',value:sources.length,detail:'canais ativos na rede',icon:<Youtube className="h-4 w-4"/>,tone:'text-red-300 bg-red-500/10'},
+      ].map(item=><div key={item.label} className="rounded-2xl border border-white/[.08] bg-white/[.025] p-4 transition hover:border-white/15 hover:bg-white/[.04]"><div className="flex items-center justify-between"><div className="text-xs text-white/40">{item.label}</div><div className={`rounded-lg p-2 ${item.tone}`}>{item.icon}</div></div><div className="mt-3 text-2xl font-semibold text-white">{item.value}</div><div className="mt-1 text-[11px] text-white/30">{item.detail}</div></div>)}
     </div>
 
     <ReviewDesk
@@ -750,54 +754,6 @@ export default function ClipNetworkPage() {
       onPublish={clip=>publishNow(clip as Clip)}
       publicationStatusByClip={publicationStatusByClip}
     />
-
-    {readyClips.length>0&&<section className="rounded-3xl border border-emerald-500/15 bg-emerald-500/[.035] p-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-semibold text-white">Clips prontos</h2>
-          <p className="mt-1 text-xs text-white/40">MP4s finalizados e prontos para assistir ou baixar.</p>
-        </div>
-        <Pill tone="good">{readyClips.length} prontos</Pill>
-      </div>
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {readyClips.map(clip=><div key={clip.id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-          {playing[clip.id]
-            ? <video
-                src={playing[clip.id]}
-                controls
-                playsInline
-                preload="metadata"
-                className="aspect-[9/16] max-h-[520px] w-full bg-black object-contain"
-              />
-            : <div className="flex aspect-[9/16] max-h-[520px] items-center justify-center bg-black/50 text-white/40">
-                <Loader2 className="h-6 w-6 animate-spin"/>
-              </div>
-          }
-
-          <div className="p-3">
-            <div className="line-clamp-2 text-xs font-medium text-white">
-              {clip.on_screen_title||clip.hook||clip.topic||"Clip pronto"}
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Pill tone="good">{Math.round(clip.score)} score</Pill>
-              {clip.start_seconds!=null&&clip.end_seconds!=null&&
-                <Pill>{Math.round(clip.end_seconds-clip.start_seconds)}s</Pill>}
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <button onClick={()=>watch(clip)} className="inline-flex flex-1 items-center justify-center rounded-lg bg-white px-2.5 py-2 text-[11px] font-semibold text-black">
-                <Play className="mr-1.5 h-3.5 w-3.5"/>Assistir
-              </button>
-              <button onClick={()=>downloadClip(clip)} className="inline-flex items-center justify-center rounded-lg border border-white/10 px-2.5 py-2 text-[11px] text-white/65">
-                <Download className="h-3.5 w-3.5"/>
-              </button>
-            </div>
-          </div>
-        </div>)}
-      </div>
-    </section>}
 
     <div className="grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
       <section className="rounded-3xl border border-white/10 bg-white/[.025] p-5">
