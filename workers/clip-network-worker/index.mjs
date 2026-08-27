@@ -441,6 +441,184 @@ async function renderRevision(
  * URL assinada no banco criaria um link que expira e vira erro silencioso.
  */
 
+
+// V5.1 clip-level speech quality: re-transcribe only the approved clip and generate a safe headline.
+async function buildClipQualityV51({
+  master,
+  clip,
+  revision,
+  video,
+  dir,
+  report,
+}) {
+  const clipStart = Number(
+    revision?.parameters?.start_seconds ?? clip.start_seconds,
+  );
+  const clipEnd = Number(
+    revision?.parameters?.end_seconds ?? clip.end_seconds,
+  );
+  const clipDuration = clipEnd - clipStart;
+  if (!(clipDuration > 0)) {
+    throw new Error("V5.1: janela de transcricao invalida");
+  }
+
+  const audioPath = join(
+    dir,
+    `${revision.id}-clip-v51.mp3`,
+  );
+
+  await report({
+    phase: "speech",
+    phase_pct: 0,
+    detail: "V5.1 retranscrevendo somente o corte aprovado",
+  }, true);
+
+  await run(
+    "ffmpeg",
+    [
+      "-hide_banner",
+      "-loglevel", "error",
+      "-y",
+      "-ss", String(clipStart),
+      "-i", master,
+      "-t", String(clipDuration),
+      "-vn",
+      "-ac", "1",
+      "-ar", "16000",
+      "-b:a", "64k",
+      audioPath,
+    ],
+    { timeoutMs: 3 * 60 * 1000 },
+  );
+
+  await report({
+    phase: "speech",
+    phase_pct: 20,
+    detail: "Audio do corte pronto · transcricao + diarizacao",
+  }, true);
+
+  const audio = await readFile(audioPath);
+  const quality = await callFunction(
+    "clip-quality-v51",
+    "transcribe",
+    {
+      audio_base64: audio.toString("base64"),
+      mime_type: "audio/mpeg",
+      language: "pt",
+      context: [
+        video?.title || "",
+        clip?.transcript_excerpt || "",
+        clip?.on_screen_title || "",
+      ].filter(Boolean).join(" | ").slice(0, 900),
+    },
+    { timeoutMs: 2 * 60 * 1000 },
+  );
+
+  if (!Array.isArray(quality?.words) || quality.words.length < 2) {
+    throw new Error("V5.1: transcricao do corte nao retornou palavras suficientes");
+  }
+
+  const transcript = {
+    text: String(quality.text || ""),
+    duration: clipDuration,
+    source: "clip_quality_v51",
+    segments: (quality.segments || []).map((segment) => ({
+      ...segment,
+      start: Number(segment.start || 0) + clipStart,
+      end: Number(segment.end || 0) + clipStart,
+    })),
+    words: quality.words.map((word) => ({
+      word: String(word.word || "").trim(),
+      start: Number(word.start || 0) + clipStart,
+      end: Number(word.end || 0) + clipStart,
+      speaker_id:
+        word.speaker_id === undefined
+          ? null
+          : word.speaker_id,
+    })).filter((word) => word.word && word.end > word.start),
+  };
+
+  await report({
+    phase: "speech",
+    phase_pct: 72,
+    detail:
+      `V5.1 ${transcript.words.length} palavras · ${Number(quality.speaker_count || 0)} speakers`,
+  }, true);
+
+  let headlineResult;
+  try {
+    headlineResult = await callFunction(
+      "clip-quality-v51",
+      "headline",
+      {
+        transcript: transcript.text,
+        video_title: video?.title || "",
+        original_title: clip?.on_screen_title || "",
+      },
+      { timeoutMs: 45 * 1000 },
+    );
+  } catch (error) {
+    headlineResult = {
+      source: "disabled_headline_call_error",
+      score: 0,
+      error: String(error?.message || error).slice(0, 700),
+      candidates: [],
+      headline: {
+        enabled: false,
+        preset: "none",
+        text: "",
+        duration: 0,
+      },
+    };
+  }
+
+  const headline =
+    headlineResult?.headline &&
+    typeof headlineResult.headline === "object"
+      ? headlineResult.headline
+      : {
+          enabled: false,
+          preset: "none",
+          text: "",
+          duration: 0,
+        };
+
+  await report({
+    phase: "speech",
+    phase_pct: 100,
+    detail:
+      headline.enabled
+        ? `Transcricao pronta · headline ${headline.preset}`
+        : "Transcricao pronta · headline desativada pelo QA",
+  }, true);
+
+  return {
+    transcript,
+    transcriptionMeta: {
+      version: "5.1",
+      backend: quality.backend || "unknown",
+      fallback_used: Boolean(quality.fallback_used),
+      diarization_error: quality.diarization_error || null,
+      speaker_count: Number(quality.speaker_count || 0),
+      word_count: transcript.words.length,
+      attempts: quality.attempts || null,
+    },
+    headline,
+    headlineMeta: {
+      source: headlineResult?.source || "unknown",
+      model: headlineResult?.model || null,
+      score: Number(headlineResult?.score || 0),
+      candidates: headlineResult?.candidates || [],
+      rejected_old_title_copy:
+        Boolean(headlineResult?.rejected_old_title_copy),
+      error: headlineResult?.error || null,
+      enabled: Boolean(headline.enabled),
+      preset: headline.preset || "none",
+      text: headline.text || "",
+    },
+  };
+}
+
 async function renderAndUploadV4Revision(
   clip,
   variant,
@@ -484,10 +662,11 @@ async function renderAndUploadV4Revision(
   const ranges = {
     planning: [0, 10],
     acquire: [10, 20],
-    vision: [20, 45],
-    timeline: [45, 50],
-    captions: [50, 55],
-    render: [55, 95],
+    speech: [20, 30],
+    vision: [30, 50],
+    timeline: [50, 55],
+    captions: [55, 60],
+    render: [60, 95],
     qa: [95, 98],
     upload: [98, 100],
     done: [100, 100],
@@ -693,7 +872,42 @@ async function renderAndUploadV4Revision(
     );
 
     const sourceMeta = await probeMedia(master);
-    const transcript = video.transcript || {};
+    let transcript = video.transcript || {};
+
+    if (useV5) {
+      const quality = await buildClipQualityV51({
+        master,
+        clip,
+        revision: {
+          ...revision,
+          parameters,
+        },
+        video,
+        dir,
+        report,
+      });
+
+      transcript = quality.transcript;
+
+      const currentPlan = parameters?.v5_plan || {};
+      const recommended = currentPlan?.recommended || null;
+
+      parameters = {
+        ...parameters,
+        clip_transcription_v51: quality.transcriptionMeta,
+        headline_v51: quality.headlineMeta,
+        v5_plan: recommended
+          ? {
+              ...currentPlan,
+              recommended: {
+                ...recommended,
+                // Never reuse candidate on_screen_title as the final fallback headline.
+                headline: quality.headline,
+              },
+            }
+          : currentPlan,
+      };
+    }
 
     const rendered = useV5
       ? await renderEditorialV5({

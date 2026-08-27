@@ -67,3 +67,32 @@ test("V5 creates hard-cut shots around speaker switches and emphasis", () => {
     assert.ok(shot.x >= 0 && shot.y >= 0);
   }
 });
+
+
+test("V5.1 caption groups never mix speakers", () => {
+  const words = [
+    { word: "Assim,", start: 0.0, end: 0.35, speaker_id: "A" },
+    { word: "titio", start: 0.36, end: 0.72, speaker_id: "A" },
+    { word: "ele", start: 0.75, end: 0.95, speaker_id: "B" },
+    { word: "meteu", start: 0.96, end: 1.25, speaker_id: "B" },
+  ];
+
+  const groups = __v5Test.groupWords(words, 5, 32, 2.15);
+  assert.equal(groups.length, 2);
+  assert.deepEqual(groups[0].map((word) => word.word), ["Assim,", "titio"]);
+  assert.deepEqual(groups[1].map((word) => word.word), ["ele", "meteu"]);
+  assert.ok(groups.every((group) => new Set(group.map((word) => word.speaker_id)).size === 1));
+});
+
+test("V5.1 preserves diarized speaker IDs through retiming", () => {
+  const words = [
+    { index: 0, word: "Assim,", start: 0.0, end: 0.3, speaker_id: "A" },
+    { index: 1, word: "titio", start: 0.31, end: 0.65, speaker_id: "A" },
+  ];
+  const ranges = __v5Test.addOutputOffsets([
+    { start: 0, end: 0.8, purpose: "hook", reason: "" },
+  ]);
+  const mapped = __v5Test.retimeWords(words, ranges);
+  assert.equal(mapped[0].speaker_id, "A");
+  assert.equal(mapped[1].speaker_id, "A");
+});

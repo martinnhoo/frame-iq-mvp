@@ -40,6 +40,8 @@ function relativeWords(transcript, clipStart, clipEnd) {
       word: String(item.word ?? item.text ?? "").trim(),
       start: Number(item.start ?? 0) - clipStart,
       end: Number(item.end ?? item.start ?? 0) - clipStart,
+      speaker_id:
+        item.speaker_id ?? item.speaker ?? null,
     }))
     .filter(
       (item) =>
@@ -200,6 +202,7 @@ function retimeWords(words, ranges) {
         word: word.word,
         start,
         end,
+        speaker_id: word.speaker_id ?? null,
       });
     }
   }
@@ -236,6 +239,36 @@ function cameraAt(camera, time) {
     }
   }
   return best;
+}
+
+// V5.1 speaker-safe captions: preserve audio diarization and use LR-ASD only when audio speaker is unknown.
+function attachVisionSpeakers(words, vision) {
+  return words.map((word) => {
+    if (
+      word.speaker_id !== null &&
+      word.speaker_id !== undefined &&
+      String(word.speaker_id) !== "" &&
+      String(word.speaker_id) !== "unknown"
+    ) {
+      return word;
+    }
+
+    const midpoint =
+      (Number(word.start || 0) + Number(word.end || word.start || 0)) / 2;
+    const camera = cameraAt(vision?.camera || [], midpoint);
+    const speakerId =
+      camera.mode === "speaker" &&
+      camera.speaker_id !== null &&
+      camera.speaker_id !== undefined &&
+      Number(camera.confidence || 0) >= 0.42
+        ? `vision:${camera.speaker_id}`
+        : null;
+
+    return {
+      ...word,
+      speaker_id: speakerId,
+    };
+  });
 }
 
 function beatAt(beats, start, end) {
@@ -436,10 +469,18 @@ function groupWords(words, maxWords = 6, maxChars = 36, maxDuration = 2.4) {
       previous && /[.!?…]["')\]]?$/.test(previous.word);
     const proposed = [...current, word];
     const duration = current.length ? word.end - current[0].start : 0;
+    const speakerBreak =
+      previous &&
+      previous.speaker_id !== null &&
+      previous.speaker_id !== undefined &&
+      word.speaker_id !== null &&
+      word.speaker_id !== undefined &&
+      String(previous.speaker_id) !== String(word.speaker_id);
 
     if (
       current.length &&
       (
+        speakerBreak ||
         current.length >= maxWords ||
         length(proposed) > maxChars ||
         duration > maxDuration ||
@@ -561,12 +602,16 @@ function headlineEvents(lines, headline, end) {
 async function writeV5Ass({ outputPath, words, plan, duration }) {
   const caption = plan?.captions || {};
   const preset = caption.preset || "dynamic_active_word";
-  const maxWords = Number(caption.max_words || 6);
+  const requestedMaxWords = Number(caption.max_words || 5);
+  const maxWords =
+    preset === "bold_phrase"
+      ? Math.min(requestedMaxWords, 4)
+      : Math.min(requestedMaxWords, 5);
   const groups = groupWords(
     words,
     maxWords,
-    preset === "bold_phrase" ? 32 : 36,
-    preset === "bold_phrase" ? 2.0 : 2.45,
+    preset === "bold_phrase" ? 30 : 32,
+    preset === "bold_phrase" ? 1.9 : 2.15,
   );
   const fontSize =
     preset === "bold_phrase" ? 72 :
@@ -593,7 +638,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     "Style: SocialHeadline,Inter,42,&H00111111,&H00111111,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,65,65,130,1",
     "Style: BoldHeadline,Inter,55,&H00000000,&H00000000,&H00FFFFFF,&H00000000,-1,-1,0,0,100,100,0,0,1,0,0,8,55,55,55,1",
     "Style: NewsHeadline,Inter,44,&H00FFFFFF,&H00FFFFFF,&H002929E6,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,55,55,42,1",
-    "Style: CleanHeadline,Inter,52,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,80,80,100,1",
+    "Style: CleanHeadline,Inter,58,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,80,80,92,1",
     "",
     "[Events]",
     "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -636,10 +681,35 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
   }
 
   await writeFile(outputPath, lines.join("\n"), "utf8");
+  const speakerIds = [
+    ...new Set(
+      words
+        .map((word) => word.speaker_id)
+        .filter((value) => value !== null && value !== undefined && String(value) !== ""),
+    ),
+  ];
+  let speakerSwitches = 0;
+  for (let index = 1; index < words.length; index += 1) {
+    const previous = words[index - 1].speaker_id;
+    const current = words[index].speaker_id;
+    if (
+      previous !== null &&
+      previous !== undefined &&
+      current !== null &&
+      current !== undefined &&
+      String(previous) !== String(current)
+    ) {
+      speakerSwitches += 1;
+    }
+  }
+
   return {
     preset,
     words: words.length,
     caption_groups: groups.length,
+    speaker_count: speakerIds.length,
+    speaker_switches: speakerSwitches,
+    speaker_safe: true,
     headline: plan?.headline || { enabled: false, preset: "none" },
   };
 }
@@ -865,10 +935,14 @@ export async function renderEditorialV5({
     clipStart,
     clipEnd,
   );
+  const speakerWords = attachVisionSpeakers(
+    sourceWords,
+    vision,
+  );
   const contentRanges = addOutputOffsets(
     normalizeContentRanges(
       plan,
-      sourceWords,
+      speakerWords,
       clipDuration,
     ),
   );
@@ -889,7 +963,7 @@ export async function renderEditorialV5({
   );
 
   const retimedWords = retimeWords(
-    sourceWords,
+    speakerWords,
     contentRanges,
   );
 
@@ -1013,4 +1087,6 @@ export const __v5Test = {
   sourceTimeToOutput,
   buildShots,
   cropForShot,
+  groupWords,
+  attachVisionSpeakers,
 };
