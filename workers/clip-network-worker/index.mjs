@@ -603,7 +603,9 @@ function mergeVisualConfig(base, override) {
   };
 }
 
-// V5.1 clip-level speech quality: re-transcribe only the approved clip and generate a safe headline.
+// V5.1 speech quality: use the existing word-level source transcript first.
+// Clip-level retranscription is optional enrichment and must never block rendering
+// when the source transcript is already usable.
 async function buildClipQualityV51({
   master,
   clip,
@@ -623,109 +625,192 @@ async function buildClipQualityV51({
     throw new Error("V5.1: janela de transcricao invalida");
   }
 
-  const audioPath = join(
-    dir,
-    `${revision.id}-clip-v51.mp3`,
-  );
-
-  await report({
-    phase: "speech",
-    phase_pct: 0,
-    detail: "V5.1 retranscrevendo somente o corte aprovado",
-  }, true);
-
-  await run(
-    "ffmpeg",
-    [
-      "-hide_banner",
-      "-loglevel", "error",
-      "-y",
-      "-ss", String(clipStart),
-      "-i", master,
-      "-t", String(clipDuration),
-      "-vn",
-      "-ac", "1",
-      "-ar", "16000",
-      "-b:a", "64k",
-      audioPath,
-    ],
-    { timeoutMs: 3 * 60 * 1000 },
-  );
-
-  await report({
-    phase: "speech",
-    phase_pct: 20,
-    detail: "Audio do corte pronto · transcricao + diarizacao",
-  }, true);
-
-  const audio = await readFile(audioPath);
-  const quality = await callFunction(
-    "clip-quality-v51",
-    "transcribe",
-    {
-      audio_base64: audio.toString("base64"),
-      mime_type: "audio/mpeg",
-      language: "pt",
-      context: [
-        video?.title || "",
-        clip?.transcript_excerpt || "",
-        clip?.on_screen_title || "",
-      ].filter(Boolean).join(" | ").slice(0, 900),
-    },
-    { timeoutMs: 2 * 60 * 1000 },
-  );
-
-  if (!Array.isArray(quality?.words) || quality.words.length < 2) {
-    throw new Error("V5.1: transcricao do corte nao retornou palavras suficientes");
-  }
-
-  let transcript = {
-    text: String(quality.text || ""),
-    duration: clipDuration,
-    source: "clip_quality_v51",
-    segments: (quality.segments || []).map((segment) => ({
-      ...segment,
-      start: Number(segment.start || 0) + clipStart,
-      end: Number(segment.end || 0) + clipStart,
-    })),
-    words: quality.words.map((word) => ({
-      word: String(word.word || "").trim(),
-      start: Number(word.start || 0) + clipStart,
-      end: Number(word.end || 0) + clipStart,
-      speaker_id:
-        word.speaker_id === undefined
-          ? null
-          : word.speaker_id,
-    })).filter((word) => word.word && word.end > word.start),
-  };
-
-  await report({
-    phase: "speech",
-    phase_pct: 72,
-    detail:
-      `V5.1 ${transcript.words.length} palavras · ${Number(quality.speaker_count || 0)} speakers`,
-  }, true);
-
   const sourceFallback = sourceTranscriptSlice(
     video?.transcript || {},
     clipStart,
     clipEnd,
   );
-  const transcriptAlignment = transcriptTokenOverlap(
-    transcript.text,
-    sourceFallback.text,
-  );
-  const useSourceTranscriptGuard =
+  const sourceUsable =
+    Array.isArray(sourceFallback.words) &&
     sourceFallback.words.length >= 2 &&
-    normalizedTranscriptTokens(sourceFallback.text).length >= 8 &&
-    transcriptAlignment < 0.16;
+    normalizedTranscriptTokens(sourceFallback.text).length >= 2;
 
-  if (useSourceTranscriptGuard) {
-    log(
-      `[clip ${clip.id}] V5.1 language guard: clip ASR divergiu do transcript PT ` +
-      `(overlap ${transcriptAlignment.toFixed(3)}); usando transcript base`,
+  const forceRetranscribe =
+    String(process.env.CLIP_V51_RETRANSCRIBE || "0") === "1";
+  const shouldRetranscribe = forceRetranscribe || !sourceUsable;
+
+  let transcript = sourceUsable ? sourceFallback : null;
+  let quality = {
+    backend: sourceUsable ? "source_word_timing_v51" : "unavailable",
+    fallback_used: sourceUsable,
+    diarization_error: null,
+    speaker_count: new Set(
+      (sourceFallback.words || [])
+        .map((word) => word.speaker_id)
+        .filter((value) => value !== null && value !== undefined),
+    ).size,
+    attempts: null,
+  };
+  let transcriptAlignment = sourceUsable ? 1 : 0;
+  let enrichmentError = null;
+  let enrichmentAttempted = false;
+
+  await report({
+    phase: "speech",
+    phase_pct: sourceUsable ? 55 : 0,
+    detail: sourceUsable
+      ? `V5.1 usando transcript word-level existente Â· ${sourceFallback.words.length} palavras`
+      : "V5.1 sem transcript word-level suficiente Â· tentando ASR do corte",
+  }, true);
+
+  if (shouldRetranscribe) {
+    enrichmentAttempted = true;
+    const audioPath = join(
+      dir,
+      `${revision.id}-clip-v51.mp3`,
     );
-    transcript = sourceFallback;
+
+    try {
+      await report({
+        phase: "speech",
+        phase_pct: 5,
+        detail: forceRetranscribe
+          ? "V5.1 enriquecimento ASR habilitado"
+          : "V5.1 fallback ASR porque transcript base nao e suficiente",
+      }, true);
+
+      await run(
+        "ffmpeg",
+        [
+          "-hide_banner",
+          "-loglevel", "error",
+          "-y",
+          "-ss", String(clipStart),
+          "-i", master,
+          "-t", String(clipDuration),
+          "-vn",
+          "-ac", "1",
+          "-ar", "16000",
+          "-b:a", "64k",
+          audioPath,
+        ],
+        { timeoutMs: 3 * 60 * 1000 },
+      );
+
+      const audio = await readFile(audioPath);
+      const asrQuality = await callFunction(
+        "clip-quality-v51",
+        "transcribe",
+        {
+          audio_base64: audio.toString("base64"),
+          mime_type: "audio/mpeg",
+          language: "pt",
+          context: [
+            video?.title || "",
+            clip?.transcript_excerpt || "",
+            clip?.on_screen_title || "",
+          ].filter(Boolean).join(" | ").slice(0, 900),
+        },
+        { timeoutMs: 2 * 60 * 1000 },
+      );
+
+      if (!Array.isArray(asrQuality?.words) || asrQuality.words.length < 2) {
+        throw new Error(
+          "V5.1: transcricao do corte nao retornou palavras suficientes",
+        );
+      }
+
+      let asrTranscript = {
+        text: String(asrQuality.text || ""),
+        duration: clipDuration,
+        source: "clip_quality_v51",
+        segments: (asrQuality.segments || []).map((segment) => ({
+          ...segment,
+          start: Number(segment.start || 0) + clipStart,
+          end: Number(segment.end || 0) + clipStart,
+        })),
+        words: asrQuality.words.map((word) => ({
+          word: String(word.word || "").trim(),
+          start: Number(word.start || 0) + clipStart,
+          end: Number(word.end || 0) + clipStart,
+          speaker_id:
+            word.speaker_id === undefined
+              ? null
+              : word.speaker_id,
+        })).filter((word) => word.word && word.end > word.start),
+      };
+
+      const overlap = sourceUsable
+        ? transcriptTokenOverlap(asrTranscript.text, sourceFallback.text)
+        : 1;
+      transcriptAlignment = overlap;
+
+      const useSourceGuard =
+        sourceUsable &&
+        normalizedTranscriptTokens(sourceFallback.text).length >= 8 &&
+        overlap < 0.16;
+
+      if (useSourceGuard) {
+        log(
+          `[clip ${clip.id}] V5.1 language guard: clip ASR divergiu do transcript PT ` +
+          `(overlap ${overlap.toFixed(3)}); usando transcript base`,
+        );
+        transcript = sourceFallback;
+        quality = {
+          ...asrQuality,
+          backend: "source_transcript_pt_guard",
+          fallback_used: true,
+        };
+      } else {
+        transcript = asrTranscript;
+        quality = asrQuality;
+      }
+
+      await report({
+        phase: "speech",
+        phase_pct: 72,
+        detail:
+          `V5.1 ASR enriquecido Â· ${transcript.words.length} palavras Â· ` +
+          `${Number(asrQuality.speaker_count || 0)} speakers`,
+      }, true);
+    } catch (error) {
+      enrichmentError = String(error?.message || error).slice(0, 1200);
+
+      if (!sourceUsable) {
+        throw error;
+      }
+
+      transcript = sourceFallback;
+      quality = {
+        backend: "source_word_timing_v51",
+        fallback_used: true,
+        diarization_error: enrichmentError,
+        speaker_count: new Set(
+          (sourceFallback.words || [])
+            .map((word) => word.speaker_id)
+            .filter((value) => value !== null && value !== undefined),
+        ).size,
+        attempts: null,
+      };
+      transcriptAlignment = 1;
+
+      log(
+        `[clip ${clip.id}] V5.1 ASR opcional falhou; render continua com transcript base: ` +
+        enrichmentError,
+      );
+
+      await report({
+        phase: "speech",
+        phase_pct: 72,
+        detail: "ASR opcional indisponivel Â· usando transcript word-level existente",
+      }, true);
+    } finally {
+      await rm(audioPath, { force: true }).catch(() => {});
+    }
+  }
+
+  if (!transcript || !Array.isArray(transcript.words) || transcript.words.length < 2) {
+    throw new Error("V5.1: nenhum transcript utilizavel para render");
   }
 
   let headlineResult;
@@ -771,19 +856,38 @@ async function buildClipQualityV51({
     phase_pct: 100,
     detail:
       headline.enabled
-        ? `Transcricao pronta · headline ${headline.preset}`
-        : "Transcricao pronta · headline desativada pelo QA",
+        ? `Transcricao pronta Â· headline ${headline.preset}`
+        : "Transcricao pronta Â· headline desativada pelo QA",
   }, true);
+
+  const usedSource =
+    transcript.source === "source_transcript_pt_guard" ||
+    transcript.source === "source_word_timing_v51" ||
+    transcript.source === "source_transcript_pt_guard";
 
   return {
     transcript,
     transcriptionMeta: {
-      version: "5.1",
-      backend: transcript.source === "source_transcript_pt_guard" ? "source_transcript_pt_guard" : quality.backend || "unknown",
-      language_guard_fallback: transcript.source === "source_transcript_pt_guard",
+      version: "5.1.1",
+      backend:
+        transcript.source === "clip_quality_v51"
+          ? quality.backend || "clip_quality_v51"
+          : quality.backend || transcript.source || "source_word_timing_v51",
+      source_transcript_first: true,
+      source_transcript_usable: sourceUsable,
+      source_word_count: Number(sourceFallback.words?.length || 0),
+      enrichment_attempted: enrichmentAttempted,
+      enrichment_forced: forceRetranscribe,
+      enrichment_error: enrichmentError,
+      language_guard_fallback:
+        transcript.source === "source_transcript_pt_guard",
       language_guard_overlap: Number(transcriptAlignment.toFixed(4)),
-      fallback_used: Boolean(quality.fallback_used) || transcript.source === "source_transcript_pt_guard",
-      diarization_error: quality.diarization_error || null,
+      fallback_used:
+        Boolean(quality.fallback_used) ||
+        usedSource ||
+        Boolean(enrichmentError),
+      diarization_error:
+        quality.diarization_error || enrichmentError || null,
       speaker_count: Number(quality.speaker_count || 0),
       word_count: transcript.words.length,
       attempts: quality.attempts || null,
