@@ -742,6 +742,66 @@ function headlineLines(text, maxChars, maxLines) {
   return lines;
 }
 
+
+const HEADLINE_FONTS = new Set(["DejaVu Sans Condensed", "Inter"]);
+const CAPTION_FONTS = new Set(["Inter", "DejaVu Sans Condensed"]);
+const ACTIVE_COLORS = {
+  yellow: "&H0000D8FF&",
+  cyan: "&H00FFFF00&",
+  green: "&H0000E676&",
+  white: "&H00FFFFFF&",
+};
+
+function stripEmoji(value) {
+  return String(value || "")
+    .replace(/\p{Extended_Pictographic}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeHeadlineStyle(headline, preset) {
+  const raw = headline?.style || {};
+  const fallbackSize = preset === "simple_viral" ? 62 : preset === "news_page" ? 49 : 44;
+  const fallbackPanel = preset === "simple_viral"
+    ? TEMPLATE_GEOMETRY.simple_viral.panelHeight
+    : preset === "news_page"
+      ? TEMPLATE_GEOMETRY.news_page.panelHeight
+      : TEMPLATE_GEOMETRY.media_split.bandHeight;
+  return {
+    font_family: HEADLINE_FONTS.has(String(raw.font_family))
+      ? String(raw.font_family)
+      : preset === "news_page" ? "Inter" : "DejaVu Sans Condensed",
+    font_size: clamp(Number(raw.font_size || fallbackSize), 40, 90),
+    panel_height: clamp(Number(raw.panel_height || fallbackPanel), 120, 420),
+    tracking: clamp(Number(raw.tracking ?? (preset === "simple_viral" ? -0.9 : -0.2)), -3, 4),
+    bold: raw.bold !== false,
+    italic: raw.italic ?? preset === "simple_viral",
+    show_emoji: raw.show_emoji === true,
+  };
+}
+
+function headlineStyleTags(layout) {
+  const style = layout?.style || normalizeHeadlineStyle(layout, layout?.preset || "simple_viral");
+  return (
+    `\\fn${style.font_family}` +
+    `\\b${style.bold ? 1 : 0}` +
+    `\\i${style.italic ? 1 : 0}` +
+    `\\fsp${Number(style.tracking || 0).toFixed(1)}`
+  );
+}
+
+function normalizeCaptionStyle(caption) {
+  const raw = caption?.style || {};
+  const active = String(raw.active_color || "yellow").toLowerCase();
+  return {
+    font_family: CAPTION_FONTS.has(String(raw.font_family)) ? String(raw.font_family) : "Inter",
+    font_size: clamp(Number(raw.font_size || 56), 42, 76),
+    outline: clamp(Number(raw.outline || 4), 1, 7),
+    active_color: ACTIVE_COLORS[active] ? active : "yellow",
+    active_ass_color: ACTIVE_COLORS[active] || ACTIVE_COLORS.yellow,
+  };
+}
+
 function buildHeadlineLayout(headline) {
   if (!headline?.enabled || !headline?.text) {
     return {
@@ -764,12 +824,13 @@ function buildHeadlineLayout(headline) {
   const preset = allowed.has(canonicalPreset)
     ? canonicalPreset
     : "simple_viral";
-  const emoji = String(headline.emoji || "").trim();
+  const style = normalizeHeadlineStyle(headline, preset);
+  const emoji = style.show_emoji ? String(headline.emoji || "").trim() : "";
   const uppercase =
     preset === "simple_viral" || preset === "media_split";
   const baseText = uppercase
-    ? String(headline.text).toUpperCase()
-    : String(headline.text);
+    ? stripEmoji(headline.text).toUpperCase()
+    : stripEmoji(headline.text);
   const displayText =
     emoji && !baseText.includes(emoji)
       ? `${baseText} ${emoji}`
@@ -823,12 +884,8 @@ function buildHeadlineLayout(headline) {
     };
   }
 
-  const panelHeight =
-    preset === "news_page"
-      ? TEMPLATE_GEOMETRY.news_page.panelHeight
-      : preset === "simple_viral"
-        ? TEMPLATE_GEOMETRY.simple_viral.panelHeight
-        : TEMPLATE_GEOMETRY.media_split.bandHeight;
+  fontSize = style.font_size;
+  const panelHeight = style.panel_height;
 
   return {
     ...headline,
@@ -838,6 +895,7 @@ function buildHeadlineLayout(headline) {
     lines,
     font_size: fontSize,
     panel_height: panelHeight,
+    style,
     safe: true,
     reason: "ok",
   };
@@ -860,7 +918,7 @@ function headlineEvents(lines, headlineLayout, end) {
       `Dialogue: 3,${assTime(0)},${stop},NewsPageLabel,,0,0,0,,{\\an7\\pos(135,30)}${escapeAss(headlineLayout.page_name || "FRAMEIQ CORTES")}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},NewsPageHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height * 0.67)})\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height * 0.67)})\\fs${headlineLayout.font_size}${headlineStyleTags(headlineLayout)}}${text}`,
     );
     lines.push(
       `Dialogue: 3,${assTime(0)},${stop},NewsPageHandle,,0,0,0,,{\\an7\\pos(135,70)}${escapeAss(headlineLayout.handle || "@frameiqcortes")}`,
@@ -874,7 +932,7 @@ function headlineEvents(lines, headlineLayout, end) {
       `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},ViralHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height / 2)})\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},ViralHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height / 2)})\\fs${headlineLayout.font_size}${headlineStyleTags(headlineLayout)}}${text}`,
     );
     return;
   }
@@ -886,7 +944,7 @@ function headlineEvents(lines, headlineLayout, end) {
       `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,${bandY})\\p1\\bord0\\shad0\\1c&H002B1DE2&}m 0 0 l 1080 0 l 1080 ${bandHeight} l 0 ${bandHeight}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},MediaHeadline,,0,0,0,,{\\an5\\pos(540,${bandY + Math.round(bandHeight / 2)})\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},MediaHeadline,,0,0,0,,{\\an5\\pos(540,${bandY + Math.round(bandHeight / 2)})\\fs${headlineLayout.font_size}${headlineStyleTags(headlineLayout)}}${text}`,
     );
   }
 }
@@ -894,6 +952,7 @@ function headlineEvents(lines, headlineLayout, end) {
 async function writeV5Ass({ outputPath, words, plan, duration }) {
   const caption = plan?.captions || {};
   const preset = caption.preset || "dynamic_active_word";
+  const captionStyle = normalizeCaptionStyle(caption);
   const requestedMaxWords = Number(caption.max_words || 4);
   const maxWords = Math.min(4, Math.max(2, requestedMaxWords));
   const groups = groupWords(
@@ -908,9 +967,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     headlineLayout.enabled &&
     headlineLayout.preset === "media_split";
 
-  const fontSize =
-    preset === "bold_phrase" ? 60 :
-      preset === "clean_phrase" ? 54 : 56;
+  const fontSize = captionStyle.font_size;
   const marginV =
     mediaSplit ? 190 :
       caption.position === "lower" ? 245 :
@@ -926,7 +983,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     "",
     "[V4+ Styles]",
     "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-    `Style: Caption,Inter,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,2,90,90,${marginV},1`,
+    `Style: Caption,${captionStyle.font_family},${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,${captionStyle.outline},1,2,90,90,${marginV},1`,
     "Style: Graphic,Inter,20,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
     "Style: NewsPageLabel,Inter,30,&H00252525,&H00252525,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
     "Style: NewsPageHandle,Inter,22,&H00707070,&H00707070,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
@@ -959,7 +1016,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
   } else {
     for (const event of schedule.events) {
       lines.push(
-        `Dialogue: 1,${assTime(event.start)},${assTime(event.end)},Caption,,0,0,0,,${phrase(event.group, event.active_index)}`,
+        `Dialogue: 1,${assTime(event.start)},${assTime(event.end)},Caption,,0,0,0,,${phrase(event.group, event.active_index, captionStyle.active_ass_color)}`,
       );
     }
   }
@@ -1009,6 +1066,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     },
     caption_font_size: fontSize,
     caption_margin_v: marginV,
+    caption_style: captionStyle,
     caption_probe_times: schedule.events
       .filter((event) => event.end - event.start >= 0.04)
       .map((event) => Number(((event.start + event.end) / 2).toFixed(3)))

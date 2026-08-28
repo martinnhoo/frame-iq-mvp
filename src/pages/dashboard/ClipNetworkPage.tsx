@@ -444,6 +444,64 @@ export default function ClipNetworkPage() {
     catch(e:any){setError(e.message||String(e));setReviewMessage(null);}finally{setBusy(null);}
   };
 
+  const saveVisualRevision = async (
+    clip:Clip,
+    variant:ClipVariant,
+    revision:ClipRevision,
+    headline:Record<string,unknown>,
+    captions:Record<string,unknown>,
+  ) => {
+    setBusy(`visual:${variant.id}`);
+    setError(null);
+    setReviewMessage("Criando nova versão visual…");
+    try {
+      const { data, error: rpcError } = await db.rpc(
+        "clip_create_visual_revision",
+        {
+          p_variant_id: variant.id,
+          p_headline: headline,
+          p_captions: captions,
+        },
+      );
+      if (rpcError) throw rpcError;
+      const created = Array.isArray(data) ? data[0] : data;
+      const revisionId = created?.revision_id;
+      if (!revisionId) throw new Error("Nova revisão visual não foi criada");
+
+      setPlaying((current) => {
+        const next = { ...current };
+        delete next[variant.id];
+        delete next[revision.id];
+        delete next[revisionId];
+        return next;
+      });
+
+      // This endpoint already owns the worker wake/retry path.
+      try {
+        await clipBridge(
+          CLIP_NETWORK_REVIEW_URL,
+          {
+            action:"retry_revision",
+            payload:{ clip_id:clip.id, revision_id:revisionId },
+          },
+        );
+      } catch {
+        // The revision is already pending; bootstrap/status can wake it on the next cycle.
+      }
+
+      setReviewMessage(
+        `Visual salvo como v${created?.revision_number || "nova"}. Gerando MP4…`,
+      );
+      await load();
+      await loadWorkerStatus();
+    } catch (e:any) {
+      setError(e?.message || String(e));
+      setReviewMessage(null);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const retryRevision = async (clip:Clip,revision:ClipRevision) => {
     setBusy(`retry-revision:${revision.id}`);setError(null);
     try{const data=await clipBridge(CLIP_NETWORK_REVIEW_URL,{action:"retry_revision",payload:{clip_id:clip.id,revision_id:revision.id}});setReviewMessage(`v${revision.revision_number} voltou para a fila de render.`);await load();}
@@ -496,6 +554,20 @@ export default function ClipNetworkPage() {
 
     return ()=>{ cancelled = true; };
   },[clips,playing,readyClips]);
+
+  useEffect(()=>{
+    setPlaying((current)=>{
+      let changed=false;
+      const next={...current};
+      for(const variant of variants){
+        if(variant.render_status!=="ready"&&next[variant.id]){
+          delete next[variant.id];
+          changed=true;
+        }
+      }
+      return changed?next:current;
+    });
+  },[variants]);
 
   useEffect(()=>{
     const missing=variants.filter(variant=>variant.render_status==="ready"&&!playing[variant.id]).slice(0,12);
@@ -750,6 +822,7 @@ export default function ClipNetworkPage() {
       onWatchRevision={revision=>watchVariant(revision,true)}
       onDownload={(item,isRevision)=>downloadVariant(item,isRevision)}
       onRetry={(clip,revision)=>retryRevision(clip as Clip,revision)}
+      onVisualSave={(clip,variant,revision,headline,captions)=>saveVisualRevision(clip as Clip,variant,revision,headline,captions)}
       canPublishInstagram={!!instagram}
       onPublish={clip=>publishNow(clip as Clip)}
       publicationStatusByClip={publicationStatusByClip}

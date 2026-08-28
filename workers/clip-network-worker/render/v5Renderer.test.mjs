@@ -211,3 +211,28 @@ test("V5.3 writes real ASS newlines and control tags", async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+
+test("V5.4 manual visual style overrides are clamped and emoji-safe", () => {
+  const layout = __v5Test.buildHeadlineLayout({
+    enabled: true,
+    preset: "simple_viral",
+    text: "HEADLINE EDITAVEL 😳",
+    emoji: "😳",
+    style: {
+      font_family: "Inter",
+      font_size: 74,
+      panel_height: 310,
+      tracking: -1.4,
+      bold: true,
+      italic: false,
+      show_emoji: false,
+    },
+  });
+  assert.equal(layout.preset, "simple_viral");
+  assert.equal(layout.font_size, 74);
+  assert.equal(layout.panel_height, 310);
+  assert.equal(layout.style.font_family, "Inter");
+  assert.equal(layout.style.italic, false);
+  assert.equal(layout.display_text.includes("😳"), false);
+});

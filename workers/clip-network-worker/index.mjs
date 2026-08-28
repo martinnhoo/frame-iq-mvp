@@ -478,6 +478,82 @@ async function renderRevision(
  */
 
 
+
+function normalizedTranscriptTokens(text) {
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .match(/[\p{L}\p{N}]+/gu) || [];
+}
+
+function transcriptTokenOverlap(a, b) {
+  const left = normalizedTranscriptTokens(a);
+  const right = new Set(normalizedTranscriptTokens(b));
+  if (!left.length || !right.size) return 0;
+  let hits = 0;
+  for (const token of left) if (right.has(token)) hits += 1;
+  return hits / left.length;
+}
+
+function sourceTranscriptSlice(transcript, start, end) {
+  const segments = (Array.isArray(transcript?.segments) ? transcript.segments : [])
+    .filter((segment) => Number(segment.end) >= start && Number(segment.start) <= end)
+    .map((segment) => ({
+      ...segment,
+      start: Math.max(start, Number(segment.start || 0)),
+      end: Math.min(end, Number(segment.end || 0)),
+      text: String(segment.text || "").trim(),
+    }))
+    .filter((segment) => segment.text && segment.end > segment.start);
+
+  let words = (Array.isArray(transcript?.words) ? transcript.words : [])
+    .filter((word) => {
+      const mid = (Number(word.start || 0) + Number(word.end || 0)) / 2;
+      return mid >= start && mid <= end;
+    })
+    .map((word) => ({
+      word: String(word.word || "").trim(),
+      start: Number(word.start || 0),
+      end: Number(word.end || 0),
+      speaker_id: word.speaker_id ?? null,
+    }))
+    .filter((word) => word.word && word.end > word.start);
+
+  if (words.length < 2) {
+    words = segments.flatMap((segment) => {
+      const tokens = String(segment.text || "").match(/\S+/g) || [];
+      const span = Math.max(0.08, segment.end - segment.start);
+      return tokens.map((word, index) => ({
+        word,
+        start: segment.start + (span * index) / Math.max(1, tokens.length),
+        end: segment.start + (span * (index + 1)) / Math.max(1, tokens.length),
+        speaker_id: segment.speaker_id ?? null,
+      }));
+    });
+  }
+
+  return {
+    text: segments.map((segment) => segment.text).join(" ").trim(),
+    duration: Math.max(0, end - start),
+    source: "source_transcript_pt_guard",
+    segments,
+    words,
+  };
+}
+
+function mergeVisualConfig(base, override) {
+  if (!override || typeof override !== "object") return base || {};
+  return {
+    ...(base || {}),
+    ...override,
+    style: {
+      ...((base || {}).style || {}),
+      ...(override.style || {}),
+    },
+  };
+}
+
 // V5.1 clip-level speech quality: re-transcribe only the approved clip and generate a safe headline.
 async function buildClipQualityV51({
   master,
@@ -554,7 +630,7 @@ async function buildClipQualityV51({
     throw new Error("V5.1: transcricao do corte nao retornou palavras suficientes");
   }
 
-  const transcript = {
+  let transcript = {
     text: String(quality.text || ""),
     duration: clipDuration,
     source: "clip_quality_v51",
@@ -580,6 +656,28 @@ async function buildClipQualityV51({
     detail:
       `V5.1 ${transcript.words.length} palavras · ${Number(quality.speaker_count || 0)} speakers`,
   }, true);
+
+  const sourceFallback = sourceTranscriptSlice(
+    video?.transcript || {},
+    clipStart,
+    clipEnd,
+  );
+  const transcriptAlignment = transcriptTokenOverlap(
+    transcript.text,
+    sourceFallback.text,
+  );
+  const useSourceTranscriptGuard =
+    sourceFallback.words.length >= 2 &&
+    normalizedTranscriptTokens(sourceFallback.text).length >= 8 &&
+    transcriptAlignment < 0.16;
+
+  if (useSourceTranscriptGuard) {
+    log(
+      `[clip ${clip.id}] V5.1 language guard: clip ASR divergiu do transcript PT ` +
+      `(overlap ${transcriptAlignment.toFixed(3)}); usando transcript base`,
+    );
+    transcript = sourceFallback;
+  }
 
   let headlineResult;
   try {
@@ -632,8 +730,10 @@ async function buildClipQualityV51({
     transcript,
     transcriptionMeta: {
       version: "5.1",
-      backend: quality.backend || "unknown",
-      fallback_used: Boolean(quality.fallback_used),
+      backend: transcript.source === "source_transcript_pt_guard" ? "source_transcript_pt_guard" : quality.backend || "unknown",
+      language_guard_fallback: transcript.source === "source_transcript_pt_guard",
+      language_guard_overlap: Number(transcriptAlignment.toFixed(4)),
+      fallback_used: Boolean(quality.fallback_used) || transcript.source === "source_transcript_pt_guard",
       diarization_error: quality.diarization_error || null,
       speaker_count: Number(quality.speaker_count || 0),
       word_count: transcript.words.length,
@@ -960,8 +1060,15 @@ async function renderAndUploadV4Revision(
               ...currentPlan,
               recommended: {
                 ...recommended,
-                // Never reuse candidate on_screen_title as the final fallback headline.
-                headline: quality.headline,
+                // AI supplies the default; explicit user visual controls win.
+                headline: mergeVisualConfig(
+                  quality.headline,
+                  parameters?.headline_override,
+                ),
+                captions: mergeVisualConfig(
+                  recommended.captions || {},
+                  parameters?.captions_override,
+                ),
               },
             }
           : currentPlan,
@@ -1398,7 +1505,8 @@ async function processApprovedBacklog() {
   try {
     if (
       Number(revision.revision_number || 1) > 1 &&
-      revision.feedback_text
+      revision.feedback_text &&
+      revision?.interpreted_action?.type !== "visual_override"
     ) {
       const revised = await callFunction(
         "clip-ai-editor-revise-v2",
