@@ -260,6 +260,117 @@ async function persistMasterCache(
 }
 
 /** Validação pura para o guard long-form; metadata sem duração segue o fluxo normal. */
+
+function normalizeYoutubeHeatmap(raw) {
+  const points = (Array.isArray(raw) ? raw : [])
+    .map((item) => {
+      const start = Number(item?.start_time);
+      const end = Number(item?.end_time);
+      const value = Number(item?.value);
+      if (
+        !Number.isFinite(start) ||
+        !Number.isFinite(end) ||
+        !Number.isFinite(value) ||
+        start < 0 ||
+        end <= start
+      ) return null;
+      return {
+        start_time: start,
+        end_time: end,
+        value: Math.max(0, Math.min(1, value)),
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 500)
+    .sort((a, b) => a.start_time - b.start_time);
+
+  const ranked = [...points].sort((a, b) => b.value - a.value);
+  const peaks = [];
+  for (const point of ranked) {
+    const time = (point.start_time + point.end_time) / 2;
+    if (peaks.some((peak) => Math.abs(peak.time - time) < 15)) continue;
+    peaks.push({ ...point, time, rank: peaks.length + 1 });
+    if (peaks.length >= 20) break;
+  }
+
+  return { points, peaks };
+}
+
+export async function readYoutubeMostReplayed({ video, source }) {
+  const base = {
+    version: 1,
+    provider: "youtube",
+    source: "most_replayed_public",
+    collection_backend: "yt-dlp",
+    fetched_at: new Date().toISOString(),
+    video_id: video?.provider_video_id || null,
+    available: false,
+    point_count: 0,
+    points: [],
+    peaks: [],
+  };
+
+  if (source?.provider !== "youtube") {
+    return { ...base, reason: "provider_not_youtube" };
+  }
+
+  if (!source?.rights_confirmed || !video?.rights_confirmed) {
+    return { ...base, reason: "rights_not_confirmed" };
+  }
+
+  const url =
+    video?.source_url ||
+    (video?.provider_video_id
+      ? `https://www.youtube.com/watch?v=${video.provider_video_id}`
+      : null);
+
+  if (!url) {
+    return { ...base, reason: "missing_url" };
+  }
+
+  try {
+    const { stdout } = await run(
+      "yt-dlp",
+      [
+        "--skip-download",
+        "--dump-single-json",
+        "--no-playlist",
+        url,
+      ],
+      { timeoutMs: 120_000 },
+    );
+
+    const metadata = JSON.parse(stdout || "{}");
+    const { points, peaks } = normalizeYoutubeHeatmap(metadata?.heatmap);
+
+    if (!points.length) {
+      return {
+        ...base,
+        video_id: metadata?.id || base.video_id,
+        reason: "heatmap_not_available",
+      };
+    }
+
+    return {
+      ...base,
+      video_id: metadata?.id || base.video_id,
+      available: true,
+      point_count: points.length,
+      max_value: Math.max(...points.map((point) => point.value)),
+      points,
+      peaks,
+      reason: null,
+      interpretation:
+        "Public Most Replayed is a retrieval/ranking signal, not ground truth for clip quality.",
+    };
+  } catch (error) {
+    return {
+      ...base,
+      reason: String(error?.message || error).slice(0, 180),
+    };
+  }
+}
+
 export function enforceMinimumDuration(metadata, threshold = minimumSourceDuration()) {
   const duration = Number(metadata?.duration);
   if (!Number.isFinite(duration) || duration <= 0) return null;

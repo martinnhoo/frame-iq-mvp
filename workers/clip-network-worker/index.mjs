@@ -25,7 +25,7 @@ import { spawn } from "node:child_process";
 import { hostname } from "node:os";
 import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { resolveMedia, probeDuration, MediaResolverError } from "./mediaResolver.mjs";
+import { resolveMedia, probeDuration, MediaResolverError, readYoutubeMostReplayed } from "./mediaResolver.mjs";
 import { call, callFunction, storageShim, uploadBytes } from "./gateway.mjs";
 import { normalizeRenderSettings, revisionStoragePath } from "./render/config.mjs";
 import { buildRemotionCaptionPages } from "./render/captions.mjs";
@@ -134,6 +134,55 @@ async function claimJob() {
 }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ TranscriÃƒÂ§ÃƒÂ£o (Gemini, via gateway) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+
+
+async function collectYoutubeEngagement(video, source) {
+  const existing = video?.engagement_signals || null;
+  const fetchedAt = Date.parse(existing?.fetched_at || "");
+  const freshYtDlp =
+    existing?.collection_backend === "yt-dlp" &&
+    Number.isFinite(fetchedAt) &&
+    Date.now() - fetchedAt < 12 * 60 * 60 * 1000;
+
+  if (source?.provider !== "youtube" || freshYtDlp) {
+    return existing;
+  }
+
+  let signal = null;
+  try {
+    signal = await readYoutubeMostReplayed({ video, source });
+  } catch (error) {
+    log(
+      `[video ${video?.id}] YouTube Most Replayed indisponivel:`,
+      error?.message || error,
+    );
+    return existing;
+  }
+
+  try {
+    const saved = await callFunction(
+      "clip-youtube-engagement",
+      "ingest",
+      {
+        video_id: video.id,
+        signal,
+      },
+      { timeoutMs: 60_000 },
+    );
+
+    log(
+      `[video ${video.id}] YouTube Most Replayed: ` +
+      `${saved?.available ? saved.point_count + " pontos" : "indisponivel"}`,
+    );
+  } catch (error) {
+    log(
+      `[video ${video?.id}] nao consegui persistir Most Replayed:`,
+      error?.message || error,
+    );
+  }
+
+  return signal || existing;
+}
 
 async function transcribe(input, dir) {
   const audioDir = join(dir, "audio");
@@ -1368,6 +1417,7 @@ async function processJob(job) {
   const dir = await mkdtemp(join(TMP_ROOT, "clip-"));
   try {
     const ctx = await call("context", { source_id: job.source_id });
+    const engagementSignals = await collectYoutubeEngagement(job, ctx.source);
 
     // 1. MÃƒÂ­dia
     const { path: master, strategy } = await resolveMedia({
@@ -1458,6 +1508,7 @@ async function processJob(job) {
         },
         transcript,
         multimodal,
+        engagement: engagementSignals,
       },
       { timeoutMs: 10 * 60 * 1000 },
     );
@@ -1497,6 +1548,7 @@ async function processApprovedBacklog() {
   if (!renderJob) return false;
 
   const { clip, variant, video, source } = renderJob;
+  await collectYoutubeEngagement(video, source);
   let revision = renderJob.revision;
 
   await mkdir(TMP_ROOT, { recursive: true });
