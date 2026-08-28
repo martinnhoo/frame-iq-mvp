@@ -12,6 +12,12 @@ primary_region = "gru"
   V4_FFMPEG_THREADS = "2"
   V4_ASD_THREADS = "2"
   V4_ASD_PROXY_MAX_SIDE = "640"
+  V4_ASD_DETECT_FPS = "5"
+  V4_ASD_AMBIGUITY_PAD_SECONDS = "0.4"
+  V5_SCALE_FLAGS = "bicubic"
+  V5_X264_PRESET = "superfast"
+  V5_X264_CRF = "26"
+  V5_FFMPEG_THREADS = "2"
   V4_LR_ASD_WEIGHTS = "/app/vision/lrasd_talkset.model"
   V4_MAX_OUTPUT_BYTES = "47185920"
   CLIP_WORKER_ID = "fly-clip-worker"
@@ -25,7 +31,7 @@ primary_region = "gru"
   CLIP_MIN_SOURCE_DURATION_SECONDS = "181"
 
 [[vm]]
-  size = "shared-cpu-2x"
+  size = "performance-2x"
   memory = "4gb"
 
 [[mounts]]

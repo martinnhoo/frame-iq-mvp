@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { __v5Test } from "./v5Renderer.mjs";
 
 test("V5.2 preserves pauses by default and retimes words monotonically", () => {
@@ -170,4 +173,32 @@ test("V5.1.1 media split chooses a grounded clip frame", () => {
     8,
   );
   assert.equal(time, 2.4);
+});
+
+
+test("V5.3 writes real ASS newlines and control tags", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "frameiq-v53-ass-"));
+  try {
+    const outputPath = join(dir, "captions.ass");
+    const meta = await __v5Test.writeV5Ass({
+      outputPath,
+      words: [
+        { word: "isso", start: 0.10, end: 0.35, speaker_id: "A" },
+        { word: "funciona", start: 0.36, end: 0.72, speaker_id: "A" },
+      ],
+      plan: {
+        captions: { preset: "dynamic_active_word", max_words: 4, position: "center_low" },
+        headline: { enabled: true, preset: "viral_headline", text: "TESTE REAL", duration: 1.0 },
+      },
+      duration: 1.2,
+    });
+    const ass = await readFile(outputPath, "utf8");
+    assert.ok(ass.includes("\n[V4+ Styles]\n"));
+    assert.ok(ass.includes(String.raw`{\c&H0000D8FF&}`));
+    assert.ok(ass.includes("ViralHeadline"));
+    assert.equal(meta.headline.enabled, true);
+    assert.equal(meta.caption_overlap_count, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

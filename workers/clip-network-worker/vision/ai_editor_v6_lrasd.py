@@ -439,25 +439,32 @@ class LRASDInference:
         self.fc.eval()
 
     @torch.inference_mode()
-    def score(self, audio_mfcc, video_faces):
+    def encode_audio(self, audio_mfcc):
         audio_mfcc = np.asarray(audio_mfcc, dtype=np.float32)
+        if audio_mfcc.ndim != 2 or audio_mfcc.shape[0] < 20:
+            return None
+        return self.model.forward_audio_frontend(
+            torch.from_numpy(audio_mfcc).unsqueeze(0)
+        )
+
+    @torch.inference_mode()
+    def score_with_audio_embedding(self, audio_embedding, video_faces):
         video_faces = np.asarray(video_faces, dtype=np.float32)
         v_len = int(video_faces.shape[0])
-        a_len = int(audio_mfcc.shape[0])
-        usable_v = min(v_len, a_len // 4)
-        if usable_v < 5:
+        if audio_embedding is None or v_len < 5:
             return np.zeros(v_len, dtype=np.float32)
 
-        usable_a = usable_v * 4
-        a = torch.from_numpy(audio_mfcc[:usable_a]).unsqueeze(0)
-        v = torch.from_numpy(video_faces[:usable_v]).unsqueeze(0)
+        embed_v = self.model.forward_visual_frontend(
+            torch.from_numpy(video_faces).unsqueeze(0)
+        )
+        common = min(int(audio_embedding.shape[1]), int(embed_v.shape[1]))
+        if common < 5:
+            return np.zeros(v_len, dtype=np.float32)
 
-        embed_a = self.model.forward_audio_frontend(a)
-        embed_v = self.model.forward_visual_frontend(v)
-        common = min(embed_a.shape[1], embed_v.shape[1])
-        embed_a = embed_a[:, :common]
-        embed_v = embed_v[:, :common]
-        out = self.model.forward_audio_visual_backend(embed_a, embed_v)
+        out = self.model.forward_audio_visual_backend(
+            audio_embedding[:, :common],
+            embed_v[:, :common],
+        )
         logits = self.fc(out)
         prob = torch.softmax(logits, dim=-1)[:, 1].cpu().numpy().astype(np.float32)
 
@@ -466,6 +473,22 @@ class LRASDInference:
         if len(prob) and len(prob) < v_len:
             result[len(prob):] = prob[-1]
         return result
+
+    @torch.inference_mode()
+    def score(self, audio_mfcc, video_faces):
+        audio_mfcc = np.asarray(audio_mfcc, dtype=np.float32)
+        video_faces = np.asarray(video_faces, dtype=np.float32)
+        v_len = int(video_faces.shape[0])
+        usable_v = min(v_len, int(audio_mfcc.shape[0]) // 4)
+        if usable_v < 5:
+            return np.zeros(v_len, dtype=np.float32)
+
+        usable_a = usable_v * 4
+        audio_embedding = self.encode_audio(audio_mfcc[:usable_a])
+        return self.score_with_audio_embedding(
+            audio_embedding,
+            video_faces[:usable_v],
+        )
 
 
 def self_test(weight_path):
@@ -479,7 +502,7 @@ def self_test(weight_path):
     emit({
         "type": "self_test",
         "ok": True,
-        "backend": "lr_asd_talkset_cpu_v1",
+        "backend": "lr_asd_talkset_cpu_sparse_ambiguity_v2",
         "frames": len(scores),
         "min": float(scores.min()),
         "max": float(scores.max()),
@@ -532,84 +555,118 @@ def associate_tracks(tracks, detections, max_missed=8):
     return matches, det_used, track_used
 
 
-def score_track_neural(engine, track, global_mfcc):
-    start = track.first_frame
-    end = track.last_frame
-    length = end - start + 1
-    if length < 10:
-        return
+def build_ambiguity_windows(track, presence_by_frame, pad_frames=10):
+    ambiguous = sorted(
+        frame_no
+        for frame_no in track.boxes
+        if presence_by_frame.get(frame_no, 0) >= 2
+    )
+    if not ambiguous:
+        return []
 
-    # Fill short detector gaps using the last known crop, then the next crop if needed.
-    faces = []
-    last_face = None
-    last_box = None
-    next_known = {}
-    next_boxes = {}
-    nxt = None
-    nxt_box = None
-    for idx in range(end, start - 1, -1):
-        if idx in track.faces:
-            nxt = track.faces[idx]
-        if idx in track.boxes:
-            nxt_box = track.boxes[idx]
-        next_known[idx] = nxt
-        next_boxes[idx] = nxt_box
+    groups = []
+    start = ambiguous[0]
+    previous = ambiguous[0]
+    for frame_no in ambiguous[1:]:
+        if frame_no - previous > 6:
+            groups.append((start, previous))
+            start = frame_no
+        previous = frame_no
+    groups.append((start, previous))
 
-    visible_count = 0
-    for frame_idx in range(start, end + 1):
-        face = track.faces.get(frame_idx)
-        box = track.boxes.get(frame_idx)
-        if face is not None:
-            visible_count += 1
-            last_face = face
-        elif last_face is not None:
-            face = last_face
+    out = []
+    for start, end in groups:
+        start = max(track.first_frame, start - pad_frames)
+        end = min(track.last_frame, end + pad_frames)
+        if not out or start > out[-1][1] + 2:
+            out.append([start, end])
         else:
-            face = next_known.get(frame_idx)
+            out[-1][1] = max(out[-1][1], end)
+    return [(a, b) for a, b in out if b - a + 1 >= 5]
 
-        if box is not None:
-            last_box = box
-        elif last_box is not None:
-            track.boxes[frame_idx] = last_box
-        elif next_boxes.get(frame_idx) is not None:
-            track.boxes[frame_idx] = next_boxes[frame_idx]
 
-        if face is None:
-            face = np.full((FACE_SIZE, FACE_SIZE), 110, dtype=np.uint8)
-        faces.append(face)
+def score_track_neural_windows(
+    engine,
+    track,
+    global_mfcc,
+    audio_cache,
+    windows,
+):
+    if not windows:
+        return 0, 0
 
-    if visible_count / max(1, length) < 0.45:
-        return
+    scored_frames = 0
+    audio_cache_hits = 0
+    chunk = 150
+    overlap = 25
 
-    audio_start = start * 4
-    audio_end = (end + 1) * 4
-    audio = global_mfcc[audio_start:audio_end]
-    usable = min(len(faces), len(audio) // 4)
-    if usable < 10:
-        return
+    for window_start, window_end in windows:
+        faces = []
+        last_face = None
+        next_known = {}
+        nxt = None
+        for idx in range(window_end, window_start - 1, -1):
+            if idx in track.faces:
+                nxt = track.faces[idx]
+            next_known[idx] = nxt
 
-    # Chunk inference limits RAM and gives the recurrent detector local conversational context.
-    chunk = 150  # 6 s at 25 fps
-    overlap = 25  # 1 s
-    accum = np.zeros(usable, dtype=np.float32)
-    counts = np.zeros(usable, dtype=np.float32)
-    pos = 0
-    while pos < usable:
-        c_end = min(usable, pos + chunk)
-        v = np.stack(faces[pos:c_end], axis=0)
-        a0, a1 = pos * 4, c_end * 4
-        a = audio[a0:a1]
-        scores = engine.score(a, v)[: c_end - pos]
-        accum[pos:c_end] += scores
-        counts[pos:c_end] += 1.0
-        if c_end >= usable:
-            break
-        pos = max(pos + 1, c_end - overlap)
+        visible = 0
+        for frame_no in range(window_start, window_end + 1):
+            face = track.faces.get(frame_no)
+            if face is not None:
+                last_face = face
+                visible += 1
+            elif last_face is not None:
+                face = last_face
+            else:
+                face = next_known.get(frame_no)
+            if face is None:
+                face = np.full((FACE_SIZE, FACE_SIZE), 110, dtype=np.uint8)
+            faces.append(face)
 
-    final = accum / np.maximum(1.0, counts)
-    for offset, score in enumerate(final):
-        track.scores[start + offset] = float(score)
+        if visible / max(1, len(faces)) < 0.35:
+            continue
 
+        audio_start = window_start * 4
+        usable = min(
+            len(faces),
+            max(0, (len(global_mfcc) - audio_start) // 4),
+        )
+        if usable < 5:
+            continue
+
+        accum = np.zeros(usable, dtype=np.float32)
+        counts = np.zeros(usable, dtype=np.float32)
+        pos = 0
+        while pos < usable:
+            c_end = min(usable, pos + chunk)
+            global_start = window_start + pos
+            global_end = window_start + c_end
+            a0, a1 = global_start * 4, global_end * 4
+            cache_key = (a0, a1)
+            embed_a = audio_cache.get(cache_key)
+            if embed_a is None:
+                embed_a = engine.encode_audio(global_mfcc[a0:a1])
+                audio_cache[cache_key] = embed_a
+            else:
+                audio_cache_hits += 1
+
+            scores = engine.score_with_audio_embedding(
+                embed_a,
+                np.stack(faces[pos:c_end], axis=0),
+            )[: c_end - pos]
+            accum[pos:c_end] += scores
+            counts[pos:c_end] += 1.0
+            if c_end >= usable:
+                break
+            pos = max(pos + 1, c_end - overlap)
+
+        final = accum / np.maximum(1.0, counts)
+        for offset, score in enumerate(final):
+            track.scores[window_start + offset] = float(score)
+            scored_frames += 1
+
+    return scored_frames, audio_cache_hits
 
 def compress_camera(points):
     if not points:
@@ -637,6 +694,13 @@ def run(args):
     width, height, source_fps = probe_video(args.input)
     proxy_w, proxy_h = proxy_size(width, height, max_side=args.proxy_max_side)
     total_frames = max(1, int(math.ceil(args.duration * VISION_FPS)))
+    requested_detect_fps = clamp(
+        float(os.environ.get("V4_ASD_DETECT_FPS", "5")),
+        2.0,
+        12.5,
+    )
+    detect_stride = max(1, int(round(VISION_FPS / requested_detect_fps)))
+    detect_fps = VISION_FPS / detect_stride
 
     detector = cv2.FaceDetectorYN.create(
         args.model, "", (320, 320), 0.55, 0.30, 5000
@@ -664,7 +728,8 @@ def run(args):
     frame_idx = 0
     face_frames = 0
     multi_face_frames = 0
-    max_missed = 8
+    detector_calls = 0
+    max_missed = 3
 
     try:
         while frame_idx < total_frames:
@@ -673,48 +738,72 @@ def run(args):
                 break
             frame = np.frombuffer(raw, dtype=np.uint8).reshape((proxy_h, proxy_w, 3))
 
-            detector.setInputSize((proxy_w, proxy_h))
-            _, faces = detector.detect(frame)
-            detections = []
-            if faces is not None:
-                for item in faces:
-                    x, y, w, h = [float(v) for v in item[:4]]
-                    box = (
-                        clamp(x, 0, proxy_w - 2),
-                        clamp(y, 0, proxy_h - 2),
-                        clamp(w, 2, proxy_w),
-                        clamp(h, 2, proxy_h),
-                    )
-                    if box[2] * box[3] < proxy_w * proxy_h * 0.001:
-                        continue
-                    detections.append((box, crop_face_for_asd(frame, box)))
+            detect_now = frame_idx % detect_stride == 0
+            if detect_now:
+                detector_calls += 1
+                detector.setInputSize((proxy_w, proxy_h))
+                _, faces = detector.detect(frame)
+                detections = []
+                if faces is not None:
+                    for item in faces:
+                        x, y, w, h = [float(v) for v in item[:4]]
+                        box = (
+                            clamp(x, 0, proxy_w - 2),
+                            clamp(y, 0, proxy_h - 2),
+                            clamp(w, 2, proxy_w),
+                            clamp(h, 2, proxy_h),
+                        )
+                        if box[2] * box[3] < proxy_w * proxy_h * 0.001:
+                            continue
+                        detections.append(
+                            (box, crop_face_for_asd(frame, box))
+                        )
 
-            if detections:
-                face_frames += 1
-            if len(detections) >= 2:
-                multi_face_frames += 1
-
-            matches, det_used, track_used = associate_tracks(tracks, detections, max_missed)
-            for det_i, track_id in matches:
-                box, face = detections[det_i]
-                tracks[track_id].add(frame_idx, box, face)
-
-            for det_i, (box, face) in enumerate(detections):
-                if det_i in det_used:
-                    continue
-                track = FaceTrack(
-                    track_id=next_track_id,
-                    first_frame=frame_idx,
-                    last_frame=frame_idx,
-                    last_box=box,
+                matches, det_used, track_used = associate_tracks(
+                    tracks,
+                    detections,
+                    max_missed,
                 )
-                track.add(frame_idx, box, face)
-                tracks[next_track_id] = track
-                next_track_id += 1
+                for det_i, track_id in matches:
+                    box, face = detections[det_i]
+                    tracks[track_id].add(frame_idx, box, face)
 
-            for track_id, track in list(tracks.items()):
-                if track_id not in track_used and frame_idx not in track.boxes:
-                    track.missed += 1
+                for det_i, (box, face) in enumerate(detections):
+                    if det_i in det_used:
+                        continue
+                    track = FaceTrack(
+                        track_id=next_track_id,
+                        first_frame=frame_idx,
+                        last_frame=frame_idx,
+                        last_box=box,
+                    )
+                    track.add(frame_idx, box, face)
+                    tracks[next_track_id] = track
+                    next_track_id += 1
+
+                for track_id, track in list(tracks.items()):
+                    if track_id not in track_used and frame_idx not in track.boxes:
+                        track.missed += 1
+            else:
+                for track in tracks.values():
+                    if track.missed != 0:
+                        continue
+                    box = track.last_box
+                    track.add(
+                        frame_idx,
+                        box,
+                        crop_face_for_asd(frame, box),
+                    )
+
+            visible_now = sum(
+                1
+                for track in tracks.values()
+                if track.missed == 0 and frame_idx in track.boxes
+            )
+            if visible_now >= 1:
+                face_frames += 1
+            if visible_now >= 2:
+                multi_face_frames += 1
 
             frame_idx += 1
             if frame_idx == 1 or frame_idx == total_frames or frame_idx % 25 == 0:
@@ -750,15 +839,66 @@ def run(args):
     ]
     candidates.sort(key=lambda t: t.first_frame)
 
+    presence_by_frame = defaultdict(int)
+    for track in candidates:
+        for frame_no in track.boxes:
+            presence_by_frame[frame_no] += 1
+
+    audio_cache = {}
+    asd_tracks_scored = 0
+    asd_tracks_skipped_single_face = 0
+    asd_window_count = 0
+    asd_scored_frames = 0
+    audio_cache_hits = 0
+    pad_frames = max(
+        0,
+        int(round(
+            float(os.environ.get("V4_ASD_AMBIGUITY_PAD_SECONDS", "0.4"))
+            * VISION_FPS
+        )),
+    )
+
     for idx, track in enumerate(candidates):
-        score_track_neural(engine, track, mfcc)
+        for frame_no in track.boxes:
+            if presence_by_frame.get(frame_no, 0) < 2:
+                track.scores[frame_no] = 0.99
+
+        windows = build_ambiguity_windows(
+            track,
+            presence_by_frame,
+            pad_frames=pad_frames,
+        )
+        if not windows:
+            asd_tracks_skipped_single_face += 1
+        else:
+            scored, hits = score_track_neural_windows(
+                engine,
+                track,
+                mfcc,
+                audio_cache,
+                windows,
+            )
+            if scored > 0:
+                asd_tracks_scored += 1
+                asd_scored_frames += scored
+                asd_window_count += len(windows)
+                audio_cache_hits += hits
+
         emit({
             "type": "progress",
             "stage": "asd",
             "current": idx + 1,
             "total": max(1, len(candidates)),
-            "phase_pct": round(55.0 + 35.0 * (idx + 1) / max(1, len(candidates)), 2),
+            "phase_pct": round(
+                55.0 + 35.0 * (idx + 1) / max(1, len(candidates)),
+                2,
+            ),
             "eta_seconds": None,
+            "detail": (
+                f"LR-ASD {asd_tracks_scored} ambiguous tracks · "
+                f"{asd_tracks_skipped_single_face} deterministic · "
+                f"{len(audio_cache)} audio embeddings"
+            ),
         })
 
     by_frame = defaultdict(list)
@@ -883,16 +1023,28 @@ def run(args):
         "face_frame_ratio": round(face_frames / max(1, frame_idx), 4),
         "multi_face_frame_ratio": round(multi_face_frames / max(1, frame_idx), 4),
         "tracks_detected": len(tracks),
-        "asd_tracks_scored": len([t for t in candidates if t.scores]),
+        "tracks_kept": len(candidates),
+        "detector_fps": round(detect_fps, 3),
+        "detector_calls": detector_calls,
+        "detector_call_reduction_vs_25fps": round(
+            1.0 - detector_calls / max(1, frame_idx),
+            4,
+        ),
+        "asd_tracks_scored": asd_tracks_scored,
+        "asd_tracks_skipped_single_face": asd_tracks_skipped_single_face,
+        "asd_window_count": asd_window_count,
+        "asd_scored_seconds": round(asd_scored_frames / VISION_FPS, 3),
+        "audio_embedding_cache_entries": len(audio_cache),
+        "audio_embedding_cache_hits": audio_cache_hits,
         "neural_speaker_samples": neural_speaker_samples,
         "speaker_switches": speaker_switches,
         "active_speaker_confidence_avg": round(score_sum / max(1, score_count), 4),
         "neural_coverage_ratio": round(neural_speaker_samples / max(1, len(camera)), 4),
     }
     result = {
-        "version": 6,
+        "version": 7,
         "editor": "ai_editor_v4_open_source",
-        "vision_backend": "lr_asd_talkset_cpu_v1",
+        "vision_backend": "lr_asd_talkset_cpu_sparse_ambiguity_v2",
         "asd_model": "LR-ASD IJCV 2025 TalkSet",
         "asd_upstream": LR_ASD_UPSTREAM,
         "sample_fps": args.sample_fps,

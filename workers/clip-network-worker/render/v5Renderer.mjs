@@ -372,14 +372,21 @@ function zoomForShot(style, beat, index, mode, headlineActive) {
   return alternating ? 1.045 : 1.0;
 }
 
-function cropForShot(sourceMeta, focusX, focusY, zoom, headlineActive) {
+function cropForShot(
+  sourceMeta,
+  focusX,
+  focusY,
+  zoom,
+  headlineActive,
+  targetHeight = OUTPUT_H,
+) {
   const sourceW = Number(sourceMeta.width || 0);
   const sourceH = Number(sourceMeta.height || 0);
   if (!sourceW || !sourceH) {
     throw new Error("V5 sem dimensoes validas da fonte");
   }
 
-  const aspect = OUTPUT_W / OUTPUT_H;
+  const aspect = OUTPUT_W / Math.max(2, Number(targetHeight || OUTPUT_H));
   const sourceAspect = sourceW / sourceH;
   let baseW;
   let baseH;
@@ -419,10 +426,14 @@ function cropForShot(sourceMeta, focusX, focusY, zoom, headlineActive) {
 
 function buildShots(ranges, vision, plan, sourceMeta) {
   const shots = [];
-  const headlineEnd =
-    plan?.headline?.enabled === true
-      ? Number(plan.headline.duration || 0)
-      : 0;
+  const headlineLayout = buildHeadlineLayout(plan?.headline || {});
+  const bodyHeight =
+    headlineLayout.enabled && headlineLayout.preset === "media_split"
+      ? 1140
+      : headlineLayout.enabled &&
+          ["viral_headline", "news_page"].includes(headlineLayout.preset)
+        ? OUTPUT_H - Number(headlineLayout.panel_height || 0)
+        : OUTPUT_H;
   let shotIndex = 0;
 
   for (const range of ranges) {
@@ -454,7 +465,7 @@ function buildShots(ranges, vision, plan, sourceMeta) {
 
       const outputStart =
         range.output_start + (start - range.start);
-      const headlineActive = outputStart < headlineEnd;
+      const headlineActive = headlineLayout.enabled;
       let zoom = zoomForShot(
         plan?.editing_style || "podcast_dynamic",
         beat,
@@ -470,6 +481,7 @@ function buildShots(ranges, vision, plan, sourceMeta) {
         focusY,
         zoom,
         headlineActive,
+        bodyHeight,
       );
 
       shots.push({
@@ -484,6 +496,7 @@ function buildShots(ranges, vision, plan, sourceMeta) {
         mode,
         beat_type: beat?.type || null,
         zoom: Number(zoom.toFixed(3)),
+        body_height: bodyHeight,
         ...crop,
       });
       shotIndex += 1;
@@ -574,13 +587,13 @@ function phrase(group, activeIndex, activeColor = "&H0000D8FF&") {
   const parts = group.map((item, index) => {
     const word = escapeAss(item.word);
     if (index === activeIndex) {
-      return `{\\\\c${activeColor}}${word}{\\\\c&H00FFFFFF&}`;
+      return `{\\c${activeColor}}${word}{\\c&H00FFFFFF&}`;
     }
     return word;
   });
   const at = breakIndex(group);
   if (at <= 0) return parts.join(" ");
-  return `${parts.slice(0, at).join(" ")}\\\\N${parts.slice(at).join(" ")}`;
+  return `${parts.slice(0, at).join(" ")}\\N${parts.slice(at).join(" ")}`;
 }
 
 const toCs = (seconds) =>
@@ -825,18 +838,18 @@ function buildHeadlineLayout(headline) {
 function headlineEvents(lines, headlineLayout, end) {
   if (!headlineLayout?.enabled || end <= 0) return;
   const stop = assTime(end);
-  const text = headlineLayout.lines.map(escapeAss).join("\\\\N");
+  const text = headlineLayout.lines.map(escapeAss).join("\\N");
 
   if (headlineLayout.preset === "news_page") {
     const height = Number(headlineLayout.panel_height || 220);
     lines.push(
-      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\\\an7\\\\pos(0,0)\\\\p1\\\\bord0\\\\shad0\\\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
+      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},NewsPageLabel,,0,0,0,,{\\\\an7\\\\pos(52,28)}●  AGORA`,
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageLabel,,0,0,0,,{\\an7\\pos(52,28)}●  ${escapeAss(headlineLayout.page_name || "FRAMEIQ CORTES")}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},NewsPageHeadline,,0,0,0,,{\\\\an8\\\\pos(540,${Math.round(height * 0.58)})\\\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height * 0.62)})\\fs${headlineLayout.font_size}}${text}`,
     );
     return;
   }
@@ -844,17 +857,20 @@ function headlineEvents(lines, headlineLayout, end) {
   if (headlineLayout.preset === "viral_headline") {
     const height = Number(headlineLayout.panel_height || 175);
     lines.push(
-      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\\\an7\\\\pos(0,0)\\\\p1\\\\bord0\\\\shad0\\\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
+      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},ViralHeadline,,0,0,0,,{\\\\an8\\\\pos(540,${Math.round(height / 2)})\\\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},ViralHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height / 2)})\\fs${headlineLayout.font_size}}${text}`,
     );
     return;
   }
 
   if (headlineLayout.preset === "media_split") {
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},MediaHeadline,,0,0,0,,{\\\\an5\\\\pos(540,1210)\\\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,1140)\\p1\\bord0\\shad0\\1c&H002B1DE2&}m 0 0 l 1080 0 l 1080 140 l 0 140`,
+    );
+    lines.push(
+      `Dialogue: 3,${assTime(0)},${stop},MediaHeadline,,0,0,0,,{\\an5\\pos(540,1210)\\fs${headlineLayout.font_size}}${text}`,
     );
   }
 }
@@ -877,8 +893,8 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     headlineLayout.preset === "media_split";
 
   const fontSize =
-    preset === "bold_phrase" ? 70 :
-      preset === "clean_phrase" ? 62 : 66;
+    preset === "bold_phrase" ? 64 :
+      preset === "clean_phrase" ? 58 : 60;
   const marginV =
     mediaSplit ? 830 :
       caption.position === "lower" ? 245 :
@@ -897,8 +913,8 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     `Style: Caption,Inter,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,2,90,90,${marginV},1`,
     "Style: Graphic,Inter,20,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
     "Style: NewsPageLabel,Inter,27,&H00252525,&H00252525,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
-    "Style: NewsPageHeadline,Inter,48,&H00101010,&H00101010,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,60,60,0,1",
-    "Style: ViralHeadline,DejaVu Sans Condensed,58,&H00101010,&H00101010,&H00000000,&H00000000,-1,-1,0,0,100,100,-0.5,0,1,0,0,8,48,48,0,1",
+    "Style: NewsPageHeadline,Inter,48,&H00101010,&H00101010,&H00000000,&H00000000,-1,0,0,0,100,100,-0.4,0,1,0,0,8,60,60,0,1",
+    "Style: ViralHeadline,DejaVu Sans Condensed,58,&H00101010,&H00101010,&H00000000,&H00000000,-1,-1,0,0,104,100,-0.9,0,1,0,0,8,48,48,0,1",
     "Style: MediaHeadline,DejaVu Sans Condensed,44,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00000000,-1,0,0,0,100,100,-0.2,0,1,2,0,5,45,45,0,1",
     "",
     "[Events]",
@@ -908,7 +924,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
   headlineEvents(
     lines,
     headlineLayout,
-    Math.min(duration, Number(headlineLayout?.duration || 0)),
+    headlineLayout.enabled ? duration : 0,
   );
 
   if (preset === "clean_phrase") {
@@ -918,7 +934,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
       const text =
         at <= 0
           ? group.map((item) => escapeAss(item.word)).join(" ")
-          : `${group.slice(0, at).map((item) => escapeAss(item.word)).join(" ")}\\\\N${group.slice(at).map((item) => escapeAss(item.word)).join(" ")}`;
+          : `${group.slice(0, at).map((item) => escapeAss(item.word)).join(" ")}\\N${group.slice(at).map((item) => escapeAss(item.word)).join(" ")}`;
       lines.push(
         `Dialogue: 1,${assTime(window.start)},${assTime(window.end)},Caption,,0,0,0,,${text}`,
       );
@@ -931,7 +947,7 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     }
   }
 
-  await writeFile(outputPath, lines.join("\\n"), "utf8");
+  await writeFile(outputPath, lines.join("\n"), "utf8");
 
   const speakerIds = [
     ...new Set(
@@ -970,7 +986,16 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     speaker_switches: speakerSwitches,
     speaker_safe: true,
     one_caption_at_a_time: schedule.overlap_count === 0,
-    headline: headlineLayout,
+    headline: {
+      ...headlineLayout,
+      duration: headlineLayout.enabled ? duration : 0,
+    },
+    caption_font_size: fontSize,
+    caption_margin_v: marginV,
+    caption_probe_times: schedule.events
+      .filter((event) => event.end - event.start >= 0.04)
+      .map((event) => Number(((event.start + event.end) / 2).toFixed(3)))
+      .slice(0, 40),
   };
 }
 
@@ -978,32 +1003,23 @@ function buildFilterComplex({
   shots,
   assPath,
   hasAudio,
-  mediaSplit = false,
+  headlineLayout,
   outputDuration,
 }) {
   const count = shots.length;
   const filters = [];
-
-  filters.push(
-    `[0:v]split=${count}${shots.map((_, i) => `[vs${i}]`).join("")}`,
-  );
-  if (hasAudio) {
-    filters.push(
-      `[0:a]asplit=${count}${shots.map((_, i) => `[as${i}]`).join("")}`,
-    );
-  }
+  const bodyHeight = Number(shots[0]?.body_height || OUTPUT_H);
+  const scaleFlags = process.env.V5_SCALE_FLAGS || "bicubic";
 
   shots.forEach((shot, index) => {
     filters.push(
-      `[vs${index}]trim=start=${shot.source_start.toFixed(3)}:end=${shot.source_end.toFixed(3)},` +
-      `setpts=PTS-STARTPTS,` +
+      `[${index}:v]setpts=PTS-STARTPTS,` +
       `crop=${shot.cropW}:${shot.cropH}:${shot.x}:${shot.y},` +
-      `scale=${OUTPUT_W}:${OUTPUT_H}:flags=lanczos,setsar=1[v${index}]`,
+      `scale=${OUTPUT_W}:${bodyHeight}:flags=${scaleFlags},setsar=1[v${index}]`,
     );
     if (hasAudio) {
       filters.push(
-        `[as${index}]atrim=start=${shot.source_start.toFixed(3)}:end=${shot.source_end.toFixed(3)},` +
-        `asetpts=PTS-STARTPTS[a${index}]`,
+        `[${index}:a]asetpts=PTS-STARTPTS,aresample=async=1:first_pts=0[a${index}]`,
       );
     }
   });
@@ -1021,19 +1037,30 @@ function buildFilterComplex({
   }
 
   let videoLabel = "[vcat]";
-  if (mediaSplit) {
+  if (headlineLayout?.enabled && headlineLayout.preset === "media_split") {
     const d = Math.max(0.1, Number(outputDuration || 0)).toFixed(3);
+    const supportingIndex = shots.length;
     filters.push(
-      `[vcat]scale=1080:1140:force_original_aspect_ratio=increase,crop=1080:1140,setsar=1[vtop]`,
-    );
-    filters.push(
-      `[1:v]scale=1080:640:force_original_aspect_ratio=increase,crop=1080:640,trim=duration=${d},setpts=PTS-STARTPTS,setsar=1[vbottom]`,
+      `[${supportingIndex}:v]scale=1080:640:force_original_aspect_ratio=increase,crop=1080:640,trim=duration=${d},setpts=PTS-STARTPTS,setsar=1[vbottom]`,
     );
     filters.push(
       `color=c=0xE21D2B:s=1080x140:r=25:d=${d}[vbar]`,
     );
     filters.push(
-      "[vtop][vbar][vbottom]vstack=inputs=3[vlayout]",
+      "[vcat][vbar][vbottom]vstack=inputs=3[vlayout]",
+    );
+    videoLabel = "[vlayout]";
+  } else if (
+    headlineLayout?.enabled &&
+    ["viral_headline", "news_page"].includes(headlineLayout.preset)
+  ) {
+    const d = Math.max(0.1, Number(outputDuration || 0)).toFixed(3);
+    const panelHeight = Number(headlineLayout.panel_height || 0);
+    filters.push(
+      `color=c=0x000000:s=${OUTPUT_W}x${OUTPUT_H}:r=30:d=${d}[vcanvas]`,
+    );
+    filters.push(
+      `[vcanvas][vcat]overlay=0:${panelHeight}:shortest=1[vlayout]`,
     );
     videoLabel = "[vlayout]";
   }
@@ -1055,10 +1082,10 @@ async function runFfmpeg({
   master,
   output,
   clipStart,
-  clipDuration,
   outputDuration,
   filterComplex,
   hasAudio,
+  shots,
   supportingFrame = null,
   report,
 }) {
@@ -1066,9 +1093,19 @@ async function runFfmpeg({
     "-hide_banner",
     "-loglevel", "error",
     "-y",
-    "-ss", String(clipStart),
-    "-i", master,
   ];
+
+  for (const shot of shots) {
+    const duration = Math.max(
+      0.05,
+      Number(shot.source_end) - Number(shot.source_start),
+    );
+    args.push(
+      "-ss", String(clipStart + Number(shot.source_start)),
+      "-t", String(duration),
+      "-i", master,
+    );
+  }
 
   if (supportingFrame) {
     args.push(
@@ -1079,7 +1116,6 @@ async function runFfmpeg({
   }
 
   args.push(
-    "-t", String(clipDuration),
     "-filter_complex", filterComplex,
     "-map", "[vout]",
   );
@@ -1088,10 +1124,10 @@ async function runFfmpeg({
 
   args.push(
     "-c:v", "libx264",
-    "-preset", process.env.V4_X264_PRESET || "superfast",
-    "-crf", process.env.V4_X264_CRF || "28",
+    "-preset", process.env.V5_X264_PRESET || process.env.V4_X264_PRESET || "superfast",
+    "-crf", process.env.V5_X264_CRF || process.env.V4_X264_CRF || "26",
     "-pix_fmt", "yuv420p",
-    "-threads", String(process.env.V4_FFMPEG_THREADS || 2),
+    "-threads", String(process.env.V5_FFMPEG_THREADS || process.env.V4_FFMPEG_THREADS || 2),
   );
 
   if (hasAudio) {
@@ -1106,6 +1142,9 @@ async function runFfmpeg({
     "-nostats",
     output,
   );
+
+  const startedAt = Date.now();
+  let finalSpeed = null;
 
   await new Promise((resolve, reject) => {
     const child = spawn("ffmpeg", args, {
@@ -1127,7 +1166,10 @@ async function runFfmpeg({
         const value = rest.join("=");
         if (key === "speed") {
           const parsed = Number(String(value).replace(/x$/i, ""));
-          if (Number.isFinite(parsed)) speed = parsed;
+          if (Number.isFinite(parsed)) {
+            speed = parsed;
+            finalSpeed = parsed;
+          }
         }
         if (key !== "out_time") continue;
         const match = /^(\d+):(\d+):(\d+(?:\.\d+)?)$/.exec(value);
@@ -1174,6 +1216,248 @@ async function runFfmpeg({
       }
     });
   });
+
+  return {
+    elapsed_ms: Date.now() - startedAt,
+    speed_x: Number.isFinite(finalSpeed)
+      ? Number(finalSpeed.toFixed(3))
+      : null,
+    input_strategy: "bounded_input_per_shot",
+    shot_inputs: shots.length,
+  };
+}
+
+function frameForOutputTime(shots, outputTime) {
+  return shots.find(
+    (shot) =>
+      outputTime >= Number(shot.output_start) &&
+      outputTime < Number(shot.output_end),
+  ) || shots.at(-1) || null;
+}
+
+function chooseProbeTime(candidates, shots, duration) {
+  for (const raw of candidates || []) {
+    const time = clamp(raw, 0.08, Math.max(0.08, duration - 0.08));
+    const shot = frameForOutputTime(shots, time);
+    if (!shot) continue;
+    const distance = Math.min(
+      time - Number(shot.output_start),
+      Number(shot.output_end) - time,
+    );
+    if (distance >= 0.08) return { time, shot };
+  }
+  const time = clamp(duration * 0.5, 0.08, Math.max(0.08, duration - 0.08));
+  const shot = frameForOutputTime(shots, time);
+  return shot ? { time, shot } : null;
+}
+
+function readRawFrame(args, label) {
+  const expectedBytes = OUTPUT_W * OUTPUT_H * 3;
+  return new Promise((resolve, reject) => {
+    const child = spawn("ffmpeg", args, {
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const chunks = [];
+    let size = 0;
+    let stderr = "";
+    child.stdout.on("data", (chunk) => {
+      chunks.push(chunk);
+      size += chunk.length;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code !== 0) {
+        reject(
+          new Error(`${label} falhou (${code}): ${stderr.slice(-1200)}`),
+        );
+        return;
+      }
+      const frame = Buffer.concat(chunks, size);
+      if (frame.length !== expectedBytes) {
+        reject(
+          new Error(
+            `${label} retornou ${frame.length} bytes; esperado ${expectedBytes}`,
+          ),
+        );
+        return;
+      }
+      resolve(frame);
+    });
+  });
+}
+
+async function renderedFrame(output, time) {
+  return readRawFrame(
+    [
+      "-hide_banner", "-loglevel", "error",
+      "-ss", String(time),
+      "-i", output,
+      "-frames:v", "1",
+      "-vf", `scale=${OUTPUT_W}:${OUTPUT_H}:flags=bilinear`,
+      "-pix_fmt", "rgb24",
+      "-f", "rawvideo",
+      "pipe:1",
+    ],
+    "QA frame renderizado",
+  );
+}
+
+async function cleanReferenceFrame({
+  master,
+  clipStart,
+  probe,
+  headlineLayout,
+}) {
+  const shot = probe.shot;
+  const sourceTime =
+    clipStart +
+    Number(shot.source_start) +
+    (probe.time - Number(shot.output_start));
+  const bodyHeight = Number(shot.body_height || OUTPUT_H);
+  const filters = [
+    `crop=${shot.cropW}:${shot.cropH}:${shot.x}:${shot.y}`,
+    `scale=${OUTPUT_W}:${bodyHeight}:flags=${process.env.V5_SCALE_FLAGS || "bicubic"}`,
+  ];
+
+  if (bodyHeight < OUTPUT_H) {
+    const top =
+      headlineLayout?.enabled &&
+      ["viral_headline", "news_page"].includes(headlineLayout.preset)
+        ? Number(headlineLayout.panel_height || 0)
+        : 0;
+    filters.push(
+      `pad=${OUTPUT_W}:${OUTPUT_H}:0:${top}:color=black`,
+    );
+  }
+
+  return readRawFrame(
+    [
+      "-hide_banner", "-loglevel", "error",
+      "-ss", String(sourceTime),
+      "-i", master,
+      "-frames:v", "1",
+      "-vf", filters.join(","),
+      "-pix_fmt", "rgb24",
+      "-f", "rawvideo",
+      "pipe:1",
+    ],
+    "QA frame de referencia",
+  );
+}
+
+function regionDiff(rendered, reference, region) {
+  const x0 = Math.max(0, Math.floor(region.x));
+  const y0 = Math.max(0, Math.floor(region.y));
+  const x1 = Math.min(OUTPUT_W, Math.ceil(region.x + region.width));
+  const y1 = Math.min(OUTPUT_H, Math.ceil(region.y + region.height));
+  let absolute = 0;
+  let changed = 0;
+  let pixels = 0;
+
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = x0; x < x1; x += 1) {
+      const offset = (y * OUTPUT_W + x) * 3;
+      const dr = Math.abs(rendered[offset] - reference[offset]);
+      const dg = Math.abs(rendered[offset + 1] - reference[offset + 1]);
+      const db = Math.abs(rendered[offset + 2] - reference[offset + 2]);
+      const peak = Math.max(dr, dg, db);
+      absolute += dr + dg + db;
+      if (peak >= 30) changed += 1;
+      pixels += 1;
+    }
+  }
+
+  return {
+    mean_absolute_difference:
+      pixels > 0 ? Number((absolute / (pixels * 3)).toFixed(3)) : 0,
+    changed_pixel_ratio:
+      pixels > 0 ? Number((changed / pixels).toFixed(5)) : 0,
+    pixels,
+  };
+}
+
+async function verifyBurnedOverlays({
+  output,
+  master,
+  clipStart,
+  outputDuration,
+  shots,
+  captionMeta,
+}) {
+  const headlineLayout = captionMeta?.headline || {};
+  const checks = {};
+
+  if (captionMeta?.words > 0) {
+    const probe = chooseProbeTime(
+      captionMeta.caption_probe_times,
+      shots,
+      outputDuration,
+    );
+    if (!probe) throw new Error("QA visual: sem frame de fala para validar legenda");
+    const [rendered, reference] = await Promise.all([
+      renderedFrame(output, probe.time),
+      cleanReferenceFrame({ master, clipStart, probe, headlineLayout }),
+    ]);
+    const baselineY = OUTPUT_H - Number(captionMeta.caption_margin_v || 315);
+    const fontSize = Number(captionMeta.caption_font_size || 60);
+    const diff = regionDiff(rendered, reference, {
+      x: 45,
+      y: baselineY - fontSize * 2.8,
+      width: OUTPUT_W - 90,
+      height: fontSize * 3.25,
+    });
+    checks.caption = { probe_time: probe.time, ...diff };
+    if (
+      diff.changed_pixel_ratio < 0.0025 ||
+      diff.mean_absolute_difference < 0.45
+    ) {
+      throw new Error(
+        `QA visual: legenda nao apareceu no MP4 final (${JSON.stringify(diff)})`,
+      );
+    }
+  }
+
+  if (headlineLayout.enabled) {
+    const probe = chooseProbeTime(
+      [Math.min(0.8, outputDuration * 0.25), 0.25],
+      shots,
+      outputDuration,
+    );
+    if (!probe) throw new Error("QA visual: sem frame para validar headline");
+    const [rendered, reference] = await Promise.all([
+      renderedFrame(output, probe.time),
+      cleanReferenceFrame({ master, clipStart, probe, headlineLayout }),
+    ]);
+    const region =
+      headlineLayout.preset === "media_split"
+        ? { x: 0, y: 1140, width: OUTPUT_W, height: 140 }
+        : {
+            x: 0,
+            y: 0,
+            width: OUTPUT_W,
+            height: Number(headlineLayout.panel_height || 190),
+          };
+    const diff = regionDiff(rendered, reference, region);
+    checks.headline = { probe_time: probe.time, ...diff };
+    if (
+      diff.changed_pixel_ratio < 0.03 ||
+      diff.mean_absolute_difference < 2
+    ) {
+      throw new Error(
+        `QA visual: headline nao apareceu no MP4 final (${JSON.stringify(diff)})`,
+      );
+    }
+  }
+
+  return {
+    version: 1,
+    passed: true,
+    method: "decoded_final_mp4_vs_clean_source_roi",
+    checks,
+  };
 }
 
 
@@ -1410,7 +1694,7 @@ export async function renderEditorialV5({
     shots,
     assPath,
     hasAudio: Boolean(sourceMeta.hasAudio),
-    mediaSplit,
+    headlineLayout: captionMeta.headline,
     outputDuration,
   });
 
@@ -1421,14 +1705,14 @@ export async function renderEditorialV5({
       `V5.2 story-first renderer · ${shots.length} decisões visuais · headline ${captionMeta?.headline?.preset || "none"}`,
   });
 
-  await runFfmpeg({
+  const renderMeta = await runFfmpeg({
     master,
     output,
     clipStart,
-    clipDuration,
     outputDuration,
     filterComplex,
     hasAudio: Boolean(sourceMeta.hasAudio),
+    shots,
     supportingFrame,
     report,
   });
@@ -1438,6 +1722,15 @@ export async function renderEditorialV5({
     durationSeconds: outputDuration,
     hasAudio: Boolean(sourceMeta.hasAudio),
     report,
+  });
+
+  const visualQa = await verifyBurnedOverlays({
+    output,
+    master,
+    clipStart,
+    outputDuration,
+    shots,
+    captionMeta,
   });
 
   await report({
@@ -1452,7 +1745,7 @@ export async function renderEditorialV5({
       ...(revision.parameters || {}),
       editor: "ai_editor_v5_semantic_multimodal",
       editor_version: 5,
-      renderer: "ffmpeg_hardcut_v5",
+      renderer: "ffmpeg_bounded_inputs_v53",
       vision_backend: vision.vision_backend,
       vision_stats: vision.stats,
       v5_runtime: {
@@ -1468,6 +1761,8 @@ export async function renderEditorialV5({
         content_ranges: contentRanges,
         shot_count: shots.length,
         shots,
+        render_performance: renderMeta,
+        visual_qa: visualQa,
         headline: captionMeta.headline,
         supporting_visual: supportingVisual,
         captions: captionMeta,
@@ -1497,4 +1792,5 @@ export const __v5Test = {
   buildHeadlineLayout,
   selectSupportingFrameTime,
   attachVisionSpeakers,
+  writeV5Ass,
 };
