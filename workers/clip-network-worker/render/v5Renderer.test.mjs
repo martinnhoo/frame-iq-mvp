@@ -149,8 +149,8 @@ test("V5.1.1 caption scheduler has zero overlap", () => {
   }
 });
 
-test("V5.1.1 headline layouts match the three editorial presets", () => {
-  for (const preset of ["news_page", "viral_headline", "media_split"]) {
+test("V5.4 headline layouts freeze exactly the three editorial presets", () => {
+  for (const preset of ["simple_viral", "media_split", "news_page"]) {
     const layout = __v5Test.buildHeadlineLayout({
       enabled: true,
       preset,
@@ -164,6 +164,15 @@ test("V5.1.1 headline layouts match the three editorial presets", () => {
     assert.ok(layout.lines.length <= (preset === "news_page" ? 3 : 2));
     assert.equal(layout.safe, true);
   }
+});
+
+test("V5.4 keeps viral_headline solely as a simple_viral compatibility alias", () => {
+  const layout = __v5Test.buildHeadlineLayout({
+    enabled: true,
+    preset: "viral_headline",
+    text: "Agora ficou certo",
+  });
+  assert.equal(layout.preset, "simple_viral");
 });
 
 test("V5.1.1 media split chooses a grounded clip frame", () => {
@@ -188,7 +197,7 @@ test("V5.3 writes real ASS newlines and control tags", async () => {
       ],
       plan: {
         captions: { preset: "dynamic_active_word", max_words: 4, position: "center_low" },
-        headline: { enabled: true, preset: "viral_headline", text: "TESTE REAL", duration: 1.0 },
+        headline: { enabled: true, preset: "simple_viral", text: "TESTE REAL", duration: 1.0 },
       },
       duration: 1.2,
     });

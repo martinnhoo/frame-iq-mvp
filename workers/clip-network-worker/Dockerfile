@@ -3,8 +3,11 @@
 # Remotion renderiza a camada visual das variantes com legenda.
 FROM node:20-bookworm-slim
 
+ARG WORKER_GIT_SHA=unknown
+LABEL org.opencontainers.image.revision=$WORKER_GIT_SHA
 ENV NODE_ENV=production \
-    CLIP_TMP_DIR=/data/tmp
+    CLIP_TMP_DIR=/data/tmp \
+    WORKER_GIT_SHA=$WORKER_GIT_SHA
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \

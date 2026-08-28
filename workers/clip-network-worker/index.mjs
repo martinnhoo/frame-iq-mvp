@@ -23,7 +23,7 @@
  */
 import { spawn } from "node:child_process";
 import { hostname } from "node:os";
-import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { resolveMedia, probeDuration, MediaResolverError } from "./mediaResolver.mjs";
 import { call, callFunction, storageShim, uploadBytes } from "./gateway.mjs";
@@ -45,6 +45,8 @@ const LEASE_SECS = Number(process.env.CLIP_LEASE_SECONDS || 900);
 const TMP_ROOT = process.env.CLIP_TMP_DIR || "/data/tmp";
 const WORKER_ID = process.env.CLIP_WORKER_ID || `clip-worker-${hostname()}`;
 const RUN_ONCE = process.env.RUN_ONCE === "1" || process.argv.includes("--once");
+const WORKER_GIT_SHA = process.env.WORKER_GIT_SHA || "unknown";
+const WORKER_IMAGE_REF = process.env.FLY_IMAGE_REF || process.env.WORKER_IMAGE_REF || null;
 
 if (!SUPABASE_URL || !WORKER_SECRET) {
   throw new Error("Faltam SUPABASE_URL ou CLIP_WORKER_SECRET");
@@ -75,6 +77,39 @@ function run(bin, args, { timeoutMs = 45 * 60 * 1000 } = {}) {
 
 const updateVideo = (videoId, patch) => call("update_video", { video_id: videoId, patch });
 const updateRevision = (revisionId, patch) => call("update_revision", { revision_id: revisionId, patch });
+
+async function preserveBenchmarkArtifacts({ clip, revision, dir, out, parameters }) {
+  const requestedClip = String(process.env.CLIP_BENCHMARK_CLIP_ID || "");
+  const requestedRevision = String(process.env.CLIP_BENCHMARK_REVISION_ID || "");
+  if (
+    (requestedClip && requestedClip !== String(clip.id)) ||
+    (requestedRevision && requestedRevision !== String(revision.id)) ||
+    (!requestedClip && !requestedRevision)
+  ) return null;
+
+  const target = join(TMP_ROOT, "benchmarks", String(revision.id));
+  await mkdir(target, { recursive: true });
+  await copyFile(out, join(target, "final.mp4"));
+  const files = await readdir(dir);
+  for (const file of files) {
+    if (!file.startsWith(String(revision.id))) continue;
+    if (!/\.(ass|jpg|jpeg|png|json)$/i.test(file)) continue;
+    await copyFile(join(dir, file), join(target, file));
+  }
+  await writeFile(
+    join(target, "benchmark.json"),
+    `${JSON.stringify({
+      captured_at: nowIso(),
+      clip_id: clip.id,
+      revision_id: revision.id,
+      revision_number: revision.revision_number,
+      parameters,
+    }, null, 2)}\n`,
+    "utf8",
+  );
+  log(`[benchmark] artefatos preservados em ${target}`);
+  return target;
+}
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Estado do pipeline Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
@@ -642,6 +677,19 @@ async function renderAndUploadV4Revision(
   const useV5 =
     String(process.env.CLIP_AI_EDITOR_VERSION || "4") === "5";
 
+  const benchmarkIdentity = {
+    revision_id: revision.id,
+    clip_id: clip.id,
+    revision_number: revision.revision_number,
+    effective_editor_env: String(process.env.CLIP_AI_EDITOR_VERSION || "4"),
+    selected_renderer: useV5
+      ? "ffmpeg_sequential_staging_v54"
+      : "ffmpeg_one_pass_v4",
+    worker_git_sha: WORKER_GIT_SHA,
+    worker_image_ref: WORKER_IMAGE_REF,
+    machine_id: process.env.FLY_MACHINE_ID || null,
+  };
+
   let parameters = {
     ...baseParameters,
     editor: useV5
@@ -649,10 +697,13 @@ async function renderAndUploadV4Revision(
       : "ai_editor_v4_open_source",
     editor_version: useV5 ? 5 : 4,
     renderer: useV5
-      ? "ffmpeg_hardcut_v5"
+      ? "ffmpeg_sequential_staging_v54"
       : "ffmpeg_one_pass_v4",
     render_attempt_number: attemptNumber,
+    benchmark_identity: benchmarkIdentity,
   };
+
+  log(`[benchmark] ${JSON.stringify(benchmarkIdentity)}`);
 
   let activePhase = null;
   let activePhaseStartedAt = null;
@@ -808,7 +859,7 @@ async function renderAndUploadV4Revision(
         ...parameters,
         editor: "ai_editor_v5_semantic_multimodal",
         editor_version: 5,
-        renderer: "ffmpeg_hardcut_v5",
+        renderer: "ffmpeg_sequential_staging_v54",
         v5_plan: {
           version: planned.version || 5,
           editor: planned.editor,
@@ -819,6 +870,13 @@ async function renderAndUploadV4Revision(
           alternatives: planned.alternatives || [],
           original_candidate_ids: planned.original_candidate_ids || [],
           generated_at: planned.generated_at,
+        },
+        benchmark_identity: {
+          ...benchmarkIdentity,
+          planner: planned.editor || "clip-ai-editor-v5",
+          planner_version: planned.version || 5,
+          planner_model: planned.model || null,
+          selected_plan_id: planned.selected_plan_id || null,
         },
       };
 
@@ -1050,10 +1108,18 @@ async function renderAndUploadV4Revision(
       lease_expires_at: null,
     });
 
+    await preserveBenchmarkArtifacts({
+      clip,
+      revision,
+      dir,
+      out,
+      parameters,
+    });
+
     if (out) await rm(out, { force: true });
 
     log(
-      `[clip ${clip.id}] editorial_master v${revision.revision_number} ready via AI Editor v${useV5 ? 5 : 4} in ${Math.round((finishedAtMs - startedAtMs) / 1000)}s`,
+      `[clip ${clip.id}] revision ${revision.id} editorial_master v${revision.revision_number} ready via AI Editor v${useV5 ? 5 : 4} renderer ${parameters.renderer} commit ${WORKER_GIT_SHA} in ${Math.round((finishedAtMs - startedAtMs) / 1000)}s`,
     );
 
     return {
@@ -1103,7 +1169,7 @@ async function renderAndUploadV4Revision(
     }
 
     log(
-      `[clip ${clip.id}] AI Editor v${useV5 ? 5 : 4} failed`,
+      `[clip ${clip.id}] revision ${revision.id} AI Editor v${useV5 ? 5 : 4} renderer ${parameters.renderer} commit ${WORKER_GIT_SHA} failed`,
       error?.message || error,
     );
 

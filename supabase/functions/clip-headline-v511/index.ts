@@ -5,6 +5,22 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 const HEADLINE_MODEL = Deno.env.get("CLIP_HEADLINE_MODEL") || "gpt-5.4-mini";
 const TRANSIENT = new Set([408, 429, 500, 502, 503, 504]);
 
+type HeadlineCandidateInput = {
+  text?: unknown;
+  preset?: unknown;
+  emoji?: unknown;
+  score?: unknown;
+  reason?: unknown;
+};
+
+type HeadlineCandidate = {
+  text: string;
+  preset: string;
+  emoji: string;
+  score: number;
+  reason: string;
+};
+
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -64,7 +80,7 @@ async function fetchWithRetry(url: string, init: RequestInit, attempts = 2) {
   throw lastError || new Error("OpenAI headline falhou");
 }
 
-async function headlineV511(payload: any) {
+async function headlineV511(payload: Record<string, unknown>) {
   if (!OPENAI_API_KEY) {
     return {
       ok: true,
@@ -97,8 +113,8 @@ async function headlineV511(payload: any) {
     "Cada headline: 3–9 palavras, ideal até 55 caracteres.",
     "Use SOMENTE estes presets:",
     "- news_page: estilo página de notícias/cortes. Boa para notícia, contexto, celebridade, atualização ou história. Texto natural em 1–3 linhas.",
-    "- viral_headline: estilo Reels/TikTok chamativo, fonte condensada/bold, 1–2 linhas. Pode usar 1–2 emojis relevantes.",
-    "- media_split: vídeo em cima + freeze-frame relevante do próprio corte embaixo + faixa de headline. Use quando a composição visual melhora muito o hook.",
+    "- simple_viral: faixa branca superior, headline preta ALL CAPS, condensada e itálica em 1–2 linhas, vídeo abaixo. Pode usar 1–2 emojis relevantes.",
+    "- media_split: imagem auxiliar relevante no topo + faixa vermelha com headline branca + vídeo embaixo. Use somente quando a imagem realmente acrescenta contexto ao hook.",
     "Emoji é opcional. Não use emoji aleatório ou em excesso.",
     "Dê score 0–100 para utilidade real.",
     "Se nenhuma opção atingir 78 ou o áudio já se sustenta, use_headline=false.",
@@ -107,7 +123,7 @@ async function headlineV511(payload: any) {
     `Título do vídeo-fonte: ${videoTitle}`,
     `Título antigo do candidato (NÃO reutilizar): ${originalTitle}`,
     `Transcrição corrigida: ${transcript}`,
-    'JSON: {"use_headline":true,"selected_index":0,"candidates":[{"text":"...","preset":"viral_headline","emoji":"😳","score":86,"reason":"..."}]}',
+    'JSON: {"use_headline":true,"selected_index":0,"candidates":[{"text":"...","preset":"simple_viral","emoji":"😳","score":86,"reason":"..."}]}',
   ].join("\n");
 
   try {
@@ -132,21 +148,27 @@ async function headlineV511(payload: any) {
       2,
     );
 
-    const body = JSON.parse(text);
-    const parsed = JSON.parse(body?.choices?.[0]?.message?.content || "{}");
-    const allowed = new Set(["news_page", "viral_headline", "media_split"]);
+    const body = JSON.parse(text) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const parsed = JSON.parse(body?.choices?.[0]?.message?.content || "{}") as {
+      candidates?: HeadlineCandidateInput[];
+      selected_index?: unknown;
+      use_headline?: unknown;
+    };
+    const allowed = new Set(["simple_viral", "media_split", "news_page"]);
     const candidates = (Array.isArray(parsed.candidates) ? parsed.candidates : [])
       .slice(0, 3)
-      .map((candidate: any) => ({
+      .map((candidate: HeadlineCandidateInput): HeadlineCandidate => ({
         text: normalizeHeadlineText(candidate.text),
         preset: allowed.has(String(candidate.preset))
           ? String(candidate.preset)
-          : "viral_headline",
+          : "simple_viral",
         emoji: clean(candidate.emoji, 12),
         score: clamp(Number(candidate.score) || 0, 0, 100),
         reason: clean(candidate.reason, 180),
       }))
-      .filter((candidate: any) => candidate.text);
+      .filter((candidate: HeadlineCandidate) => candidate.text);
 
     const requestedIndex = Number(parsed.selected_index);
     const selected =

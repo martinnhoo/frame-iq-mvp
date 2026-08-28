@@ -1,10 +1,16 @@
 import { spawn } from "node:child_process";
-import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { runVision, ensureUploadBudget } from "./v4Renderer.mjs";
 
 const OUTPUT_W = 1080;
 const OUTPUT_H = 1920;
+const TEMPLATE_GEOMETRY = Object.freeze({
+  simple_viral: Object.freeze({ panelHeight: 250, bodyHeight: 1670 }),
+  media_split: Object.freeze({ imageHeight: 680, bandHeight: 150, bodyHeight: 1090 }),
+  news_page: Object.freeze({ panelHeight: 390, bodyHeight: 1530 }),
+});
+const FFMPEG_BIN = process.env.FFMPEG_BIN || "ffmpeg";
 const clamp = (value, min, max) =>
   Math.min(max, Math.max(min, Number(value)));
 
@@ -429,9 +435,9 @@ function buildShots(ranges, vision, plan, sourceMeta) {
   const headlineLayout = buildHeadlineLayout(plan?.headline || {});
   const bodyHeight =
     headlineLayout.enabled && headlineLayout.preset === "media_split"
-      ? 1140
+      ? TEMPLATE_GEOMETRY.media_split.bodyHeight
       : headlineLayout.enabled &&
-          ["viral_headline", "news_page"].includes(headlineLayout.preset)
+          ["simple_viral", "news_page"].includes(headlineLayout.preset)
         ? OUTPUT_H - Number(headlineLayout.panel_height || 0)
         : OUTPUT_H;
   let shotIndex = 0;
@@ -748,17 +754,19 @@ function buildHeadlineLayout(headline) {
     };
   }
 
-  const allowed = new Set([
-    "news_page",
-    "viral_headline",
-    "media_split",
-  ]);
-  const preset = allowed.has(String(headline.preset))
-    ? String(headline.preset)
-    : "viral_headline";
+  const requestedPreset = String(headline.preset || "");
+  // Compatibility only: deployed planners may still emit the former name.
+  const canonicalPreset =
+    requestedPreset === "viral_headline"
+      ? "simple_viral"
+      : requestedPreset;
+  const allowed = new Set(["simple_viral", "media_split", "news_page"]);
+  const preset = allowed.has(canonicalPreset)
+    ? canonicalPreset
+    : "simple_viral";
   const emoji = String(headline.emoji || "").trim();
   const uppercase =
-    preset === "viral_headline" || preset === "media_split";
+    preset === "simple_viral" || preset === "media_split";
   const baseText = uppercase
     ? String(headline.text).toUpperCase()
     : String(headline.text);
@@ -772,21 +780,21 @@ function buildHeadlineLayout(headline) {
       ? {
           maxChars: 34,
           maxLines: 3,
-          fontSize: displayText.length <= 42 ? 48 : 43,
+          fontSize: displayText.length <= 42 ? 49 : 44,
           minFontSize: 40,
         }
       : preset === "media_split"
         ? {
             maxChars: 34,
             maxLines: 2,
-            fontSize: displayText.length <= 38 ? 46 : 40,
+            fontSize: displayText.length <= 38 ? 44 : 39,
             minFontSize: 36,
           }
         : {
             maxChars: 27,
             maxLines: 2,
-            fontSize: displayText.length <= 30 ? 62 : 54,
-            minFontSize: 48,
+            fontSize: displayText.length <= 30 ? 68 : 58,
+            minFontSize: 50,
           };
 
   let lines = headlineLines(
@@ -817,10 +825,10 @@ function buildHeadlineLayout(headline) {
 
   const panelHeight =
     preset === "news_page"
-      ? clamp(88 + lines.length * 60, 170, 270)
-      : preset === "viral_headline"
-        ? clamp(45 + lines.length * 68, 120, 195)
-        : 140;
+      ? TEMPLATE_GEOMETRY.news_page.panelHeight
+      : preset === "simple_viral"
+        ? TEMPLATE_GEOMETRY.simple_viral.panelHeight
+        : TEMPLATE_GEOMETRY.media_split.bandHeight;
 
   return {
     ...headline,
@@ -841,21 +849,27 @@ function headlineEvents(lines, headlineLayout, end) {
   const text = headlineLayout.lines.map(escapeAss).join("\\N");
 
   if (headlineLayout.preset === "news_page") {
-    const height = Number(headlineLayout.panel_height || 220);
+    const height = Number(headlineLayout.panel_height || 390);
     lines.push(
       `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},NewsPageLabel,,0,0,0,,{\\an7\\pos(52,28)}●  ${escapeAss(headlineLayout.page_name || "FRAMEIQ CORTES")}`,
+      `Dialogue: 2,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(55,30)\\p1\\bord0\\shad0\\1c&H003CCB64&}m 30 0 b 47 0 60 13 60 30 b 60 47 47 60 30 60 b 13 60 0 47 0 30 b 0 13 13 0 30 0`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},NewsPageHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height * 0.62)})\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageLabel,,0,0,0,,{\\an7\\pos(135,30)}${escapeAss(headlineLayout.page_name || "FRAMEIQ CORTES")}`,
+    );
+    lines.push(
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageHeadline,,0,0,0,,{\\an8\\pos(540,${Math.round(height * 0.67)})\\fs${headlineLayout.font_size}}${text}`,
+    );
+    lines.push(
+      `Dialogue: 3,${assTime(0)},${stop},NewsPageHandle,,0,0,0,,{\\an7\\pos(135,70)}${escapeAss(headlineLayout.handle || "@frameiqcortes")}`,
     );
     return;
   }
 
-  if (headlineLayout.preset === "viral_headline") {
-    const height = Number(headlineLayout.panel_height || 175);
+  if (headlineLayout.preset === "simple_viral") {
+    const height = Number(headlineLayout.panel_height || 250);
     lines.push(
       `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,0)\\p1\\bord0\\shad0\\1c&H00FFFFFF&}m 0 0 l 1080 0 l 1080 ${height} l 0 ${height}`,
     );
@@ -866,11 +880,13 @@ function headlineEvents(lines, headlineLayout, end) {
   }
 
   if (headlineLayout.preset === "media_split") {
+    const bandY = TEMPLATE_GEOMETRY.media_split.imageHeight;
+    const bandHeight = TEMPLATE_GEOMETRY.media_split.bandHeight;
     lines.push(
-      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,1140)\\p1\\bord0\\shad0\\1c&H002B1DE2&}m 0 0 l 1080 0 l 1080 140 l 0 140`,
+      `Dialogue: 0,${assTime(0)},${stop},Graphic,,0,0,0,,{\\an7\\pos(0,${bandY})\\p1\\bord0\\shad0\\1c&H002B1DE2&}m 0 0 l 1080 0 l 1080 ${bandHeight} l 0 ${bandHeight}`,
     );
     lines.push(
-      `Dialogue: 3,${assTime(0)},${stop},MediaHeadline,,0,0,0,,{\\an5\\pos(540,1210)\\fs${headlineLayout.font_size}}${text}`,
+      `Dialogue: 3,${assTime(0)},${stop},MediaHeadline,,0,0,0,,{\\an5\\pos(540,${bandY + Math.round(bandHeight / 2)})\\fs${headlineLayout.font_size}}${text}`,
     );
   }
 }
@@ -893,10 +909,10 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     headlineLayout.preset === "media_split";
 
   const fontSize =
-    preset === "bold_phrase" ? 64 :
-      preset === "clean_phrase" ? 58 : 60;
+    preset === "bold_phrase" ? 60 :
+      preset === "clean_phrase" ? 54 : 56;
   const marginV =
-    mediaSplit ? 830 :
+    mediaSplit ? 190 :
       caption.position === "lower" ? 245 :
         caption.position === "center_low" ? 385 : 315;
 
@@ -912,7 +928,8 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
     "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
     `Style: Caption,Inter,${fontSize},&H00FFFFFF,&H0000D8FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,2,90,90,${marginV},1`,
     "Style: Graphic,Inter,20,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
-    "Style: NewsPageLabel,Inter,27,&H00252525,&H00252525,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
+    "Style: NewsPageLabel,Inter,30,&H00252525,&H00252525,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
+    "Style: NewsPageHandle,Inter,22,&H00707070,&H00707070,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
     "Style: NewsPageHeadline,Inter,48,&H00101010,&H00101010,&H00000000,&H00000000,-1,0,0,0,100,100,-0.4,0,1,0,0,8,60,60,0,1",
     "Style: ViralHeadline,DejaVu Sans Condensed,58,&H00101010,&H00101010,&H00000000,&H00000000,-1,-1,0,0,104,100,-0.9,0,1,0,0,8,48,48,0,1",
     "Style: MediaHeadline,DejaVu Sans Condensed,44,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00000000,-1,0,0,0,100,100,-0.2,0,1,2,0,5,45,45,0,1",
@@ -1000,67 +1017,38 @@ async function writeV5Ass({ outputPath, words, plan, duration }) {
 }
 
 function buildFilterComplex({
-  shots,
   assPath,
   hasAudio,
   headlineLayout,
   outputDuration,
 }) {
-  const count = shots.length;
   const filters = [];
-  const bodyHeight = Number(shots[0]?.body_height || OUTPUT_H);
-  const scaleFlags = process.env.V5_SCALE_FLAGS || "bicubic";
-
-  shots.forEach((shot, index) => {
-    filters.push(
-      `[${index}:v]setpts=PTS-STARTPTS,` +
-      `crop=${shot.cropW}:${shot.cropH}:${shot.x}:${shot.y},` +
-      `scale=${OUTPUT_W}:${bodyHeight}:flags=${scaleFlags},setsar=1[v${index}]`,
-    );
-    if (hasAudio) {
-      filters.push(
-        `[${index}:a]asetpts=PTS-STARTPTS,aresample=async=1:first_pts=0[a${index}]`,
-      );
-    }
-  });
-
-  if (hasAudio) {
-    filters.push(
-      `${shots.map((_, i) => `[v${i}][a${i}]`).join("")}` +
-      `concat=n=${count}:v=1:a=1[vcat][acat]`,
-    );
-  } else {
-    filters.push(
-      `${shots.map((_, i) => `[v${i}]`).join("")}` +
-      `concat=n=${count}:v=1:a=0[vcat]`,
-    );
-  }
-
-  let videoLabel = "[vcat]";
+  filters.push("[0:v]setpts=PTS-STARTPTS,setsar=1[vbody]");
+  let videoLabel = "[vbody]";
   if (headlineLayout?.enabled && headlineLayout.preset === "media_split") {
     const d = Math.max(0.1, Number(outputDuration || 0)).toFixed(3);
-    const supportingIndex = shots.length;
     filters.push(
-      `[${supportingIndex}:v]scale=1080:640:force_original_aspect_ratio=increase,crop=1080:640,trim=duration=${d},setpts=PTS-STARTPTS,setsar=1[vbottom]`,
+      `[1:v]scale=1080:${TEMPLATE_GEOMETRY.media_split.imageHeight}:force_original_aspect_ratio=increase,` +
+      `crop=1080:${TEMPLATE_GEOMETRY.media_split.imageHeight},trim=duration=${d},setpts=PTS-STARTPTS,setsar=1[vtop]`,
     );
     filters.push(
-      `color=c=0xE21D2B:s=1080x140:r=25:d=${d}[vbar]`,
+      `color=c=0xE21D2B:s=1080x${TEMPLATE_GEOMETRY.media_split.bandHeight}:r=30:d=${d}[vbar]`,
     );
     filters.push(
-      "[vcat][vbar][vbottom]vstack=inputs=3[vlayout]",
+      "[vtop][vbar][vbody]vstack=inputs=3[vlayout]",
     );
     videoLabel = "[vlayout]";
   } else if (
     headlineLayout?.enabled &&
-    ["viral_headline", "news_page"].includes(headlineLayout.preset)
+    ["simple_viral", "news_page"].includes(headlineLayout.preset)
   ) {
     const d = Math.max(0.1, Number(outputDuration || 0)).toFixed(3);
     const panelHeight = Number(headlineLayout.panel_height || 0);
     filters.push(
-      `color=c=0x000000:s=${OUTPUT_W}x${OUTPUT_H}:r=30:d=${d}[vcanvas]`,
+      `color=c=0xFFFFFF:s=${OUTPUT_W}x${OUTPUT_H}:r=30:d=${d}[vcanvas]`,
     );
     filters.push(
-      `[vcanvas][vcat]overlay=0:${panelHeight}:shortest=1[vlayout]`,
+      `[vcanvas][vbody]overlay=0:${panelHeight}:shortest=1[vlayout]`,
     );
     videoLabel = "[vlayout]";
   }
@@ -1071,11 +1059,117 @@ function buildFilterComplex({
 
   if (hasAudio) {
     filters.push(
-      "[acat]loudnorm=I=-16:TP=-1.5:LRA=11[aout]",
+      "[0:a]asetpts=PTS-STARTPTS,loudnorm=I=-16:TP=-1.5:LRA=11[aout]",
     );
   }
 
   return filters.join(";");
+}
+
+function concatPath(path) {
+  return String(path).replace(/'/g, "'\\''");
+}
+
+function ffmpegFailure(label, code, signal, stderr) {
+  const identity = signal ? `sinal ${signal}` : `codigo ${code}`;
+  const oomHint = signal === "SIGKILL"
+    ? "; processo morto externamente, provável OOM"
+    : "";
+  return new Error(
+    `${label} falhou (${identity}${oomHint}): ${String(stderr || "").slice(-2200)}`,
+  );
+}
+
+function runFfmpegProcess(args, label, onStdout = null) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(FFMPEG_BIN, args, {
+      stdio: ["ignore", onStdout ? "pipe" : "ignore", "pipe"],
+    });
+    let stderr = "";
+    if (onStdout) child.stdout.on("data", onStdout);
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", reject);
+    child.on("close", (code, signal) => {
+      if (code === 0) resolve({ code, signal, stderr });
+      else reject(ffmpegFailure(label, code, signal, stderr));
+    });
+  });
+}
+
+async function stageShots({
+  master,
+  output,
+  clipStart,
+  shots,
+  hasAudio,
+  report,
+}) {
+  const stagingDir = `${output}.stages`;
+  await rm(stagingDir, { recursive: true, force: true });
+  await mkdir(stagingDir, { recursive: true });
+  const paths = [];
+  const preset = process.env.V5_STAGE_X264_PRESET || "superfast";
+  const crf = process.env.V5_STAGE_X264_CRF || "18";
+  const threads = String(process.env.V5_FFMPEG_THREADS || 2);
+  const scaleFlags = process.env.V5_SCALE_FLAGS || "bicubic";
+
+  for (let index = 0; index < shots.length; index += 1) {
+    const shot = shots[index];
+    const duration = Math.max(
+      0.05,
+      Number(shot.source_end) - Number(shot.source_start),
+    );
+    const path = join(stagingDir, `shot-${String(index).padStart(4, "0")}.mkv`);
+    const args = [
+      "-hide_banner", "-loglevel", "error", "-y",
+      "-ss", String(clipStart + Number(shot.source_start)),
+      "-t", String(duration),
+      "-i", master,
+      "-map", "0:v:0",
+      "-vf",
+      `crop=${shot.cropW}:${shot.cropH}:${shot.x}:${shot.y},` +
+        `scale=${OUTPUT_W}:${shot.body_height}:flags=${scaleFlags},setsar=1,fps=30`,
+      "-c:v", "libx264", "-preset", preset, "-crf", crf,
+      "-pix_fmt", "yuv420p", "-threads", threads,
+    ];
+    if (hasAudio) {
+      args.push(
+        "-map", "0:a:0", "-af", "aresample=async=1:first_pts=0",
+        "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2",
+      );
+    } else {
+      args.push("-an");
+    }
+    args.push("-avoid_negative_ts", "make_zero", path);
+    await runFfmpegProcess(args, `FFmpeg V5 stage ${index + 1}/${shots.length}`);
+    paths.push(path);
+    await report({
+      phase: "render",
+      phase_pct: ((index + 1) / shots.length) * 35,
+      current: index + 1,
+      total: shots.length,
+      detail: `Preparando camera ${index + 1}/${shots.length}`,
+    });
+  }
+
+  const listPath = join(stagingDir, "concat.txt");
+  const basePath = join(stagingDir, "timeline.mkv");
+  await writeFile(
+    listPath,
+    `${paths.map((path) => `file '${concatPath(path)}'`).join("\n")}\n`,
+    "utf8",
+  );
+  await runFfmpegProcess(
+    [
+      "-hide_banner", "-loglevel", "error", "-y",
+      "-f", "concat", "-safe", "0", "-i", listPath,
+      "-c", "copy", basePath,
+    ],
+    "FFmpeg V5 concat sequencial",
+  );
+  return { stagingDir, basePath };
 }
 
 async function runFfmpeg({
@@ -1089,74 +1183,37 @@ async function runFfmpeg({
   supportingFrame = null,
   report,
 }) {
-  const args = [
-    "-hide_banner",
-    "-loglevel", "error",
-    "-y",
-  ];
-
-  for (const shot of shots) {
-    const duration = Math.max(
-      0.05,
-      Number(shot.source_end) - Number(shot.source_start),
-    );
-    args.push(
-      "-ss", String(clipStart + Number(shot.source_start)),
-      "-t", String(duration),
-      "-i", master,
-    );
-  }
-
-  if (supportingFrame) {
-    args.push(
-      "-loop", "1",
-      "-framerate", "25",
-      "-i", supportingFrame,
-    );
-  }
-
-  args.push(
-    "-filter_complex", filterComplex,
-    "-map", "[vout]",
-  );
-
-  if (hasAudio) args.push("-map", "[aout]");
-
-  args.push(
-    "-c:v", "libx264",
-    "-preset", process.env.V5_X264_PRESET || process.env.V4_X264_PRESET || "superfast",
-    "-crf", process.env.V5_X264_CRF || process.env.V4_X264_CRF || "26",
-    "-pix_fmt", "yuv420p",
-    "-threads", String(process.env.V5_FFMPEG_THREADS || process.env.V4_FFMPEG_THREADS || 2),
-  );
-
-  if (hasAudio) {
-    args.push("-c:a", "aac", "-b:a", "128k");
-  } else {
-    args.push("-an");
-  }
-
-  args.push(
-    "-movflags", "+faststart",
-    "-progress", "pipe:1",
-    "-nostats",
-    output,
-  );
-
   const startedAt = Date.now();
   let finalSpeed = null;
-
-  await new Promise((resolve, reject) => {
-    const child = spawn("ffmpeg", args, {
-      stdio: ["ignore", "pipe", "pipe"],
-    });
+  const { stagingDir, basePath } = await stageShots({
+    master, output, clipStart, shots, hasAudio, report,
+  });
+  try {
+    const args = [
+      "-hide_banner", "-loglevel", "error", "-y",
+      "-i", basePath,
+    ];
+    if (supportingFrame) {
+      args.push("-loop", "1", "-framerate", "30", "-i", supportingFrame);
+    }
+    args.push("-filter_complex", filterComplex, "-map", "[vout]");
+    if (hasAudio) args.push("-map", "[aout]");
+    args.push(
+      "-t", String(outputDuration),
+      "-c:v", "libx264",
+      "-preset", process.env.V5_X264_PRESET || process.env.V4_X264_PRESET || "superfast",
+      "-crf", process.env.V5_X264_CRF || process.env.V4_X264_CRF || "26",
+      "-pix_fmt", "yuv420p",
+      "-threads", String(process.env.V5_FFMPEG_THREADS || process.env.V4_FFMPEG_THREADS || 2),
+    );
+    if (hasAudio) args.push("-c:a", "aac", "-b:a", "128k");
+    else args.push("-an");
+    args.push("-movflags", "+faststart", "-progress", "pipe:1", "-nostats", output);
 
     let buffer = "";
-    let stderr = "";
     let lastPct = -1;
     let speed = null;
-
-    child.stdout.on("data", (chunk) => {
+    await runFfmpegProcess(args, "FFmpeg V5 compositor final", (chunk) => {
       buffer += chunk.toString();
       const lines = buffer.split(/\r?\n/);
       buffer = lines.pop() || "";
@@ -1178,10 +1235,9 @@ async function runFfmpeg({
           Number(match[1]) * 3600 +
           Number(match[2]) * 60 +
           Number(match[3]);
-        const pct = clamp(
-          (seconds / Math.max(0.1, outputDuration)) * 100,
-          0,
-          100,
+        const pct = 35 + clamp(
+          (seconds / Math.max(0.1, outputDuration)) * 65,
+          0, 65,
         );
         if (Math.floor(pct) < lastPct + 2 && pct < 99.5) continue;
         lastPct = Math.floor(pct);
@@ -1200,31 +1256,93 @@ async function runFfmpeg({
         }).catch(() => {});
       }
     });
-
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) resolve();
-      else {
-        reject(
-          new Error(
-            `FFmpeg V5 falhou (${code}): ${stderr.slice(-2200)}`,
-          ),
-        );
-      }
-    });
-  });
+  } finally {
+    await rm(stagingDir, { recursive: true, force: true }).catch(() => {});
+  }
 
   return {
     elapsed_ms: Date.now() - startedAt,
     speed_x: Number.isFinite(finalSpeed)
       ? Number(finalSpeed.toFixed(3))
       : null,
-    input_strategy: "bounded_input_per_shot",
-    shot_inputs: shots.length,
+    input_strategy: "sequential_shot_staging_single_input_compositor",
+    max_simultaneous_master_decoders: 1,
+    staged_shots: shots.length,
   };
+}
+
+export async function renderTemplateFixture({
+  master,
+  output,
+  dir = dirname(output),
+  preset,
+  supportingFrame = null,
+  headline = "AGORA O FRAMEIQ FICOU PROFISSIONAL 🚀",
+  duration = 3,
+  sourceMeta = { width: 1280, height: 720, hasAudio: true },
+}) {
+  const headlineLayout = buildHeadlineLayout({
+    enabled: true,
+    preset,
+    text: headline,
+    emoji: "",
+    page_name: "FRAMEIQ CORTES",
+    handle: "@frameiqcortes",
+  });
+  const bodyHeight = headlineLayout.preset === "media_split"
+    ? TEMPLATE_GEOMETRY.media_split.bodyHeight
+    : OUTPUT_H - Number(headlineLayout.panel_height || 0);
+  const crop = cropForShot(sourceMeta, 0.5, 0.45, 1, true, bodyHeight);
+  const shots = [{
+    source_start: 0,
+    source_end: duration,
+    output_start: 0,
+    output_end: duration,
+    body_height: bodyHeight,
+    ...crop,
+  }];
+  const assPath = join(dir, `${preset}-fixture.ass`);
+  const words = [
+    { word: "Edição", start: 0.15, end: 0.65, speaker_id: "A" },
+    { word: "pronta", start: 0.66, end: 1.15, speaker_id: "A" },
+    { word: "para", start: 1.35, end: 1.65, speaker_id: "A" },
+    { word: "publicar", start: 1.66, end: 2.35, speaker_id: "A" },
+  ];
+  const captionMeta = await writeV5Ass({
+    outputPath: assPath,
+    words,
+    duration,
+    plan: {
+      captions: { preset: "dynamic_active_word", max_words: 2, position: "lower" },
+      headline: headlineLayout,
+    },
+  });
+  const filterComplex = buildFilterComplex({
+    assPath,
+    hasAudio: Boolean(sourceMeta.hasAudio),
+    headlineLayout: captionMeta.headline,
+    outputDuration: duration,
+  });
+  const renderMeta = await runFfmpeg({
+    master,
+    output,
+    clipStart: 0,
+    outputDuration: duration,
+    filterComplex,
+    hasAudio: Boolean(sourceMeta.hasAudio),
+    shots,
+    supportingFrame,
+    report: async () => {},
+  });
+  const visualQa = await verifyBurnedOverlays({
+    output,
+    master,
+    clipStart: 0,
+    outputDuration: duration,
+    shots,
+    captionMeta,
+  });
+  return { output, assPath, captionMeta, renderMeta, visualQa };
 }
 
 function frameForOutputTime(shots, outputTime) {
@@ -1254,7 +1372,7 @@ function chooseProbeTime(candidates, shots, duration) {
 function readRawFrame(args, label) {
   const expectedBytes = OUTPUT_W * OUTPUT_H * 3;
   return new Promise((resolve, reject) => {
-    const child = spawn("ffmpeg", args, {
+    const child = spawn(FFMPEG_BIN, args, {
       stdio: ["ignore", "pipe", "pipe"],
     });
     const chunks = [];
@@ -1325,7 +1443,7 @@ async function cleanReferenceFrame({
   if (bodyHeight < OUTPUT_H) {
     const top =
       headlineLayout?.enabled &&
-      ["viral_headline", "news_page"].includes(headlineLayout.preset)
+      ["simple_viral", "news_page"].includes(headlineLayout.preset)
         ? Number(headlineLayout.panel_height || 0)
         : 0;
     filters.push(
@@ -1433,7 +1551,12 @@ async function verifyBurnedOverlays({
     ]);
     const region =
       headlineLayout.preset === "media_split"
-        ? { x: 0, y: 1140, width: OUTPUT_W, height: 140 }
+        ? {
+            x: 0,
+            y: TEMPLATE_GEOMETRY.media_split.imageHeight,
+            width: OUTPUT_W,
+            height: TEMPLATE_GEOMETRY.media_split.bandHeight,
+          }
         : {
             x: 0,
             y: 0,
@@ -1506,7 +1629,7 @@ async function extractSupportingFrame({
 }) {
   await new Promise((resolve, reject) => {
     const child = spawn(
-      "ffmpeg",
+      FFMPEG_BIN,
       [
         "-hide_banner",
         "-loglevel", "error",
@@ -1691,7 +1814,6 @@ export async function renderEditorialV5({
   }
 
   const filterComplex = buildFilterComplex({
-    shots,
     assPath,
     hasAudio: Boolean(sourceMeta.hasAudio),
     headlineLayout: captionMeta.headline,
@@ -1745,7 +1867,7 @@ export async function renderEditorialV5({
       ...(revision.parameters || {}),
       editor: "ai_editor_v5_semantic_multimodal",
       editor_version: 5,
-      renderer: "ffmpeg_bounded_inputs_v53",
+      renderer: "ffmpeg_sequential_staging_v54",
       vision_backend: vision.vision_backend,
       vision_stats: vision.stats,
       v5_runtime: {
