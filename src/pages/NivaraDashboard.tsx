@@ -86,42 +86,21 @@ async function loadMeta() {
     throw new Error("ADBRIEF_LOGIN_REQUIRED");
   }
 
-  const userId = session.user.id;
-
-  const { data: connData, error: connErr } = await supabase.functions.invoke("meta-oauth", {
-    body: { action: "get_connections", user_id: userId },
-  });
-
-  if (connErr) throw new Error(`Meta: ${connErr.message}`);
-
-  const connections: AnyRow[] = connData?.connections || [];
-  const connection = connections.find(
-    (c) =>
-      c.platform === "meta" &&
-      c.status === "active" &&
-      (c.selected_account_id === META_ACCOUNT ||
-        (Array.isArray(c.ad_accounts) &&
-          c.ad_accounts.some((a: AnyRow) => a?.id === META_ACCOUNT)))
-  );
-
-  if (!connection?.persona_id) {
-    throw new Error(
-      "Não achei uma conexão Meta ativa do AdBrief para a conta da NIVARA."
-    );
-  }
+  const NIVARA_META_PERSONA_ID = "edf9fa6e-51b4-4195-83f3-fbc048b81f3b";
 
   const { data: adsData, error: adsErr } = await supabase.functions.invoke("meta-oauth", {
     body: {
       action: "list_ads",
-      user_id: userId,
-      persona_id: connection.persona_id,
+      user_id: session.user.id,
+      persona_id: NIVARA_META_PERSONA_ID,
     },
   });
 
-  if (adsErr) throw new Error(`Meta: ${adsErr.message}`);
-  if (adsData?.error) throw new Error(`Meta: ${adsData.error}`);
+  if (adsErr) throw new Error(`Meta Ads: ${adsErr.message}`);
+  if (adsData?.error) throw new Error(`Meta Ads: ${adsData.error}`);
 
-  const allAds: AnyRow[] = adsData?.ads || [];
+  const allAds: AnyRow[] = Array.isArray(adsData?.ads) ? adsData.ads : [];
+
   const ads = allAds.filter(
     (ad) =>
       String(ad?.campaign_name || "").trim().toLowerCase() ===
@@ -136,21 +115,19 @@ async function loadMeta() {
 
   return {
     account: adsData?.account || META_ACCOUNT,
-    personaId: connection.persona_id,
-    ads: ads
-      .map((a) => ({
-        id: a.ad_id || "",
-        name: a.ad_name || "Sem nome",
-        adset: a.adset_name || "",
-        spend: N(a.spend),
-        impressions: N(a.impressions),
-        clicks: N(a.clicks),
-        ctr: N(a.ctr),
-        cpc: N(a.cpc),
-        cpm: N(a.cpm),
-        purchases: purchaseCount(a.actions || []),
-      }))
-      .sort((a, b) => b.spend - a.spend),
+    ads: ads.map((a) => ({
+      id: a.ad_id || "",
+      name: a.ad_name || "Sem nome",
+      adset: a.adset_name || "",
+      spend: N(a.spend),
+      impressions: N(a.impressions),
+      clicks: N(a.clicks),
+      ctr: N(a.ctr),
+      cpc: N(a.cpc),
+      cpm: N(a.cpm),
+      purchases: purchaseCount(a.actions || []),
+    })).sort((a, b) => b.spend - a.spend),
+
     spend,
     impressions,
     clicks,
@@ -560,3 +537,4 @@ export default function NivaraDashboard() {
     </>
   );
 }
+
