@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+﻿import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,12 +8,12 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { IdiomaProvider } from "@/ci/idioma";
 import { lazy, Suspense } from "react";
 
-// AdBrief.pro hoje é só portal de cadastro/login (invite-only) +
+// AdBrief.pro hoje Ã© sÃ³ portal de cadastro/login (invite-only) +
 // dashboard interno (Brilliant Hub). Sem marketing, sem blog, sem
-// LP, sem SEO. Toda rota pública não-auth caiu — `/` redireciona
+// LP, sem SEO. Toda rota pÃºblica nÃ£o-auth caiu â€” `/` redireciona
 // pra `/signup`.
 
-// ── Auth: eagerly loaded (primeira tela) ─────────────────────────────────────
+// â”€â”€ Auth: eagerly loaded (primeira tela) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -23,7 +23,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 
-// ── Legais (compliance Meta) ─────────────────────────────────────────────────
+// â”€â”€ Legais (compliance Meta) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Terms        = lazy(() => import("./pages/Terms"));
 const Privacy      = lazy(() => import("./pages/Privacy"));
 const Shapermint   = lazy(() => import("./pages/Shapermint"));
@@ -37,8 +37,9 @@ const CreativeHooks = lazy(() => import("./pages/CreativeHooks"));
 const CreativeProducts = lazy(() => import("./pages/CreativeProducts"));
 const CreativeReport = lazy(() => import("./pages/CreativeReport"));
 const CreativePeople = lazy(() => import("./pages/CreativePeople"));
+const NivaraDashboard = lazy(() => import("./pages/NivaraDashboard"));
 
-// ── Dashboard (Brilliant Hub interno) ────────────────────────────────────────
+// â”€â”€ Dashboard (Brilliant Hub interno) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
 const AdBriefAI        = lazy(() => import("./pages/dashboard/AdBriefAI"));
 const IntelligencePage = lazy(() => import("./pages/dashboard/IntelligencePage"));
@@ -72,7 +73,7 @@ const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
 const AutopilotLogPage = lazy(() => import("./pages/dashboard/AutopilotLogPage"));
 const DebugPage        = lazy(() => import("./pages/dashboard/DebugPage"));
 
-// Cockpit — backoffice admin
+// Cockpit â€” backoffice admin
 const CockpitLayout      = lazy(() => import("./pages/cockpit/CockpitLayout"));
 const CockpitOverview    = lazy(() => import("./pages/cockpit/CockpitOverview"));
 const CockpitUsers       = lazy(() => import("./pages/cockpit/CockpitUsers"));
@@ -130,7 +131,7 @@ const App = () => (
               {/* Sem landing page: a raiz vai direto pro login. */}
               <Route path="/" element={<Navigate to="/login" replace />} />
 
-              {/* ── Auth ────────────────────────────────────────────── */}
+              {/* â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
@@ -139,12 +140,13 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
 
-              {/* ── Legais (Meta exige links) ──────────────────────── */}
+              {/* â”€â”€ Legais (Meta exige links) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/nivara" element={<NivaraDashboard />} />
 
-              {/* Creative Intelligence. Rota na raiz porque é o que o Martinho pediu;
-                  a página exige sessão e a RLS faz o resto. */}
+              {/* Creative Intelligence. Rota na raiz porque Ã© o que o Martinho pediu;
+                  a pÃ¡gina exige sessÃ£o e a RLS faz o resto. */}
               <Route path="/shapermint" element={<Shapermint />} />
               <Route path="/importar" element={<CreativeImport />} />
               <Route path="/ci" element={<CreativeOverview />} />
@@ -158,15 +160,15 @@ const App = () => (
               <Route path="/ci/pessoas" element={<CreativePeople />} />
 
               {/* Rotas que nunca existiram e para as quais dez lugares
-                  apontavam — o banner de upgrade do plano Free, o botão
-                  Upgrade das configurações, "Comprar créditos" no chat, os
-                  rodapés legais. Todos caíam no NotFound. A página de preços
-                  de verdade é /dashboard/plans; a landing tem a seção #precos. */}
+                  apontavam â€” o banner de upgrade do plano Free, o botÃ£o
+                  Upgrade das configuraÃ§Ãµes, "Comprar crÃ©ditos" no chat, os
+                  rodapÃ©s legais. Todos caÃ­am no NotFound. A pÃ¡gina de preÃ§os
+                  de verdade Ã© /dashboard/plans; a landing tem a seÃ§Ã£o #precos. */}
               <Route path="/pricing"     element={<Navigate to="/dashboard/plans" replace />} />
               <Route path="/refund"      element={<Navigate to="/terms" replace />} />
               <Route path="/metodologia" element={<Navigate to="/privacy" replace />} />
 
-              {/* ── Dashboard (Brilliant Hub interno) ──────────────── */}
+              {/* â”€â”€ Dashboard (Brilliant Hub interno) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               <Route path="/dashboard" element={<AppLayout />}>
                 <Route index element={<Navigate to="/dashboard/hub/image" replace />} />
                 <Route path="hub" element={<BrilliantHub />} />
@@ -227,7 +229,7 @@ const App = () => (
                 <Route path="*" element={<Navigate to="/dashboard/hub" replace />} />
               </Route>
 
-              {/* ── Cockpit: admin-only backoffice ────────────────── */}
+              {/* â”€â”€ Cockpit: admin-only backoffice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               <Route path="/cockpit" element={<CockpitLayout />}>
                 <Route index element={<CockpitOverview />} />
                 <Route path="users" element={<CockpitUsers />} />
@@ -237,7 +239,7 @@ const App = () => (
                 <Route path="*" element={<Navigate to="/cockpit" replace />} />
               </Route>
 
-              {/* Catchall — qualquer URL legada cai em 404. */}
+              {/* Catchall â€” qualquer URL legada cai em 404. */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
@@ -250,3 +252,4 @@ const App = () => (
 );
 
 export default App;
+
