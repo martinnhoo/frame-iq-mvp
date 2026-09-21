@@ -21,6 +21,13 @@ const Login = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useLanguage();
+  const requestedNext = searchParams.get("next");
+  const postLoginPath =
+    requestedNext &&
+    requestedNext.startsWith("/") &&
+    !requestedNext.startsWith("//")
+      ? requestedNext
+      : "/dashboard/hub";
 
 
   // restore-existing-session
@@ -29,14 +36,14 @@ const Login = () => {
 
     supabase.auth.getSession().then(({ data }) => {
       if (active && data.session) {
-        navigate("/igcomments", { replace: true });
+        navigate(postLoginPath, { replace: true });
       }
     });
 
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [navigate, postLoginPath]);
   useEffect(() => {
     const oauthError = searchParams.get("oauth_error");
     if (!oauthError) return;
@@ -55,7 +62,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/igcomments`,
+          redirectTo: `${window.location.origin}${postLoginPath}`,
           queryParams: { prompt: "select_account" },
         },
       });
@@ -90,7 +97,7 @@ const Login = () => {
         return;
       }
       trackEvent("login_completed");
-      navigate("/igcomments");
+      navigate(postLoginPath);
     } catch (error) {
       const isNetworkError = error instanceof TypeError || String(error).toLowerCase().includes("failed to fetch");
       if (isNetworkError) {
@@ -288,6 +295,7 @@ const Login = () => {
 };
 
 export default Login;
+
 
 
 

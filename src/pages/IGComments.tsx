@@ -1,4 +1,5 @@
 ﻿import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { igCommentsSupabase } from "@/integrations/supabase/igCommentsClient";
 import { Logo } from "@/components/Logo";
@@ -80,9 +81,6 @@ const btn: React.CSSProperties = {
 export default function IGComments() {
   const [user, setUser] = useState<User | null>(null);
   const [booting, setBooting] = useState(true);
-
-  const [email, setEmail] = useState("");
-  const [loginBusy, setLoginBusy] = useState(false);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [targets, setTargets] = useState<Target[]>([]);
@@ -202,36 +200,6 @@ export default function IGComments() {
     });
   }, [user, targetId]);
 
-  async function handleLogin(event: FormEvent) {
-    event.preventDefault();
-
-    if (!email.trim()) return;
-
-    setLoginBusy(true);
-
-    try {
-      const { error } = await igCommentsSupabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: `${window.location.origin}/igcomments`,
-        },
-      });
-
-      if (error) throw error;
-
-      toast.success("Link de acesso enviado. Abra seu email para entrar.");
-    } catch (error) {
-      console.error(error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível enviar o link de acesso."
-      );
-    } finally {
-      setLoginBusy(false);
-    }
-  }
 
   async function createTarget(event: FormEvent) {
     event.preventDefault();
@@ -444,59 +412,7 @@ export default function IGComments() {
   }
 
   if (!user) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background:
-            "radial-gradient(circle at top, rgba(14,165,233,.12), transparent 32%), #070a0f",
-          display: "grid",
-          placeItems: "center",
-          padding: 20,
-          color: "white",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 420 }}>
-          <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <Logo size="lg" />
-          </div>
-
-          <form onSubmit={handleLogin} style={cardStyle}>
-            <div style={{ color: "#38bdf8", fontWeight: 800, fontSize: 12 }}>
-              IG COMMENTS
-            </div>
-
-            <h1 style={{ margin: "8px 0 6px", fontSize: 24 }}>
-              Entrar
-            </h1>
-
-            <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 18 }}>
-              Entre com seu email para acessar o AdBrief.
-            </p>
-
-            <div style={{ display: "grid", gap: 10 }}>
-              <input
-                style={inputStyle}
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Email"
-                required
-              />
-
-              <button
-                type="submit"
-                disabled={loginBusy}
-                style={{ ...btn, background: "#0ea5e9", color: "white" }}
-              >
-                {loginBusy && <Loader2 size={15} className="animate-spin" />}
-                Enviar link de acesso
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+    return <Navigate to="/login?next=/igcomments" replace />;
   }
 
   return (
@@ -899,4 +815,5 @@ export default function IGComments() {
     </div>
   );
 }
+
 
