@@ -31,7 +31,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_url text := 'https://mtrovtowcpttdqygtrwq.supabase.co/functions/v1/' || p_fn;
+  v_url text := 'https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/' || p_fn;
   v_key text;
 begin
   -- Pull service role key from vault

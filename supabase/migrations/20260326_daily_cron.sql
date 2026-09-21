@@ -68,7 +68,7 @@ select cron.schedule(
   '0 8 * * 0',
   $$
   select net.http_post(
-    url := 'https://mtrovtowcpttdqygtrwq.supabase.co/functions/v1/weekly-report',
+    url := 'https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/weekly-report',
     headers := jsonb_build_object('Authorization', 'Bearer ' || current_setting('app.service_role_key', true)),
     body := '{}'::jsonb
   )

@@ -22,7 +22,7 @@ begin
   
   -- Fallback: tenta via configuração alternativa do Supabase
   if base_url is null then
-    base_url := 'https://mtrovtowcpttdqygtrwq.supabase.co';
+    base_url := 'https://pibkslzvwcnnarlcllmx.supabase.co';
   end if;
 
   if service_key is not null then

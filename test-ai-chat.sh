@@ -19,8 +19,8 @@
 
 set -euo pipefail
 
-URL="https://mtrovtowcpttdqygtrwq.supabase.co/functions/v1/adbrief-ai-chat"
-ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cm92dG93Y3B0dGRxeWd0cndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTU5MjgsImV4cCI6MjA4ODU5MTkyOH0.lgMpc0SGlgXjvShD-1cZpZBENJtbT5TthtmOhoaAXsQ"
+URL="https://pibkslzvwcnnarlcllmx.supabase.co/functions/v1/adbrief-ai-chat"
+ANON_KEY="sb_publishable_6kSoNBhk8Uy4a4rp7QRPaw_wmi1NMXJ"
 
 # Validate env vars
 if [ -z "${SUPABASE_TOKEN:-}" ]; then echo "❌ Set SUPABASE_TOKEN first (JWT from browser)"; exit 1; fi
