@@ -1,17 +1,13 @@
-import { createClient } from "@supabase/supabase-js";
+﻿import { createClient } from "@supabase/supabase-js";
 
-const IG_COMMENTS_URL = "https://pibkslzvwcnnarlcllmx.supabase.co";
-const IG_COMMENTS_PUBLISHABLE_KEY = "sb_publishable_6kSoNBhk8Uy4a4rp7QRPaw_wmi1NMXJ";
+const url = "https://pibkslzvwcnnarlcllmx.supabase.co";
+const publishableKey = "sb_publishable_6kSoNBhk8Uy4a4rp7QRPaw_wmi1NMXJ";
 
-export const igCommentsSupabase = createClient(
-  IG_COMMENTS_URL,
-  IG_COMMENTS_PUBLISHABLE_KEY,
-  {
-    auth: {
-      storageKey: "adbrief_igcomments_auth",
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
+export const igCommentsSupabase = createClient(url, publishableKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: "adbrief_igcomments_auth",
   },
-);
+});

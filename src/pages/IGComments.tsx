@@ -1,178 +1,904 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- this page uses an isolated backend whose schema is intentionally not merged with legacy generated types. */
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
-import {
-  Check, CheckCircle2, Clipboard, Instagram, Loader2, LogOut, Plus,
-  RefreshCw, Save, ShieldCheck, Sparkles, Trash2, X,
-} from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+﻿import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import { igCommentsSupabase } from "@/integrations/supabase/igCommentsClient";
+import { Logo } from "@/components/Logo";
+import { toast } from "sonner";
+import {
+  Check,
+  Clipboard,
+  Loader2,
+  LogOut,
+  Plus,
+  Save,
+  SkipForward,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
-const db = igCommentsSupabase as any;
-type Account = { id:string; user_id:string; label:string; instagram_username:string; tone:string|null; status:string; authorization_confirmed:boolean };
-type Target = { id:string; user_id:string; ad_url:string; ad_label:string; source_context:string|null; created_at:string };
-type DraftStatus = "draft"|"approved"|"rejected"|"posted";
-type Draft = { id:string; user_id:string; target_id:string; account_id:string|null; body:string; angle:string|null; status:DraftStatus; created_at:string; updated_at?:string };
-type Filter = "all"|DraftStatus;
-
-const field = "w-full rounded-lg border border-white/10 bg-white/[.035] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition placeholder:text-white/25 focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/10";
-const card = "rounded-lg border border-white/[.07] bg-[var(--color-surface-1)]";
-const statusTone:Record<DraftStatus,string> = {
-  draft:"border-white/10 bg-white/5 text-white/55", approved:"border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
-  rejected:"border-red-400/20 bg-red-400/10 text-red-300", posted:"border-sky-400/20 bg-sky-400/10 text-sky-300",
+type Account = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  status: string;
 };
 
-function message(error:unknown) {
-  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
-}
+type Target = {
+  id: string;
+  user_id: string;
+  ad_url: string;
+  label: string | null;
+  context: string | null;
+  status: string;
+  created_at: string;
+};
+
+type DraftStatus = "draft" | "approved" | "copied" | "skipped";
+
+type Draft = {
+  id: string;
+  user_id: string;
+  target_id: string;
+  social_account_id: string | null;
+  comment_text: string;
+  intent: string;
+  status: DraftStatus;
+  ai_generated: boolean;
+  created_at: string;
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box",
+  minHeight: 44,
+  borderRadius: 10,
+  border: "1px solid rgba(148,163,184,.16)",
+  background: "rgba(2,6,23,.7)",
+  color: "#f8fafc",
+  padding: "10px 12px",
+  outline: "none",
+};
+
+const cardStyle: React.CSSProperties = {
+  background: "rgba(15,23,42,.72)",
+  border: "1px solid rgba(148,163,184,.11)",
+  borderRadius: 16,
+  padding: 18,
+};
+
+const btn: React.CSSProperties = {
+  border: 0,
+  borderRadius: 9,
+  padding: "9px 12px",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 6,
+  fontWeight: 700,
+};
 
 export default function IGComments() {
-  const [session,setSession]=useState<Session|null>(null);
-  const [checking,setChecking]=useState(true);
-  const [email,setEmail]=useState("");
-  const [password,setPassword]=useState("");
-  const [authBusy,setAuthBusy]=useState(false);
-  const [loading,setLoading]=useState(false);
-  const [busy,setBusy]=useState<string|null>(null);
-  const [error,setError]=useState<string|null>(null);
-  const [accounts,setAccounts]=useState<Account[]>([]);
-  const [targets,setTargets]=useState<Target[]>([]);
-  const [drafts,setDrafts]=useState<Draft[]>([]);
-  const [selectedTargetId,setSelectedTargetId]=useState<string|null>(null);
-  const [filter,setFilter]=useState<Filter>("all");
-  const [adUrl,setAdUrl]=useState("");
-  const [adLabel,setAdLabel]=useState("");
-  const [sourceContext,setSourceContext]=useState("");
-  const [count,setCount]=useState(6);
-  const [accountForm,setAccountForm]=useState({ id:"", label:"", instagram_username:"", tone:"", status:"active", authorization_confirmed:false });
+  const [user, setUser] = useState<User | null>(null);
+  const [booting, setBooting] = useState(true);
 
-  useEffect(()=>{
-    let active=true;
-    igCommentsSupabase.auth.getSession().then(({data})=>{ if(active){setSession(data.session);setChecking(false);} });
-    const {data:{subscription}}=igCommentsSupabase.auth.onAuthStateChange((_event,next)=>{setSession(next);setChecking(false);});
-    return ()=>{active=false;subscription.unsubscribe();};
-  },[]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginBusy, setLoginBusy] = useState(false);
 
-  const loadAll=useCallback(async()=>{
-    if(!session?.user.id)return;
-    setLoading(true);setError(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [targets, setTargets] = useState<Target[]>([]);
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+
+  const [adUrl, setAdUrl] = useState("");
+  const [label, setLabel] = useState("");
+  const [context, setContext] = useState("");
+  const [count, setCount] = useState(6);
+
+  const [creating, setCreating] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
+
+  const selectedTarget = useMemo(
+    () => targets.find((target) => target.id === targetId) ?? null,
+    [targets, targetId],
+  );
+
+  async function loadAccounts(uid: string) {
+    const { data, error } = await igCommentsSupabase
+      .from("clip_social_accounts")
+      .select("id,username,display_name,status")
+      .eq("user_id", uid)
+      .eq("platform", "instagram")
+      .order("connected_at", { ascending: false });
+
+    if (error) throw error;
+    setAccounts((data ?? []) as Account[]);
+  }
+
+  async function loadTargets(uid: string) {
+    const { data, error } = await igCommentsSupabase
+      .from("ig_comment_targets")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const rows = (data ?? []) as Target[];
+    setTargets(rows);
+
+    setTargetId((current) => {
+      if (current && rows.some((row) => row.id === current)) return current;
+      return rows[0]?.id ?? null;
+    });
+  }
+
+  async function loadDrafts(uid: string, selectedId: string | null) {
+    if (!selectedId) {
+      setDrafts([]);
+      return;
+    }
+
+    setLoadingDrafts(true);
+
     try {
-      const [accountResult,targetResult]=await Promise.all([
-        db.from("ig_comment_accounts").select("*").eq("user_id",session.user.id).order("created_at",{ascending:true}),
-        db.from("ig_comment_targets").select("*").eq("user_id",session.user.id).order("created_at",{ascending:false}),
-      ]);
-      if(accountResult.error)throw accountResult.error;
-      if(targetResult.error)throw targetResult.error;
-      setAccounts(accountResult.data||[]);setTargets(targetResult.data||[]);
-      setSelectedTargetId(current=>current||(targetResult.data?.[0]?.id??null));
-    } catch(cause){setError(message(cause));} finally{setLoading(false);}
-  },[session?.user.id]);
+      const { data, error } = await igCommentsSupabase
+        .from("ig_comment_drafts")
+        .select("*")
+        .eq("user_id", uid)
+        .eq("target_id", selectedId)
+        .order("created_at", { ascending: false });
 
-  const loadDrafts=useCallback(async()=>{
-    if(!session?.user.id||!selectedTargetId){setDrafts([]);return;}
-    const {data,error:queryError}=await db.from("ig_comment_drafts").select("*").eq("user_id",session.user.id).eq("target_id",selectedTargetId).order("created_at",{ascending:true});
-    if(queryError){setError(queryError.message);return;} setDrafts(data||[]);
-  },[selectedTargetId,session?.user.id]);
-  useEffect(()=>{if(session)void loadAll();},[session,loadAll]);
-  useEffect(()=>{void loadDrafts();},[loadDrafts]);
+      if (error) throw error;
+      setDrafts((data ?? []) as Draft[]);
+    } finally {
+      setLoadingDrafts(false);
+    }
+  }
 
-  const logEvent=async(eventType:string,targetId:string,draftId?:string)=>{
-    if(!session?.user.id)return;
-    const {error:eventError}=await db.from("ig_comment_events").insert({user_id:session.user.id,target_id:targetId,draft_id:draftId||null,event_type:eventType});
-    if(eventError)console.warn("[ig-comments-event]",eventError.message);
-  };
+  async function loadWorkspace(uid: string) {
+    await Promise.all([loadAccounts(uid), loadTargets(uid)]);
+  }
 
-  const signIn=async(event:React.FormEvent)=>{
-    event.preventDefault();setAuthBusy(true);
-    try{const {error:authError}=await igCommentsSupabase.auth.signInWithPassword({email:email.trim(),password});if(authError)throw authError;toast.success("Signed in to IG Comments");}
-    catch(cause){toast.error(message(cause));}finally{setAuthBusy(false);}
-  };
+  useEffect(() => {
+    let alive = true;
 
-  const saveAccount=async(event:React.FormEvent)=>{
+    igCommentsSupabase.auth.getSession().then(async ({ data }) => {
+      if (!alive) return;
+
+      const currentUser = data.session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        try {
+          await loadWorkspace(currentUser.id);
+        } catch (error) {
+          console.error(error);
+          toast.error("Erro ao carregar o IG Comments.");
+        }
+      }
+
+      if (alive) setBooting(false);
+    });
+
+    const {
+      data: { subscription },
+    } = igCommentsSupabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      alive = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    loadDrafts(user.id, targetId).catch((error) => {
+      console.error(error);
+      toast.error("Erro ao carregar os drafts.");
+    });
+  }, [user, targetId]);
+
+  async function handleLogin(event: FormEvent) {
     event.preventDefault();
-    if(!session?.user.id||!accountForm.authorization_confirmed){toast.error("Confirm that this account is authorized before saving.");return;}
-    setBusy("account");
-    try{
-      const payload={user_id:session.user.id,label:accountForm.label.trim(),instagram_username:accountForm.instagram_username.trim().replace(/^@/,""),tone:accountForm.tone.trim()||null,status:accountForm.status,authorization_confirmed:true};
-      const result=accountForm.id?await db.from("ig_comment_accounts").update(payload).eq("id",accountForm.id).eq("user_id",session.user.id):await db.from("ig_comment_accounts").insert(payload);
-      if(result.error)throw result.error;
-      setAccountForm({id:"",label:"",instagram_username:"",tone:"",status:"active",authorization_confirmed:false});await loadAll();toast.success("Authorized account saved");
-    }catch(cause){toast.error(message(cause));}finally{setBusy(null);}
-  };
 
-  const deleteAccount=async(id:string)=>{
-    if(!session?.user.id||!window.confirm("Delete this authorized account?"))return;
-    setBusy(`account-${id}`);const {error:deleteError}=await db.from("ig_comment_accounts").delete().eq("id",id).eq("user_id",session.user.id);setBusy(null);
-    if(deleteError)toast.error(deleteError.message);else{await loadAll();toast.success("Account deleted");}
-  };
+    setLoginBusy(true);
 
-  const createTarget=async(event:React.FormEvent)=>{
-    event.preventDefault();if(!session?.user.id)return;setBusy("target");
-    try{const {data,error:insertError}=await db.from("ig_comment_targets").insert({user_id:session.user.id,ad_url:adUrl.trim(),ad_label:adLabel.trim(),source_context:sourceContext.trim()||null}).select("*").single();if(insertError)throw insertError;setTargets(current=>[data,...current]);setSelectedTargetId(data.id);setAdUrl("");setAdLabel("");setSourceContext("");toast.success("Target created");}
-    catch(cause){toast.error(message(cause));}finally{setBusy(null);}
-  };
+    try {
+      const { data, error } = await igCommentsSupabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-  const deleteTarget=async()=>{
-    if(!session?.user.id||!selectedTargetId||!window.confirm("Delete this target and its drafts?"))return;
-    setBusy("delete-target");const {error:deleteError}=await db.from("ig_comment_targets").delete().eq("id",selectedTargetId).eq("user_id",session.user.id);setBusy(null);
-    if(deleteError)toast.error(deleteError.message);else{setSelectedTargetId(null);setDrafts([]);await loadAll();toast.success("Target deleted");}
-  };
+      if (error) throw error;
+      if (!data.user) throw new Error("Usuário não retornado.");
 
-  const clearDrafts=async()=>{
-    if(!session?.user.id||!selectedTargetId||!window.confirm("Clear all drafts for this target?"))return;
-    setBusy("clear");const {error:deleteError}=await db.from("ig_comment_drafts").delete().eq("target_id",selectedTargetId).eq("user_id",session.user.id);setBusy(null);
-    if(deleteError)toast.error(deleteError.message);else{setDrafts([]);toast.success("Drafts cleared");}
-  };
+      setUser(data.user);
+      await loadWorkspace(data.user.id);
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Falha no login.");
+    } finally {
+      setLoginBusy(false);
+    }
+  }
 
-  const generate=async()=>{
-    const target=targets.find(item=>item.id===selectedTargetId);const authorized=accounts.filter(item=>item.authorization_confirmed&&item.status==="active");
-    if(!session?.user.id||!target)return;if(!authorized.length){toast.error("Add at least one active authorized account first.");return;}
-    setBusy("generate");
-    try{
-      const {data,error:functionError}=await igCommentsSupabase.functions.invoke("ig-comments-ai",{body:{ad_url:target.ad_url,ad_label:target.ad_label,source_context:target.source_context,count,accounts:authorized.map(({id,label,instagram_username,tone,status,authorization_confirmed})=>({id,label,instagram_username,tone,status,authorization_confirmed}))}});
-      if(functionError)throw functionError;
-      const generated=Array.isArray(data?.drafts)?data.drafts:[];if(!generated.length)throw new Error("The AI returned no drafts.");
-      const rows=generated.slice(0,count).map((item:any)=>({user_id:session.user.id,target_id:target.id,account_id:item.account_id||null,body:String(item.body||"").trim(),angle:String(item.angle||"").trim()||null,status:"draft"}));
-      const {error:insertError}=await db.from("ig_comment_drafts").insert(rows);if(insertError)throw insertError;
-      await logEvent("generated",target.id);await loadDrafts();toast.success(`${rows.length} drafts generated`);
-    }catch(cause){toast.error(message(cause));}finally{setBusy(null);}
-  };
+  async function createTarget(event: FormEvent) {
+    event.preventDefault();
+    if (!user || !adUrl.trim()) return;
 
-  const updateDraft=async(draft:Draft,updates:Partial<Draft>,eventType?:string)=>{
-    if(!session?.user.id||!selectedTargetId)return;setBusy(draft.id);
-    const {error:updateError}=await db.from("ig_comment_drafts").update({...updates,updated_at:new Date().toISOString()}).eq("id",draft.id).eq("user_id",session.user.id);setBusy(null);
-    if(updateError){toast.error(updateError.message);return;}setDrafts(current=>current.map(item=>item.id===draft.id?{...item,...updates}:item));if(eventType)await logEvent(eventType,selectedTargetId,draft.id);toast.success(eventType==="edited"?"Draft saved":`Draft ${updates.status}`);
-  };
+    setCreating(true);
 
-  const copyDraft=async(draft:Draft)=>{try{await navigator.clipboard.writeText(draft.body);toast.success("Copied to clipboard");}catch{toast.error("Could not copy this draft.");}};
-  const visibleDrafts=useMemo(()=>filter==="all"?drafts:drafts.filter(item=>item.status===filter),[drafts,filter]);
-  const selectedTarget=targets.find(item=>item.id===selectedTargetId);
+    try {
+      const { data, error } = await igCommentsSupabase
+        .from("ig_comment_targets")
+        .insert({
+          user_id: user.id,
+          ad_url: adUrl.trim(),
+          label: label.trim() || null,
+          context: context.trim() || null,
+          status: "active",
+        })
+        .select("*")
+        .single();
 
-  if(checking)return <div className="flex min-h-screen items-center justify-center bg-[var(--color-surface-0)]"><Loader2 className="h-6 w-6 animate-spin text-sky-400"/></div>;
-  if(!session)return <main className="flex min-h-screen items-center justify-center bg-[var(--color-surface-0)] px-4"><form onSubmit={signIn} className={`${card} w-full max-w-sm p-6 shadow-2xl`}><div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500/10 text-sky-300"><Instagram className="h-5 w-5"/></div><h1 className="mt-5 text-xl font-bold text-white">IG Comments</h1><p className="mt-2 text-xs leading-5 text-white/45">Sign in to the dedicated review workspace.</p><div className="mt-6 space-y-3"><input className={field} type="email" value={email} onChange={event=>setEmail(event.target.value)} placeholder="Email" required/><input className={field} type="password" value={password} onChange={event=>setPassword(event.target.value)} placeholder="Password" required/><Button type="submit" disabled={authBusy} className="w-full bg-sky-500 text-white hover:bg-sky-400">{authBusy&&<Loader2 className="animate-spin"/>}Sign in</Button></div></form></main>;
+      if (error) throw error;
 
-  return <main className="min-h-screen bg-[var(--color-surface-0)] text-[var(--color-text-primary)]">
-    <header className="border-b border-white/[.07] bg-[var(--color-surface-1)]"><div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6"><div><div className="flex items-center gap-2"><Instagram className="h-5 w-5 text-sky-400"/><h1 className="text-lg font-bold">IG Comments</h1></div><p className="mt-1 flex items-center gap-1.5 text-[10px] text-white/40"><ShieldCheck className="h-3 w-3 text-emerald-400"/>Authorized accounts only · review and copy, never auto-post</p></div><Button variant="ghost" size="sm" onClick={()=>igCommentsSupabase.auth.signOut()} className="text-white/55 hover:bg-white/5 hover:text-white"><LogOut/>Sign out</Button></div></header>
-    <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 xl:grid-cols-[320px_1fr]">
-      <aside className="space-y-5">
-        <section className={`${card} p-4`}><div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Authorized accounts</h2><span className="text-[10px] text-white/35">{accounts.length}</span></div>
-          <div className="mt-3 space-y-2">{accounts.map(account=><div key={account.id} className="rounded-lg border border-white/[.07] bg-white/[.025] p-3"><div className="flex justify-between gap-2"><button type="button" onClick={()=>setAccountForm({...account,tone:account.tone||""})} className="min-w-0 text-left"><div className="truncate text-xs font-semibold text-white">{account.label}</div><div className="mt-1 text-[11px] text-white/40">@{account.instagram_username} · {account.status}</div></button><Button variant="ghost" size="icon" onClick={()=>deleteAccount(account.id)} disabled={busy===`account-${account.id}`} className="h-8 w-8 text-white/35 hover:bg-red-500/10 hover:text-red-300"><Trash2/></Button></div></div>)}</div>
-          <form onSubmit={saveAccount} className="mt-4 space-y-2 border-t border-white/[.07] pt-4"><input className={field} value={accountForm.label} onChange={event=>setAccountForm(current=>({...current,label:event.target.value}))} placeholder="Account label" required/><input className={field} value={accountForm.instagram_username} onChange={event=>setAccountForm(current=>({...current,instagram_username:event.target.value}))} placeholder="Instagram username" required/><input className={field} value={accountForm.tone} onChange={event=>setAccountForm(current=>({...current,tone:event.target.value}))} placeholder="Tone (optional)"/><select className={field} value={accountForm.status} onChange={event=>setAccountForm(current=>({...current,status:event.target.value}))}><option value="active">Active</option><option value="paused">Paused</option></select><label className="flex cursor-pointer items-start gap-2 rounded-lg border border-emerald-400/15 bg-emerald-400/[.04] p-3 text-[11px] leading-4 text-white/55"><input className="mt-0.5 accent-sky-500" type="checkbox" checked={accountForm.authorization_confirmed} onChange={event=>setAccountForm(current=>({...current,authorization_confirmed:event.target.checked}))}/><span>I confirm I am authorized to use this Instagram account for drafting comments.</span></label><div className="flex gap-2"><Button type="submit" size="sm" disabled={busy==="account"} className="flex-1 bg-sky-500 text-white hover:bg-sky-400">{accountForm.id?<Save/>:<Plus/>}{accountForm.id?"Save":"Add account"}</Button>{accountForm.id&&<Button type="button" size="sm" variant="outline" onClick={()=>setAccountForm({id:"",label:"",instagram_username:"",tone:"",status:"active",authorization_confirmed:false})}><X/></Button>}</div></form>
-        </section>
-        <section className={`${card} p-4`}><h2 className="text-sm font-semibold">Ad targets</h2><div className="mt-3 space-y-2">{targets.map(target=><button type="button" key={target.id} onClick={()=>setSelectedTargetId(target.id)} className={`w-full rounded-lg border p-3 text-left transition ${selectedTargetId===target.id?"border-sky-400/35 bg-sky-400/[.07]":"border-white/[.07] bg-white/[.025] hover:border-white/15"}`}><div className="truncate text-xs font-semibold text-white">{target.ad_label}</div><div className="mt-1 truncate text-[10px] text-white/35">{target.ad_url}</div></button>)}</div>
-          <form onSubmit={createTarget} className="mt-4 space-y-2 border-t border-white/[.07] pt-4"><input className={field} type="url" value={adUrl} onChange={event=>setAdUrl(event.target.value)} placeholder="Ad URL" required/><input className={field} value={adLabel} onChange={event=>setAdLabel(event.target.value)} placeholder="Ad label" required/><textarea className={field} rows={3} value={sourceContext} onChange={event=>setSourceContext(event.target.value)} placeholder="Context or brief (optional)"/><Button type="submit" size="sm" disabled={busy==="target"} className="w-full bg-sky-500 text-white hover:bg-sky-400"><Plus/>Create target</Button></form>
-        </section>
-      </aside>
-      <section className="min-w-0">
-        {error&&<div className="mb-4 flex items-center justify-between rounded-lg border border-red-400/20 bg-red-400/[.07] px-4 py-3 text-xs text-red-200"><span>{error}</span><Button variant="ghost" size="sm" onClick={loadAll}><RefreshCw/>Retry</Button></div>}
-        {loading?<div className={`${card} flex min-h-64 items-center justify-center`}><Loader2 className="h-6 w-6 animate-spin text-sky-400"/></div>:!selectedTarget?<div className={`${card} flex min-h-64 flex-col items-center justify-center px-6 text-center`}><Sparkles className="h-7 w-7 text-sky-400"/><h2 className="mt-4 text-base font-semibold">Create your first ad target</h2><p className="mt-2 max-w-sm text-xs leading-5 text-white/40">Add an ad URL and context, then generate account-aware drafts for review.</p></div>:<>
-          <div className={`${card} p-4 sm:p-5`}><div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="text-[10px] font-bold uppercase tracking-[.08em] text-sky-400">Active target</div><h2 className="mt-1 truncate text-lg font-bold">{selectedTarget?.ad_label}</h2><a href={selectedTarget?.ad_url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-xs text-white/40 hover:text-sky-300">{selectedTarget?.ad_url}</a>{selectedTarget?.source_context&&<p className="mt-3 text-xs leading-5 text-white/50">{selectedTarget.source_context}</p>}</div><div className="flex shrink-0 gap-2"><Button variant="outline" size="sm" onClick={clearDrafts} disabled={!drafts.length||busy==="clear"><X/>Clear drafts</Button><Button variant="outline" size="sm" onClick={deleteTarget} disabled={busy==="delete-target"} className="text-red-300 hover:text-red-200"><Trash2/>Delete</Button></div></div><div className="mt-5 flex flex-col gap-3 border-t border-white/[.07] pt-4 sm:flex-row sm:items-end"><label className="text-[10px] font-bold uppercase tracking-[.08em] text-white/35">Draft count<input className={`${field} mt-1 w-28`} type="number" min={1} max={30} value={count} onChange={event=>setCount(Math.min(30,Math.max(1,Number(event.target.value)||1)))}/></label><Button onClick={generate} disabled={busy==="generate"} className="bg-sky-500 text-white hover:bg-sky-400">{busy==="generate"?<Loader2 className="animate-spin"/>:<Sparkles/>}Generate drafts</Button></div></div>
-          <div className="mt-4 flex flex-wrap gap-2">{(["all","draft","approved","rejected","posted"] as Filter[]).map(item=><Button key={item} variant={filter===item?"default":"outline"} size="sm" onClick={()=>setFilter(item)} className={filter===item?"bg-white text-black":"text-white/55"}>{item} · {item==="all"?drafts.length:drafts.filter(draft=>draft.status===item).length}</Button>)}</div>
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">{visibleDrafts.map(draft=><article key={draft.id} className={`${card} border-l-2 border-l-sky-400 p-4`}><div className="flex items-center justify-between gap-3"><span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-2.5 py-1 text-[10px] font-semibold text-violet-200">{draft.angle||"General"}</span><span className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${statusTone[draft.status]}`}>{draft.status}</span></div><textarea className={`${field} mt-3 min-h-28 resize-y leading-6`} value={draft.body} onChange={event=>setDrafts(current=>current.map(item=>item.id===draft.id?{...item,body:event.target.value}:item))}/><select className={`${field} mt-2`} value={draft.account_id||""} onChange={event=>setDrafts(current=>current.map(item=>item.id===draft.id?{...item,account_id:event.target.value||null}:item))}><option value="">No account selected</option>{accounts.filter(account=>account.authorization_confirmed).map(account=><option key={account.id} value={account.id}>{account.label} · @{account.instagram_username}</option>)}</select><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"><Button variant="outline" size="sm" onClick={()=>updateDraft(draft,{body:draft.body,account_id:draft.account_id},"edited")} disabled={busy===draft.id}><Save/>Save</Button><Button variant="outline" size="sm" onClick={()=>updateDraft(draft,{status:"approved"},"approved")} disabled={busy===draft.id} className="text-emerald-300"><Check/>Approve</Button><Button variant="outline" size="sm" onClick={()=>updateDraft(draft,{status:"rejected"},"rejected")} disabled={busy===draft.id} className="text-red-300"><X/>Reject</Button><Button variant="outline" size="sm" onClick={()=>copyDraft(draft)}><Clipboard/>Copy</Button></div></article>)}</div>
-          {!visibleDrafts.length&&<div className={`${card} mt-4 flex min-h-40 flex-col items-center justify-center text-center`}><CheckCircle2 className="h-6 w-6 text-white/20"/><p className="mt-3 text-xs text-white/40">No drafts in this view.</p></div>}
-        </>}
-      </section>
+      const target = data as Target;
+
+      setTargets((current) => [target, ...current]);
+      setTargetId(target.id);
+
+      setAdUrl("");
+      setLabel("");
+      setContext("");
+
+      toast.success("Ad adicionado.");
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Erro ao adicionar ad.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function generate() {
+    if (!user || !selectedTarget) return;
+
+    setGenerating(true);
+
+    try {
+      const accountLabels = accounts.map(
+        (account) =>
+          account.username || account.display_name || "Instagram account",
+      );
+
+      const { data, error } = await igCommentsSupabase.functions.invoke(
+        "ig-comments-generate",
+        {
+          body: {
+            ad_url: selectedTarget.ad_url,
+            context: selectedTarget.context || "",
+            count,
+            accounts: accountLabels,
+          },
+        },
+      );
+
+      if (error) throw error;
+
+      const comments = Array.isArray(data?.comments) ? data.comments : [];
+
+      if (!comments.length) {
+        throw new Error("A IA não retornou comentários.");
+      }
+
+      const rows = comments.map(
+        (comment: { text?: string; intent?: string }) => ({
+          user_id: user.id,
+          target_id: selectedTarget.id,
+          social_account_id: null,
+          comment_text: String(comment.text || "").trim(),
+          intent: ["community", "faq", "support", "reaction", "brand"].includes(
+            String(comment.intent),
+          )
+            ? comment.intent
+            : "community",
+          status: "draft",
+          ai_generated: true,
+        }),
+      );
+
+      const { error: insertError } = await igCommentsSupabase
+        .from("ig_comment_drafts")
+        .insert(rows);
+
+      if (insertError) throw insertError;
+
+      await loadDrafts(user.id, selectedTarget.id);
+      toast.success(`${rows.length} drafts gerados.`);
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao gerar comentários.",
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function localPatch(id: string, patch: Partial<Draft>) {
+    setDrafts((current) =>
+      current.map((draft) =>
+        draft.id === id ? { ...draft, ...patch } : draft,
+      ),
+    );
+  }
+
+  async function saveDraft(draft: Draft) {
+    if (!user) return;
+
+    const { error } = await igCommentsSupabase
+      .from("ig_comment_drafts")
+      .update({
+        comment_text: draft.comment_text,
+        social_account_id: draft.social_account_id,
+        status: draft.status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", draft.id)
+      .eq("user_id", user.id);
+
+    if (error) return toast.error(error.message);
+
+    toast.success("Salvo.");
+  }
+
+  async function changeStatus(draft: Draft, status: DraftStatus) {
+    if (!user) return;
+
+    const { error } = await igCommentsSupabase
+      .from("ig_comment_drafts")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", draft.id)
+      .eq("user_id", user.id);
+
+    if (error) return toast.error(error.message);
+
+    localPatch(draft.id, { status });
+  }
+
+  async function copyDraft(draft: Draft) {
+    await navigator.clipboard.writeText(draft.comment_text);
+    await changeStatus(draft, "copied");
+    toast.success("Copiado.");
+  }
+
+  async function clearDrafts() {
+    if (!user || !selectedTarget) return;
+    if (!confirm("Apagar todos os drafts deste ad?")) return;
+
+    const { error } = await igCommentsSupabase
+      .from("ig_comment_drafts")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("target_id", selectedTarget.id);
+
+    if (error) return toast.error(error.message);
+
+    setDrafts([]);
+  }
+
+  async function deleteTarget() {
+    if (!user || !selectedTarget) return;
+    if (!confirm("Apagar este ad e seus drafts?")) return;
+
+    const { error } = await igCommentsSupabase
+      .from("ig_comment_targets")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("id", selectedTarget.id);
+
+    if (error) return toast.error(error.message);
+
+    const remaining = targets.filter((target) => target.id !== selectedTarget.id);
+    setTargets(remaining);
+    setTargetId(remaining[0]?.id ?? null);
+  }
+
+  async function signOut() {
+    await igCommentsSupabase.auth.signOut();
+    setUser(null);
+    setAccounts([]);
+    setTargets([]);
+    setDrafts([]);
+  }
+
+  if (booting) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#070a0f",
+          display: "grid",
+          placeItems: "center",
+          color: "white",
+        }}
+      >
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background:
+            "radial-gradient(circle at top, rgba(14,165,233,.12), transparent 32%), #070a0f",
+          display: "grid",
+          placeItems: "center",
+          padding: 20,
+          color: "white",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: 420 }}>
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <Logo size="lg" />
+          </div>
+
+          <form onSubmit={handleLogin} style={cardStyle}>
+            <div style={{ color: "#38bdf8", fontWeight: 800, fontSize: 12 }}>
+              IG COMMENTS
+            </div>
+
+            <h1 style={{ margin: "8px 0 6px", fontSize: 24 }}>
+              Entrar
+            </h1>
+
+            <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 18 }}>
+              Backend separado do AdBrief legado.
+            </p>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              <input
+                style={inputStyle}
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Email"
+                required
+              />
+
+              <input
+                style={inputStyle}
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Senha"
+                required
+              />
+
+              <button
+                type="submit"
+                disabled={loginBusy}
+                style={{ ...btn, background: "#0ea5e9", color: "white" }}
+              >
+                {loginBusy && <Loader2 size={15} className="animate-spin" />}
+                Entrar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(circle at 15% 0%, rgba(14,165,233,.08), transparent 26%), #070a0f",
+        color: "#f8fafc",
+      }}
+    >
+      <div style={{ maxWidth: 1450, margin: "0 auto", padding: 20 }}>
+        <header
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            marginBottom: 20,
+          }}
+        >
+          <Logo size="md" />
+
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>IG Comments</div>
+            <div style={{ color: "#64748b", fontSize: 12 }}>
+              AI drafts · review & copy · authorized accounts only
+            </div>
+          </div>
+
+          <button
+            onClick={signOut}
+            style={{
+              ...btn,
+              color: "#cbd5e1",
+              background: "rgba(148,163,184,.08)",
+            }}
+          >
+            <LogOut size={14} />
+            Sair
+          </button>
+        </header>
+
+        <div className="ig-layout">
+          <aside style={{ display: "grid", alignContent: "start", gap: 14 }}>
+            <section style={cardStyle}>
+              <div style={{ fontWeight: 800, marginBottom: 10 }}>
+                Contas Instagram
+              </div>
+
+              {accounts.length === 0 ? (
+                <div style={{ color: "#64748b", fontSize: 12 }}>
+                  Nenhuma conta Instagram conectada.
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 7 }}>
+                  {accounts.map((account) => (
+                    <div
+                      key={account.id}
+                      style={{
+                        borderRadius: 9,
+                        background: "rgba(2,6,23,.55)",
+                        padding: 9,
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: 12 }}>
+                        @{account.username || account.display_name || "instagram"}
+                      </div>
+                      <div style={{ color: "#64748b", fontSize: 10 }}>
+                        {account.status}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <form onSubmit={createTarget} style={cardStyle}>
+              <div style={{ fontWeight: 800, marginBottom: 10 }}>
+                Novo ad
+              </div>
+
+              <div style={{ display: "grid", gap: 9 }}>
+                <input
+                  style={inputStyle}
+                  value={adUrl}
+                  onChange={(event) => setAdUrl(event.target.value)}
+                  placeholder="URL do anúncio"
+                  required
+                />
+
+                <input
+                  style={inputStyle}
+                  value={label}
+                  onChange={(event) => setLabel(event.target.value)}
+                  placeholder="Nome do ad"
+                />
+
+                <textarea
+                  style={{ ...inputStyle, minHeight: 90 }}
+                  value={context}
+                  onChange={(event) => setContext(event.target.value)}
+                  placeholder="Produto, angle, contexto..."
+                />
+
+                <button
+                  disabled={creating}
+                  style={{ ...btn, background: "#0ea5e9", color: "white" }}
+                >
+                  <Plus size={14} />
+                  Adicionar
+                </button>
+              </div>
+            </form>
+
+            <section style={cardStyle}>
+              <div style={{ fontWeight: 800, marginBottom: 10 }}>Ads</div>
+
+              <div style={{ display: "grid", gap: 6 }}>
+                {targets.map((target) => (
+                  <button
+                    key={target.id}
+                    onClick={() => setTargetId(target.id)}
+                    style={{
+                      textAlign: "left",
+                      padding: 10,
+                      borderRadius: 9,
+                      cursor: "pointer",
+                      color: "#e2e8f0",
+                      background:
+                        target.id === targetId
+                          ? "rgba(14,165,233,.12)"
+                          : "rgba(2,6,23,.45)",
+                      border:
+                        target.id === targetId
+                          ? "1px solid rgba(14,165,233,.35)"
+                          : "1px solid rgba(148,163,184,.08)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 12 }}>
+                      {target.label || "Sem nome"}
+                    </div>
+                    <div
+                      style={{
+                        color: "#64748b",
+                        fontSize: 10,
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {target.ad_url}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          </aside>
+
+          <main style={{ minWidth: 0 }}>
+            {!selectedTarget ? (
+              <section style={cardStyle}>Selecione ou adicione um anúncio.</section>
+            ) : (
+              <div style={{ display: "grid", gap: 14 }}>
+                <section style={cardStyle}>
+                  <div style={{ fontWeight: 800, fontSize: 17 }}>
+                    {selectedTarget.label || "Ad"}
+                  </div>
+
+                  <a
+                    href={selectedTarget.ad_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#38bdf8", fontSize: 11 }}
+                  >
+                    {selectedTarget.ad_url}
+                  </a>
+
+                  {selectedTarget.context && (
+                    <p style={{ color: "#94a3b8", fontSize: 12 }}>
+                      {selectedTarget.context}
+                    </p>
+                  )}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      marginTop: 15,
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8", fontSize: 11 }}>
+                      Drafts
+                    </span>
+
+                    <input
+                      type="number"
+                      min={3}
+                      max={12}
+                      value={count}
+                      onChange={(event) =>
+                        setCount(
+                          Math.max(
+                            3,
+                            Math.min(12, Number(event.target.value) || 6),
+                          ),
+                        )
+                      }
+                      style={{ ...inputStyle, width: 70 }}
+                    />
+
+                    <button
+                      onClick={generate}
+                      disabled={generating}
+                      style={{ ...btn, background: "#8b5cf6", color: "white" }}
+                    >
+                      {generating ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Sparkles size={14} />
+                      )}
+                      Gerar
+                    </button>
+
+                    <button
+                      onClick={clearDrafts}
+                      style={{
+                        ...btn,
+                        color: "#cbd5e1",
+                        background: "rgba(148,163,184,.08)",
+                      }}
+                    >
+                      Limpar drafts
+                    </button>
+
+                    <button
+                      onClick={deleteTarget}
+                      style={{
+                        ...btn,
+                        color: "#fca5a5",
+                        background: "rgba(239,68,68,.08)",
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </section>
+
+                <section style={cardStyle}>
+                  <div style={{ fontWeight: 800, marginBottom: 12 }}>
+                    Comentários ({drafts.length})
+                  </div>
+
+                  {loadingDrafts ? (
+                    <Loader2 className="animate-spin" />
+                  ) : drafts.length === 0 ? (
+                    <div style={{ color: "#64748b", fontSize: 12 }}>
+                      Nenhum draft ainda.
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {drafts.map((draft) => (
+                        <article
+                          key={draft.id}
+                          style={{
+                            background: "rgba(2,6,23,.48)",
+                            border: "1px solid rgba(148,163,184,.09)",
+                            borderRadius: 11,
+                            padding: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 7,
+                              marginBottom: 8,
+                              color: "#64748b",
+                              fontSize: 10,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            <span>{draft.intent}</span>
+                            <span>·</span>
+                            <span>{draft.status}</span>
+                          </div>
+
+                          <textarea
+                            style={{
+                              ...inputStyle,
+                              minHeight: 82,
+                              resize: "vertical",
+                            }}
+                            value={draft.comment_text}
+                            onChange={(event) =>
+                              localPatch(draft.id, {
+                                comment_text: event.target.value,
+                              })
+                            }
+                          />
+
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 7,
+                              flexWrap: "wrap",
+                              marginTop: 9,
+                            }}
+                          >
+                            <select
+                              style={{ ...inputStyle, width: "auto" }}
+                              value={draft.social_account_id || ""}
+                              onChange={(event) =>
+                                localPatch(draft.id, {
+                                  social_account_id: event.target.value || null,
+                                })
+                              }
+                            >
+                              <option value="">Sem conta definida</option>
+
+                              {accounts.map((account) => (
+                                <option value={account.id} key={account.id}>
+                                  @{account.username || account.display_name}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              onClick={() => saveDraft(draft)}
+                              style={{
+                                ...btn,
+                                color: "#cbd5e1",
+                                background: "rgba(148,163,184,.08)",
+                              }}
+                            >
+                              <Save size={13} />
+                              Salvar
+                            </button>
+
+                            <button
+                              onClick={() => changeStatus(draft, "approved")}
+                              style={{
+                                ...btn,
+                                color: "#86efac",
+                                background: "rgba(34,197,94,.10)",
+                              }}
+                            >
+                              <Check size={13} />
+                              Aprovar
+                            </button>
+
+                            <button
+                              onClick={() => copyDraft(draft)}
+                              style={{
+                                ...btn,
+                                color: "#7dd3fc",
+                                background: "rgba(14,165,233,.10)",
+                              }}
+                            >
+                              <Clipboard size={13} />
+                              Copiar
+                            </button>
+
+                            <button
+                              onClick={() => changeStatus(draft, "skipped")}
+                              style={{
+                                ...btn,
+                                color: "#fca5a5",
+                                background: "rgba(239,68,68,.07)",
+                              }}
+                            >
+                              <SkipForward size={13} />
+                              Pular
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      <style>{`
+        .ig-layout {
+          display: grid;
+          grid-template-columns: 340px minmax(0,1fr);
+          gap: 14px;
+        }
+
+        @media (max-width: 850px) {
+          .ig-layout {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
-  </main>;
+  );
 }
