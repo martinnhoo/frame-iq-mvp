@@ -151,7 +151,7 @@ function FeedbackBox({busy,targetLabel,onSubmit,onCancel}:{busy:boolean;targetLa
   </div>;
 }
 
-export default function ReviewDesk({clips,variants,revisions,feedback,videos,sources,accounts,mediaUrls,busy,message,onApprove,onDiscard,onFeedback,onWatchVariant,onWatchRevision,onDownload,onRetry,canPublishInstagram,onPublish,publicationStatusByClip}:{
+export default function ReviewDesk({clips,variants,revisions,feedback,videos,sources,accounts,mediaUrls,busy,message,onApprove,onDiscard,onFeedback,onWatchVariant,onWatchRevision,onDownload,onRetry,onVisualSave,canPublishInstagram,onPublish,publicationStatusByClip}:{
   clips:DeskClip[];variants:DeskVariant[];revisions:DeskRevision[];feedback:DeskFeedback[];videos:DeskVideo[];sources:DeskSource[];accounts:DeskAccount[];mediaUrls:Record<string,string>;busy:string|null;message?:string|null;
   onApprove:(clip:DeskClip)=>void;onDiscard:(clip:DeskClip)=>void;onFeedback:(clip:DeskClip,text:string,variant?:DeskVariant)=>void;onWatchVariant:(variant:DeskVariant)=>void;onWatchRevision:(revision:DeskRevision)=>void;onDownload:(item:DeskVariant|DeskRevision,isRevision?:boolean)=>void;onRetry:(clip:DeskClip,revision:DeskRevision)=>void;onVisualSave:(clip:DeskClip,variant:DeskVariant,revision:DeskRevision,headline:Record<string,unknown>,captions:Record<string,unknown>)=>void;
   canPublishInstagram?:boolean;onPublish?:(clip:DeskClip)=>void;publicationStatusByClip?:Record<string,string>;

@@ -38,6 +38,7 @@ const CreativeProducts = lazy(() => import("./pages/CreativeProducts"));
 const CreativeReport = lazy(() => import("./pages/CreativeReport"));
 const CreativePeople = lazy(() => import("./pages/CreativePeople"));
 const NivaraDashboard = lazy(() => import("./pages/NivaraDashboard"));
+const IGComments = lazy(() => import("./pages/IGComments"));
 
 // â”€â”€ Dashboard (Brilliant Hub interno) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
@@ -139,6 +140,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/igcomments" element={<IGComments />} />
 
               {/* â”€â”€ Legais (Meta exige links) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               <Route path="/terms" element={<Terms />} />
