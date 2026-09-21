@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { igCommentsSupabase as supabase } from "@/integrations/supabase/igCommentsClient";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -26,9 +26,9 @@ const Login = () => {
     const oauthError = searchParams.get("oauth_error");
     if (!oauthError) return;
     const message = language === "pt"
-      ? "O Google recusou a autenticação agora. Tente novamente em alguns segundos."
+      ? "O Google recusou a autenticaÃ§Ã£o agora. Tente novamente em alguns segundos."
       : language === "es"
-        ? "Google rechazó la autenticación por ahora. Inténtalo de nuevo en unos segundos."
+        ? "Google rechazÃ³ la autenticaciÃ³n por ahora. IntÃ©ntalo de nuevo en unos segundos."
         : "Google sign-in failed for now. Try again in a few seconds.";
     toast.error(message);
     setSearchParams({}, { replace: true });
@@ -40,7 +40,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard/hub`,
+          redirectTo: `${window.location.origin}/igcomments`,
           queryParams: { prompt: "select_account" },
         },
       });
@@ -67,20 +67,20 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) {
         if (error.message.includes("Email not confirmed")) {
-          toast.error(language === "pt" ? "Confirme seu email antes de entrar." : language === "es" ? "Confirma tu email antes de iniciar sesión." : "Please confirm your email before signing in.");
+          toast.error(language === "pt" ? "Confirme seu email antes de entrar." : language === "es" ? "Confirma tu email antes de iniciar sesiÃ³n." : "Please confirm your email before signing in.");
           navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
         } else if (error.message.includes("Invalid login credentials")) {
-          toast.error(language === "pt" ? "Email ou senha inválidos. Tente novamente." : language === "es" ? "Email o contraseña incorrectos. Inténtalo de nuevo." : "Invalid email or password. Please try again.");
+          toast.error(language === "pt" ? "Email ou senha invÃ¡lidos. Tente novamente." : language === "es" ? "Email o contraseÃ±a incorrectos. IntÃ©ntalo de nuevo." : "Invalid email or password. Please try again.");
         } else { toast.error(error.message); }
         return;
       }
       trackEvent("login_completed");
-      navigate("/dashboard/hub");
+      navigate("/igcomments");
     } catch (error) {
       const isNetworkError = error instanceof TypeError || String(error).toLowerCase().includes("failed to fetch");
       if (isNetworkError) {
         setNetworkFailure(true);
-        toast.error(language === "pt" ? "O sistema antigo está temporariamente indisponível. Tente novamente mais tarde." : language === "es" ? "El sistema anterior no está disponible temporalmente. Inténtalo más tarde." : "The legacy system is temporarily unavailable. Please try again later.");
+        toast.error(language === "pt" ? "O sistema antigo estÃ¡ temporariamente indisponÃ­vel. Tente novamente mais tarde." : language === "es" ? "El sistema anterior no estÃ¡ disponible temporalmente. IntÃ©ntalo mÃ¡s tarde." : "The legacy system is temporarily unavailable. Please try again later.");
       } else { toast.error(String(error).slice(0, 100)); }
     } finally { setEmailLoading(false); }
   };
@@ -215,7 +215,7 @@ const Login = () => {
                 <div style={{ position: 'relative' }}>
                   <input
                     id="login-password"
-                    type={showPassword ? "text" : "password"} placeholder="••••••••"
+                    type={showPassword ? "text" : "password"} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={password} onChange={e => setPassword(e.target.value)} required disabled={isFormDisabled}
                     style={{
                       width: '100%', height: 48, borderRadius: 12, paddingLeft: 16, paddingRight: 48, boxSizing: 'border-box' as const,
@@ -273,3 +273,4 @@ const Login = () => {
 };
 
 export default Login;
+
