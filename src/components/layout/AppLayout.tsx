@@ -1,5 +1,5 @@
-﻿// AppLayout â€” shell do produto: sidebar (src/components/sidebar) + topbar
-// + DashboardContext para as pÃ¡ginas filhas.
+// AppLayout — shell do produto: sidebar (src/components/sidebar) + topbar
+// + DashboardContext para as páginas filhas.
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -34,7 +34,7 @@ export function AppLayout() {
   const { language, setLanguage } = useLanguage();
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  // Estado recolhido da sidebar â€” persiste entre recargas.
+  // Estado recolhido da sidebar — persiste entre recargas.
   const [collapsed, setCollapsed] = useState<boolean>(
     () => storage.get(SIDEBAR_COLLAPSED_KEY) === "true",
   );
@@ -43,13 +43,13 @@ export function AppLayout() {
   }, [collapsed]);
 
   // Antes: useState(false). O primeiro paint sempre desenhava a sidebar fixa
-  // de 220px, mesmo num celular de 375px, e sÃ³ depois trocava pelo drawer â€”
-  // o usuÃ¡rio via a barra "pular". Agora jÃ¡ nasce com o valor certo.
+  // de 220px, mesmo num celular de 375px, e só depois trocava pelo drawer —
+  // o usuário via a barra "pular". Agora já nasce com o valor certo.
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < MOBILE_BP,
   );
   const [savedPersonas, setSavedPersonas] = useState<any[]>([]);
-  // Topbar overlays â€” UserProfilePanel slide-out + Cmd+K palette.
+  // Topbar overlays — UserProfilePanel slide-out + Cmd+K palette.
   // Both live at the layout level so they sit above page content and
   // can be triggered from anywhere (avatar menu, palette, keyboard).
   const [profileOpen, setProfileOpen] = useState(false);
@@ -68,8 +68,8 @@ export function AppLayout() {
   // matchMedia em vez de resize com debounce.
   //
   // O debounce de 150ms era a outra metade do problema: o CSS do index.css
-  // troca de layout instantaneamente no breakpoint, e o JS sÃ³ 150ms depois.
-  // Durante esse intervalo â€” e em toda rotaÃ§Ã£o de celular â€” os dois
+  // troca de layout instantaneamente no breakpoint, e o JS só 150ms depois.
+  // Durante esse intervalo — e em toda rotação de celular — os dois
   // discordavam, e a barra oscilava. matchMedia dispara junto com o CSS.
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BP - 1}px)`);
@@ -84,7 +84,7 @@ export function AppLayout() {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  // â”€â”€ Auth + profile state â”€â”€
+  // ── Auth + profile state ──
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
@@ -92,7 +92,7 @@ export function AppLayout() {
   const [accountAlerts, setAccountAlerts] = useState<AccountAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiProfile, setAiProfile] = useState<any>(null);
-  // Start with null â€” persona is loaded AFTER auth to prevent cross-account leak
+  // Start with null — persona is loaded AFTER auth to prevent cross-account leak
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(null);
 
   const setSelectedPersona = (p: ActivePersona | null, uid?: string) => {
@@ -104,7 +104,7 @@ export function AppLayout() {
       // `parsed._uid === session.user.id` check on next reload and
       // resets to personas[0] (always Adbrief, the first-created).
       // That was the silent bug behind "I switched persona, reloaded,
-      // now I'm back on the original" â€” it persisted across sessions.
+      // now I'm back on the original" — it persisted across sessions.
       const effectiveUid = uid ?? user?.id;
       if (p && effectiveUid) storage.setJSON('frameiq_active_persona', { ...p, _uid: effectiveUid });
       else if (p) storage.setJSON('frameiq_active_persona', p);
@@ -112,7 +112,7 @@ export function AppLayout() {
     } catch {}
   };
 
-  // â”€â”€ Active account resolution (persona â†’ Meta â†’ v2) â”€â”€
+  // ── Active account resolution (persona → Meta → v2) ──
   const {
     account: activeAccount,
     isConnected: metaConnected,
@@ -129,7 +129,7 @@ export function AppLayout() {
     } catch {}
   }, []);
 
-  // â”€â”€ Init: auth + profile fetch â”€â”€
+  // ── Init: auth + profile fetch ──
   useEffect(() => {
     let mounted = true;
     const init = async () => {
@@ -144,7 +144,7 @@ export function AppLayout() {
 
       const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
 
-      // user_ai_profile, account_alerts, personas â€” off-schema in the
+      // user_ai_profile, account_alerts, personas — off-schema in the
       // generated supabase types. Cast the client once and narrow rows
       // with explicit types below.
       type AiProfileLite = {
@@ -188,8 +188,8 @@ export function AppLayout() {
             setLanguage(profileData.preferred_language as Parameters<typeof setLanguage>[0], false);
           }
         }
-        // Onboarding desligado â€” Hub Ã© uso interno por convite, sem
-        // questionÃ¡rio inicial. Quem entra cai direto no Painel.
+        // Onboarding desligado — Hub é uso interno por convite, sem
+        // questionário inicial. Quem entra cai direto no Painel.
         // (Antes redirecionava pra /onboarding se profile.onboarding_completed
         // = false; agora ignora a flag.)
       }
@@ -206,8 +206,8 @@ export function AppLayout() {
           if (mounted && !res.error) setAccountAlerts(res.data || []);
         });
 
-      // Load saved personas â€” limit(50) pra cortar histÃ³rico antigo
-      // (sidebar mostra ~5, 50 Ã© folga generosa).
+      // Load saved personas — limit(50) pra cortar histórico antigo
+      // (sidebar mostra ~5, 50 é folga generosa).
       const { data: rawPersonas } = await sb
         .from('personas')
         .select('id, name, logo_url, result, brand_kit, description, website, created_at')
@@ -253,7 +253,7 @@ export function AppLayout() {
     return () => { mounted = false; };
   }, []);
 
-  // â”€â”€ Reload personas when AccountsPage saves changes â”€â”€
+  // ── Reload personas when AccountsPage saves changes ──
   const reloadPersonas = useCallback(async () => {
     if (!user) return;
     type PersonaRow = {
@@ -299,7 +299,7 @@ export function AppLayout() {
       if (updated) {
         setSelectedPersona(updated as unknown as ActivePersona, user.id);
       } else if (personas.length) {
-        // Selected persona was deleted â€” switch to first available
+        // Selected persona was deleted — switch to first available
         setSelectedPersona(personas[0] as unknown as ActivePersona, user.id);
       } else {
         setSelectedPersona(null);
@@ -317,7 +317,7 @@ export function AppLayout() {
     if (url === '/dashboard/feed') {
       return location.pathname === '/dashboard' || location.pathname === '/dashboard/feed';
     }
-    // Painel (/dashboard/hub) â€” sÃ³ ativa em exact match. Sem isso ele
+    // Painel (/dashboard/hub) — só ativa em exact match. Sem isso ele
     // ficava aceso em qualquer rota /dashboard/hub/* (Imagens, Biblioteca,
     // etc.) porque o startsWith pegava o prefixo.
     if (url === '/dashboard/hub') {
@@ -334,7 +334,7 @@ export function AppLayout() {
 
   const plan = profile?.plan || 'free';
 
-  // â”€â”€ Upgrade wall state â”€â”€
+  // ── Upgrade wall state ──
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   useEffect(() => {
     const handler = () => setUpgradeOpen(true);
@@ -362,7 +362,7 @@ export function AppLayout() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-main)' }}>
-      {/* â”€â”€ Mobile top bar â”€â”€
+      {/* ── Mobile top bar ──
             iOS notch / Dynamic Island handling: the bar sits at top:0
             but pads its content down by env(safe-area-inset-top) so
             the menu button + logo never collide with the notch. The
@@ -399,7 +399,7 @@ export function AppLayout() {
         </div>
       )}
 
-      {/* â”€â”€ Sidebar (drawer no mobile, fixa no desktop) â”€â”€ */}
+      {/* ── Sidebar (drawer no mobile, fixa no desktop) ── */}
       <AppSidebar
         lang={language}
         plan={profile?.plan}
@@ -414,7 +414,7 @@ export function AppLayout() {
 
       {/* Main content
             Mobile: reserve room for the topbar (52) + the iOS notch.
-            We DON'T pad bottom here â€” pages render their own bottom
+            We DON'T pad bottom here — pages render their own bottom
             sticky elements (chat composer, decision cards) and each
             handles its own home-indicator clearance via the chat-input
             CSS in index.css. Padding bottom here would push everything
@@ -428,7 +428,7 @@ export function AppLayout() {
           paddingRight: 'env(safe-area-inset-right, 0px)',
         } : {}),
       }}>
-        {/* â”€â”€ Desktop topbar â€” breadcrumb + spacer + bell + avatar menu.
+        {/* ── Desktop topbar — breadcrumb + spacer + bell + avatar menu.
               Hidden on mobile (the mobile top bar above is its replacement).
               Sticky so it stays during long-page scrolls (Feed, History). */}
         {!isMobile && (
@@ -445,7 +445,7 @@ export function AppLayout() {
           }}>
             <AppTopbarBreadcrumb />
             <div style={{ flex: 1 }} />
-            {/* O produto Ã© medido em crÃ©ditos e o medidor nÃ£o existia na
+            {/* O produto é medido em créditos e o medidor não existia na
                 chrome. Das 52 telas, 7 liam o saldo e nenhuma era o shell. */}
             <CreditChip />
             <AppTopbarBell alerts={accountAlerts.map(a => ({
@@ -492,7 +492,7 @@ export function AppLayout() {
         )}
       </main>
 
-      {/* â”€â”€ Upgrade Wall â”€â”€ */}
+      {/* ── Upgrade Wall ── */}
       {upgradeOpen && (
         <UpgradeWall
           onClose={() => setUpgradeOpen(false)}
@@ -500,7 +500,7 @@ export function AppLayout() {
         />
       )}
 
-      {/* â”€â”€ Profile slide-out â€” opened by topbar avatar OR Cmd+K palette â”€â”€ */}
+      {/* ── Profile slide-out — opened by topbar avatar OR Cmd+K palette ── */}
       {user && (
         <UserProfilePanel
           open={profileOpen}
@@ -513,7 +513,7 @@ export function AppLayout() {
         />
       )}
 
-      {/* â”€â”€ Global Cmd+K palette â€” DecisÃµes pendentes / Navegar / Conta â”€â”€ */}
+      {/* ── Global Cmd+K palette — Decisões pendentes / Navegar / Conta ── */}
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
