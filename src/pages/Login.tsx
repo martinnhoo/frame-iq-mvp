@@ -17,6 +17,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [networkFailure, setNetworkFailure] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useLanguage();
@@ -61,28 +62,27 @@ const Login = () => {
     if (!email.trim() || !password) return;
 
     setEmailLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-
-    if (error) {
-      if (error.message.includes("Email not confirmed")) {
-        toast.error(language === "pt" ? "Confirme seu email antes de entrar." : language === "es" ? "Confirma tu email antes de iniciar sesión." : "Please confirm your email before signing in.");
-        navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
-      } else if (error.message.includes("Invalid login credentials")) {
-        toast.error(language === "pt" ? "Email ou senha inválidos. Tente novamente." : language === "es" ? "Email o contraseña incorrectos. Inténtalo de nuevo." : "Invalid email or password. Please try again.");
-      } else {
-        toast.error(error.message);
+    setNetworkFailure(false);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          toast.error(language === "pt" ? "Confirme seu email antes de entrar." : language === "es" ? "Confirma tu email antes de iniciar sesión." : "Please confirm your email before signing in.");
+          navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
+        } else if (error.message.includes("Invalid login credentials")) {
+          toast.error(language === "pt" ? "Email ou senha inválidos. Tente novamente." : language === "es" ? "Email o contraseña incorrectos. Inténtalo de nuevo." : "Invalid email or password. Please try again.");
+        } else { toast.error(error.message); }
+        return;
       }
-    } else {
       trackEvent("login_completed");
-      // Pivot interno: /dashboard/hub é a home (BrilliantHub Painel).
-      // /dashboard/ai (Estrategista AdBrief) era usado quando AdBrief ainda
-      // era SaaS público — hoje não é a tela inicial.
       navigate("/dashboard/hub");
-    }
-    setEmailLoading(false);
+    } catch (error) {
+      const isNetworkError = error instanceof TypeError || String(error).toLowerCase().includes("failed to fetch");
+      if (isNetworkError) {
+        setNetworkFailure(true);
+        toast.error(language === "pt" ? "O sistema antigo está temporariamente indisponível. Tente novamente mais tarde." : language === "es" ? "El sistema anterior no está disponible temporalmente. Inténtalo más tarde." : "The legacy system is temporarily unavailable. Please try again later.");
+      } else { toast.error(String(error).slice(0, 100)); }
+    } finally { setEmailLoading(false); }
   };
 
   const isFormDisabled = loading || emailLoading;
@@ -253,6 +253,8 @@ const Login = () => {
               </div>
             </form>
 
+            {networkFailure && <p role="alert" style={{ marginTop: 12, fontSize: 12, lineHeight: 1.5, color: 'rgba(248,113,113,0.85)', textAlign: 'center' }}>{language === "pt" ? "Esta falha afeta apenas o painel antigo." : language === "es" ? "Este fallo afecta solo al panel anterior." : "This only affects the legacy dashboard."}</p>}
+
             {/* Sign up link */}
             <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 20 }}>
               {t("auth_no_account")}{" "}
@@ -262,6 +264,7 @@ const Login = () => {
                 {t("auth_create")}
               </Link>
             </p>
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.07)', textAlign: 'center' }}><Link to="/igcomments" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>Abrir IG Comments</Link></div>
           </div>
         </div>
       </div>
