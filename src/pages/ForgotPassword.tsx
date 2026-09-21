@@ -1,10 +1,10 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { igCommentsSupabase as supabase } from "@/integrations/supabase/igCommentsClient";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Mail } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -85,3 +85,4 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
+

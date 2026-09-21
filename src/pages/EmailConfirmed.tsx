@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -11,12 +11,12 @@ type Lang = "pt" | "es" | "en";
 const T: Record<Lang, { title: string; sub: string; redirecting: string }> = {
   pt: {
     title: "Email verificado.",
-    sub: "Sua conta está confirmada.",
+    sub: "Sua conta estÃ¡ confirmada.",
     redirecting: "Redirecionando...",
   },
   es: {
     title: "Email verificado.",
-    sub: "Tu cuenta está confirmada.",
+    sub: "Tu cuenta estÃ¡ confirmada.",
     redirecting: "Redirigiendo...",
   },
   en: {
@@ -40,7 +40,7 @@ export default function EmailConfirmed() {
 
   // Auto-redirect to dashboard after 2.5 seconds
   useEffect(() => {
-    const timer = setTimeout(() => navigate("/dashboard/ai", { replace: true }), 2500);
+    const timer = setTimeout(() => navigate("/igcomments", { replace: true }), 2500);
     return () => clearTimeout(timer);
   }, [navigate]);
 
@@ -102,3 +102,4 @@ export default function EmailConfirmed() {
     </div>
   );
 }
+

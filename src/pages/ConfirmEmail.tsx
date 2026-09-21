@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { igCommentsSupabase as supabase } from "@/integrations/supabase/igCommentsClient";
 import { Mail, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
@@ -163,3 +163,4 @@ const ConfirmEmail = () => {
 };
 
 export default ConfirmEmail;
+

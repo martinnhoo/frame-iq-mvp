@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { igCommentsSupabase as supabase } from "@/integrations/supabase/igCommentsClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Eye, EyeOff, CheckCircle, ShieldAlert, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
-// ── Logo ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Logo() {
   return (
     <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
@@ -18,7 +18,7 @@ function Logo() {
   );
 }
 
-// ── Password strength ─────────────────────────────────────────────────────────
+// â”€â”€ Password strength â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getStrength(pw: string) {
   if (!pw) return { score: 0, label: "", color: "" };
   let score = 0;
@@ -49,14 +49,14 @@ export default function ResetPassword() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // Supabase sends token_hash in the URL — we need to exchange it
+    // Supabase sends token_hash in the URL â€” we need to exchange it
     // The onAuthStateChange fires PASSWORD_RECOVERY when the token is valid
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
         setChecking(false);
       } else if (event === "SIGNED_IN" && session) {
-        // Also valid — user signed in via magic link
+        // Also valid â€” user signed in via magic link
         setIsRecovery(true);
         setChecking(false);
       }
@@ -94,13 +94,13 @@ export default function ResetPassword() {
       setErrorMsg(error.message);
     } else {
       setSuccess(true);
-      setTimeout(() => navigate("/dashboard/ai"), 3000);
+      setTimeout(() => navigate("/igcomments"), 3000);
     }
   };
 
   const [errorMsg, setErrorMsg] = useState("");
 
-  // ── Loading check ──────────────────────────────────────────────────────────
+  // â”€â”€ Loading check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (checking) {
     return (
       <Page>
@@ -114,7 +114,7 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Success ────────────────────────────────────────────────────────────────
+  // â”€â”€ Success â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (success) {
     return (
       <Page>
@@ -139,7 +139,7 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Invalid link ──────────────────────────────────────────────────────────
+  // â”€â”€ Invalid link â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!isRecovery) {
     return (
       <Page>
@@ -161,7 +161,7 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Main form ──────────────────────────────────────────────────────────────
+  // â”€â”€ Main form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <Page>
       {/* Icon */}
@@ -195,7 +195,7 @@ export default function ResetPassword() {
               type={showPw ? "text" : "password"}
               value={password}
               onChange={e => { setPassword(e.target.value); setErrorMsg(""); }}
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               required
               minLength={8}
               autoFocus
@@ -226,7 +226,7 @@ export default function ResetPassword() {
               </div>
               {password.length < 8 && (
                 <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
-                  {language === "pt" ? "Mínimo 8 caracteres" : language === "es" ? "Mínimo 8 caracteres" : "Minimum 8 characters"}
+                  {language === "pt" ? "MÃ­nimo 8 caracteres" : language === "es" ? "MÃ­nimo 8 caracteres" : "Minimum 8 characters"}
                 </p>
               )}
             </div>
@@ -244,7 +244,7 @@ export default function ResetPassword() {
               type={showConfirm ? "text" : "password"}
               value={confirm}
               onChange={e => { setConfirm(e.target.value); setErrorMsg(""); }}
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               required
               style={{ width: "100%", padding: "12px 44px 12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: `1px solid ${mismatch ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.10)"}`, color: "#fff", fontFamily: M, fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
               onFocus={e => { if (!mismatch) e.target.style.borderColor = "rgba(14,165,233,0.4)"; }}
@@ -259,7 +259,7 @@ export default function ResetPassword() {
           )}
           {confirm.length > 0 && !mismatch && (
             <p style={{ fontFamily: M, fontSize: 12, color: "#22A3A3", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
-              <CheckCircle size={10} /> {language === "pt" ? "Senhas iguais" : language === "es" ? "Contraseñas iguales" : "Passwords match"}
+              <CheckCircle size={10} /> {language === "pt" ? "Senhas iguais" : language === "es" ? "ContraseÃ±as iguales" : "Passwords match"}
             </p>
           )}
         </div>
@@ -286,7 +286,7 @@ export default function ResetPassword() {
             onMouseEnter={e => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
             onMouseLeave={e => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}
           >
-            {language === "pt" ? "← Voltar para o login" : language === "es" ? "← Volver al inicio" : "← Back to login"}
+            {language === "pt" ? "â† Voltar para o login" : language === "es" ? "â† Volver al inicio" : "â† Back to login"}
           </Link>
         </div>
       </form>
@@ -299,7 +299,7 @@ export default function ResetPassword() {
   );
 }
 
-// ── Page wrapper ──────────────────────────────────────────────────────────────
+// â”€â”€ Page wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Page({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #080c14 0%, #0b1020 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", position: "relative", overflow: "hidden" }}>
@@ -318,3 +318,4 @@ function Page({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
