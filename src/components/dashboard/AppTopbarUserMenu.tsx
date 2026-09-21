@@ -1,23 +1,23 @@
-/**
- * AppTopbarUserMenu — avatar + dropdown for the global topbar.
+﻿/**
+ * AppTopbarUserMenu â€” avatar + dropdown for the global topbar.
  *
  * Lives at the right edge of the topbar (next to Telegram + credit
- * meter). Click → mini menu with Conta / Faturamento / Idioma / Sair.
- * Click on Conta → opens the existing UserProfilePanel slide-out
+ * meter). Click â†’ mini menu with Conta / Faturamento / Idioma / Sair.
+ * Click on Conta â†’ opens the existing UserProfilePanel slide-out
  * (no new settings UI needed; the panel already covers profile,
  * billing, telegram, language, intelligence). This component is
  * just a more discoverable trigger.
  *
  * Why a topbar trigger when the sidebar footer already had one:
  * big-tech apps (Linear, Vercel, Notion) all put user menu top-right.
- * Sidebar bottom is invisible most of the time — first-time users
+ * Sidebar bottom is invisible most of the time â€” first-time users
  * don't find it. Topbar is the canonical place.
  */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Settings, Globe, LogOut, ChevronDown, UserCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { igCommentsSupabase as authSupabase } from "@/integrations/supabase/igCommentsClient";
 import { queryClient } from "@/App";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { User } from "@supabase/supabase-js";
@@ -28,7 +28,7 @@ const F = "'Plus Jakarta Sans', Inter, system-ui, sans-serif";
 // component is self-contained and doesn't have to import from sidebar.
 function avatarGradient(name: string) {
   const palettes = [
-    "linear-gradient(135deg,#0DA2E7,#06B6D4)", // brand sky → cyan
+    "linear-gradient(135deg,#0DA2E7,#06B6D4)", // brand sky â†’ cyan
     "linear-gradient(135deg,#38BDF8,#0EA5E9)",
     "linear-gradient(135deg,#A78BFA,#7C3AED)",
     "linear-gradient(135deg,#34D399,#10B981)",
@@ -76,13 +76,13 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
     };
   }, [open]);
 
-  const displayName = profile?.name || user?.email?.split("@")[0] || "Você";
+  const displayName = profile?.name || user?.email?.split("@")[0] || "VocÃª";
   const email = user?.email || profile?.email || "";
   const initials = getInitials(displayName, email);
-  // planLabel removido — operação interna não exibe plano no header.
+  // planLabel removido â€” operaÃ§Ã£o interna nÃ£o exibe plano no header.
 
   const cycleLanguage = () => {
-    // 4 idiomas no cycler: PT → EN → ES → ZH → PT…
+    // 4 idiomas no cycler: PT â†’ EN â†’ ES â†’ ZH â†’ PTâ€¦
     const order = ["pt", "en", "es", "zh"] as const;
     const i = order.indexOf(language as (typeof order)[number]);
     const next = order[(i + 1) % order.length];
@@ -91,10 +91,10 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
 
   const langLabel = (l: string): string => {
     switch (l) {
-      case "pt": return "Português";
+      case "pt": return "PortuguÃªs";
       case "en": return "English";
-      case "es": return "Español";
-      case "zh": return "中文";
+      case "es": return "EspaÃ±ol";
+      case "zh": return "ä¸­æ–‡";
       default:   return "English";
     }
   };
@@ -102,7 +102,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
   const handleSignOut = async () => {
     setOpen(false);
     try {
-      await supabase.auth.signOut();
+      await authSupabase.auth.signOut();
       queryClient.clear();
       navigate("/login");
     } catch {
@@ -113,7 +113,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
 
   return (
     <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
-      {/* Trigger — avatar + chevron, fits the 48px topbar height */}
+      {/* Trigger â€” avatar + chevron, fits the 48px topbar height */}
       <button
         onClick={() => setOpen(s => !s)}
         title="Conta"
@@ -165,7 +165,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
             }
           `}</style>
 
-          {/* Header — name + email */}
+          {/* Header â€” name + email */}
           <div style={{ padding: "12px 14px 10px", display: "flex", alignItems: "center", gap: 10 }}>
             <Avatar style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0 }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
@@ -187,8 +187,8 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
             </div>
           </div>
 
-          {/* Idioma — destacado no topo (era item discreto no meio).
-              É a opção mais usada no contexto interno multi-marca (time
+          {/* Idioma â€” destacado no topo (era item discreto no meio).
+              Ã‰ a opÃ§Ã£o mais usada no contexto interno multi-marca (time
               alterna entre PT/EN/ES dependendo do mercado da campanha). */}
           <button
             onClick={cycleLanguage}
@@ -208,7 +208,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.18)"}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.10)"}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 0.06 }}>
-              <Globe size={13} /> {language === "en" ? "Language" : language === "es" ? "Idioma" : language === "zh" ? "语言" : "Idioma"}
+              <Globe size={13} /> {language === "en" ? "Language" : language === "es" ? "Idioma" : language === "zh" ? "è¯­è¨€" : "Idioma"}
             </span>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#3B82F6" }}>
               {langLabel(language)}
@@ -218,17 +218,17 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
           {/* Divider gap */}
           <div style={{ height: 4 }} />
 
-          {/* Menu items — operação interna, sem Plano/Faturamento/Convidar. */}
+          {/* Menu items â€” operaÃ§Ã£o interna, sem Plano/Faturamento/Convidar. */}
           {!isHubMode && (
             <MenuItem
               icon={<Settings size={14} />}
-              label={language === "en" ? "Settings" : language === "es" ? "Configuración" : language === "zh" ? "设置" : "Configurações"}
+              label={language === "en" ? "Settings" : language === "es" ? "ConfiguraciÃ³n" : language === "zh" ? "è®¾ç½®" : "ConfiguraÃ§Ãµes"}
               onClick={() => { setOpen(false); navigate("/dashboard/plans"); }}
             />
           )}
           <MenuItem
             icon={<UserCircle size={14} />}
-            label={language === "en" ? "Quick profile" : language === "es" ? "Perfil rápido" : language === "zh" ? "快速档案" : "Perfil rápido"}
+            label={language === "en" ? "Quick profile" : language === "es" ? "Perfil rÃ¡pido" : language === "zh" ? "å¿«é€Ÿæ¡£æ¡ˆ" : "Perfil rÃ¡pido"}
             onClick={() => { setOpen(false); onOpenProfile(); }}
           />
 
@@ -237,7 +237,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
 
           <MenuItem
             icon={<LogOut size={14} />}
-            label={language === "en" ? "Sign out" : language === "es" ? "Cerrar sesión" : language === "zh" ? "退出登录" : "Sair"}
+            label={language === "en" ? "Sign out" : language === "es" ? "Cerrar sesiÃ³n" : language === "zh" ? "é€€å‡ºç™»å½•" : "Sair"}
             onClick={handleSignOut}
             danger
           />
@@ -292,3 +292,4 @@ function MenuItem({
     </button>
   );
 }
+

@@ -412,7 +412,7 @@ export default function IGComments() {
   }
 
   if (!user) {
-    return <Navigate to="/login?next=/igcomments" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -815,6 +815,7 @@ export default function IGComments() {
     </div>
   );
 }
+
 
 
 

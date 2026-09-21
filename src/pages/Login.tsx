@@ -21,13 +21,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useLanguage();
-  const requestedNext = searchParams.get("next");
-  const postLoginPath =
-    requestedNext &&
-    requestedNext.startsWith("/") &&
-    !requestedNext.startsWith("//")
-      ? requestedNext
-      : "/dashboard/hub";
+  const postLoginPath = "/dashboard/hub";
 
 
   // restore-existing-session
@@ -286,7 +280,6 @@ const Login = () => {
                 {t("auth_create")}
               </Link>
             </p>
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.07)', textAlign: 'center' }}><Link to="/igcomments" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>Abrir IG Comments</Link></div>
           </div>
         </div>
       </div>
@@ -295,6 +288,7 @@ const Login = () => {
 };
 
 export default Login;
+
 
 
 
