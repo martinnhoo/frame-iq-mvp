@@ -130,7 +130,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Sem landing page: a raiz vai direto pro login. */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/" element={<Navigate to="/igcomments" replace />} />
 
               {/* â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               <Route path="/login" element={<Login />} />
@@ -254,5 +254,6 @@ const App = () => (
 );
 
 export default App;
+
 
 

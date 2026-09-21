@@ -22,6 +22,21 @@ const Login = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useLanguage();
 
+
+  // restore-existing-session
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) {
+        navigate("/igcomments", { replace: true });
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
   useEffect(() => {
     const oauthError = searchParams.get("oauth_error");
     if (!oauthError) return;
@@ -273,4 +288,5 @@ const Login = () => {
 };
 
 export default Login;
+
 
