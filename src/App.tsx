@@ -133,7 +133,7 @@ const App = () => (
               <Route path="/" element={<Navigate to="/igcomments" replace />} />
 
               {/* â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<Navigate to="/igcomments" replace />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/email-confirmed" element={<EmailConfirmed />} />
@@ -254,6 +254,7 @@ const App = () => (
 );
 
 export default App;
+
 
 
 

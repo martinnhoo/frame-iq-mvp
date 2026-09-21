@@ -82,7 +82,6 @@ export default function IGComments() {
   const [booting, setBooting] = useState(true);
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -206,22 +205,29 @@ export default function IGComments() {
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
 
+    if (!email.trim()) return;
+
     setLoginBusy(true);
 
     try {
-      const { data, error } = await igCommentsSupabase.auth.signInWithPassword({
+      const { error } = await igCommentsSupabase.auth.signInWithOtp({
         email: email.trim(),
-        password,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/igcomments`,
+        },
       });
 
       if (error) throw error;
-      if (!data.user) throw new Error("Usuário não retornado.");
 
-      setUser(data.user);
-      await loadWorkspace(data.user.id);
+      toast.success("Link de acesso enviado. Abra seu email para entrar.");
     } catch (error) {
       console.error(error);
-      toast.error(error instanceof Error ? error.message : "Falha no login.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar o link de acesso."
+      );
     } finally {
       setLoginBusy(false);
     }
@@ -465,7 +471,7 @@ export default function IGComments() {
             </h1>
 
             <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 18 }}>
-              Backend separado do AdBrief legado.
+              Entre com seu email para acessar o AdBrief.
             </p>
 
             <div style={{ display: "grid", gap: 10 }}>
@@ -478,22 +484,13 @@ export default function IGComments() {
                 required
               />
 
-              <input
-                style={inputStyle}
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Senha"
-                required
-              />
-
               <button
                 type="submit"
                 disabled={loginBusy}
                 style={{ ...btn, background: "#0ea5e9", color: "white" }}
               >
                 {loginBusy && <Loader2 size={15} className="animate-spin" />}
-                Entrar
+                Enviar link de acesso
               </button>
             </div>
           </form>
@@ -902,3 +899,4 @@ export default function IGComments() {
     </div>
   );
 }
+
