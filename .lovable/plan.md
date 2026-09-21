@@ -1,74 +1,39 @@
+# IG Comments workspace
 
-## 🔍 Problemas Identificados na UI/UX Atual
+## Goal
+Add a standalone, production-ready `/igcomments` workspace backed only by the active IG Comments project, while preserving every legacy dashboard path and its existing backend client.
 
-### 1. **Zero animações de entrada**
-- Todos os elementos aparecem estáticos. Não há fade-in, slide-up, ou qualquer motion design ao scrollar. Isso dá sensação de "template pronto" e não de produto premium.
+## Implementation
 
-### 2. **Hero sem impacto visual**
-- O headline "Talk to your ads" é forte mas a apresentação é plana — texto branco sobre fundo escuro, sem gradientes dramáticos, sem glow, sem elemento visual que "wow".
-- O badge "AI CONNECTED TO YOUR AD ACCOUNT" está num verde opaco sem destaque.
-- Falta um efeito de brilho/glow sutil no headline principal.
+1. **Isolated authentication client**
+   - Add `igCommentsSupabase` with the supplied active project URL and publishable key.
+   - Persist its session under `adbrief_igcomments_auth`, isolated from the legacy session.
+   - Leave the generated/default client unchanged.
 
-### 3. **Cards e seções sem profundidade**
-- Os cards usam `rgba(255,255,255,0.12)` — praticamente invisíveis. Não há glassmorphism, bordas iluminadas, ou hover effects sofisticados.
-- As seções são separadas apenas por uma borda fina quase invisível — falta ritmo visual.
+2. **Standalone route and login routing**
+   - Lazy-load `/igcomments` at the root router level, outside `AppLayout`.
+   - In Login, read and validate `next`; use the isolated client only when it points to `/igcomments`.
+   - Send Google OAuth back to `/igcomments`; after email login, navigate to the validated destination.
+   - Preserve normal dashboard login behavior exactly as-is.
+   - Convert legacy-client network failures into a clear backend-unavailable message without attempting cross-backend login.
+   - Add a subtle “IG Comments” link to the login screen.
 
-### 4. **Tipografia monótona**
-- Tudo usa Inter com variações mínimas de peso. Falta contraste tipográfico — usar Plus Jakarta Sans nos headlines para dar mais personalidade.
+3. **IG Comments workspace**
+   - Require an isolated IG Comments session and redirect signed-out visitors to `/login?next=/igcomments`.
+   - Load only the current user’s connected Instagram accounts and show label, handle, and connection status.
+   - Create/select ad targets with URL and optional brief, then load their existing drafts.
+   - Invoke `ig-comments-generate` with the ad URL, context, connected account labels, and a requested count of six.
+   - Persist the six returned drafts and render review controls: editable copy, intent, optional account assignment, status, Approve, Skip, and Copy.
+   - Support saving edits/account selection, clearing a target’s drafts, and deleting a target.
+   - Include scoped loading, empty, error, and disabled states plus concise toasts.
+   - Keep the product explicitly review-and-copy only; no automated posting or browser automation.
 
-### 5. **Ausência de micro-interações**
-- Botões sem hover animation premium (scale + glow)
-- Cards sem hover lift effect
-- Nenhum elemento com "pulse" ou "shimmer" que indique vida
+4. **Verification**
+   - Run focused TypeScript checks/tests through the project harness.
+   - Verify `/igcomments`, `/login?next=/igcomments`, and unchanged `/login` routing behavior in the browser at desktop and mobile sizes.
+   - Report the exact changed-file list and any backend/schema issue encountered.
 
-### 6. **Demo section sem destaque**
-- A demo interativa é o diferencial mas está apresentada como um card simples. Precisa de borda brilhante, sombra colorida, e animação ao interagir.
-
-### 7. **Stats section genérica**
-- Os números 30s, 90 dias, 7, Telegram aparecem sem animação de contagem, sem destaque visual.
-
-### 8. **Footer e CTA final fracos**
-- O CTA final é um card com gradiente roxo tímido. Precisa ser impactante — full-width, com glow, com urgência visual.
-
-### 9. **Sem efeitos de background**
-- Falta grid sutil, noise texture, gradientes radiais no fundo, ou partículas que dão sensação de "tech premium".
-
-### 10. **Cookie banner com emoji 🍪**
-- Contradiz a regra de "sem emojis" para estética premium.
-
----
-
-## 🎯 Plano de Ação (após aprovação)
-
-### Fase 1 — Foundation Premium
-- Adicionar CSS animations no `index.css`: fade-in-up, slide-in, glow-pulse, shimmer
-- Background com grid sutil + gradiente radial no hero
-- Noise texture overlay sutil
-
-### Fase 2 — Hero Upgrade
-- Headline com gradiente text brilhante + glow animado
-- Badge com animação pulse sutil
-- Stats com animated counter on scroll (Intersection Observer)
-- Botões com hover glow + scale
-
-### Fase 3 — Cards & Sections
-- Glass cards com `backdrop-filter: blur` + borda luminosa
-- Hover effects: lift + borda que brilha na cor do acento
-- Scroll-triggered fade-in-up em cada seção
-
-### Fase 4 — Demo Section
-- Borda com glow animado (gradient border rotation)
-- Typing animation nas respostas da IA
-- Sombra colorida dinâmica
-
-### Fase 5 — Pricing & CTA Final
-- Pricing cards com hover glow
-- Card "Most Popular" com animated gradient border
-- CTA final full-width com glow pulsante
-
-### Fase 6 — Polish
-- Smooth scroll entre seções
-- Cookie banner sem emoji, estilo premium
-- Preloader sutil no primeiro load
-
-**Escopo**: Apenas landing page (IndexNew.tsx + index.css). Sem alterar lógica de negócio.
+## Technical notes
+- Dynamic tables in the separate project will use a locally typed client boundary rather than modifying generated legacy database types.
+- `next` will be allowlisted to same-app `/igcomments` paths to prevent open redirects.
+- Database mutations remain scoped by both `user_id` filters and existing row-level security.
