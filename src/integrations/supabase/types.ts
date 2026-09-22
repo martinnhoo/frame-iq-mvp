@@ -7657,49 +7657,88 @@ export type Database = {
       ig_comment_accounts: {
         Row: {
           authorization_confirmed: boolean
+          avatar_name: string | null
+          avoid_topics: Json
           created_at: string
           daily_limit: number
           id: string
           instagram_username: string | null
           label: string
+          language: string
+          last_used_at: string | null
+          politics_mode: string
+          sample_comments: Json
+          social_account_id: string | null
           status: string
           tone: string | null
           updated_at: string
           user_id: string
+          voice_profile: Json
         }
         Insert: {
           authorization_confirmed?: boolean
+          avatar_name?: string | null
+          avoid_topics?: Json
           created_at?: string
           daily_limit?: number
           id?: string
           instagram_username?: string | null
           label: string
+          language?: string
+          last_used_at?: string | null
+          politics_mode?: string
+          sample_comments?: Json
+          social_account_id?: string | null
           status?: string
           tone?: string | null
           updated_at?: string
           user_id: string
+          voice_profile?: Json
         }
         Update: {
           authorization_confirmed?: boolean
+          avatar_name?: string | null
+          avoid_topics?: Json
           created_at?: string
           daily_limit?: number
           id?: string
           instagram_username?: string | null
           label?: string
+          language?: string
+          last_used_at?: string | null
+          politics_mode?: string
+          sample_comments?: Json
+          social_account_id?: string | null
           status?: string
           tone?: string | null
           updated_at?: string
           user_id?: string
+          voice_profile?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ig_comment_accounts_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "clip_social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ig_comment_drafts: {
         Row: {
           ai_generated: boolean
+          assignment_id: string | null
           comment_text: string
           created_at: string
+          failure_reason: string | null
           id: string
           intent: string
+          posted_at: string | null
+          provider_comment_id: string | null
+          queued_at: string | null
+          review_status: string
+          reviewed_at: string | null
           social_account_id: string | null
           status: string
           target_id: string
@@ -7708,10 +7747,17 @@ export type Database = {
         }
         Insert: {
           ai_generated?: boolean
+          assignment_id?: string | null
           comment_text: string
           created_at?: string
+          failure_reason?: string | null
           id?: string
           intent?: string
+          posted_at?: string | null
+          provider_comment_id?: string | null
+          queued_at?: string | null
+          review_status?: string
+          reviewed_at?: string | null
           social_account_id?: string | null
           status?: string
           target_id: string
@@ -7720,10 +7766,17 @@ export type Database = {
         }
         Update: {
           ai_generated?: boolean
+          assignment_id?: string | null
           comment_text?: string
           created_at?: string
+          failure_reason?: string | null
           id?: string
           intent?: string
+          posted_at?: string | null
+          provider_comment_id?: string | null
+          queued_at?: string | null
+          review_status?: string
+          reviewed_at?: string | null
           social_account_id?: string | null
           status?: string
           target_id?: string
@@ -7731,6 +7784,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ig_comment_drafts_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "ig_comment_target_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ig_comment_drafts_social_account_id_fkey"
             columns: ["social_account_id"]
@@ -7778,6 +7838,64 @@ export type Database = {
             columns: ["draft_id"]
             isOneToOne: false
             referencedRelation: "ig_comment_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ig_comment_target_accounts: {
+        Row: {
+          account_profile_id: string | null
+          created_at: string
+          id: string
+          selected: boolean
+          social_account_id: string
+          status: string
+          target_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_profile_id?: string | null
+          created_at?: string
+          id?: string
+          selected?: boolean
+          social_account_id: string
+          status?: string
+          target_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_profile_id?: string | null
+          created_at?: string
+          id?: string
+          selected?: boolean
+          social_account_id?: string
+          status?: string
+          target_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ig_comment_target_accounts_account_profile_id_fkey"
+            columns: ["account_profile_id"]
+            isOneToOne: false
+            referencedRelation: "ig_comment_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ig_comment_target_accounts_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "clip_social_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ig_comment_target_accounts_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "ig_comment_targets"
             referencedColumns: ["id"]
           },
         ]

@@ -9,7 +9,7 @@ const APP_ID = Deno.env.get("INSTAGRAM_APP_ID") || "";
 const APP_SECRET = Deno.env.get("INSTAGRAM_APP_SECRET") || "";
 const GRAPH_VERSION = Deno.env.get("META_GRAPH_VERSION") || "v25.0";
 const REDIRECT_URI = `${APP_URL}/dashboard/clips/connect/instagram/callback`;
-const SCOPES = ["instagram_business_basic", "instagram_business_content_publish"].join(",");
+const SCOPES = ["instagram_business_basic", "instagram_business_content_publish", "instagram_business_manage_comments"].join(",");
 
 async function currentUser(req: Request) {
   return await requireClipBridgeUser(req);
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
         username: ig.username || null,
         display_name: ig.name || ig.username || "Instagram",
         status: "active",
-        capabilities: { reels_publish: true, auth_mode: "instagram_login", graph_host: "graph.instagram.com" },
+        capabilities: { reels_publish: true, comments_manage: true, auth_mode: "instagram_login", graph_host: "graph.instagram.com" },
         token_expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
         connected_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
