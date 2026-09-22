@@ -184,24 +184,30 @@ export default function IGComments() {
   }, [drafts]);
 
   async function loadAccounts(uid: string) {
-    const [{ data: accountRows, error: accountsError }, { data: profileRows, error: profilesError }] =
-      await Promise.all([
-        igCommentsSupabase
-          .from("clip_social_accounts")
-          .select("id,username,display_name,status")
-          .eq("user_id", uid)
-          .eq("platform", "instagram")
-          .order("connected_at", { ascending: false }),
-        igCommentsSupabase
-          .from("ig_comment_accounts")
-          .select("social_account_id,tone")
-          .eq("user_id", uid),
-      ]);
+    const { data: accountRows, error: accountsError } = await igCommentsSupabase
+      .from("clip_social_accounts")
+      .select("id,username,display_name,status")
+      .eq("user_id", uid)
+      .eq("platform", "instagram")
+      .order("connected_at", { ascending: false });
 
     if (accountsError) throw accountsError;
-    if (profilesError) throw profilesError;
 
+    // Connected accounts are the primary source. A secondary profile/tone
+    // failure must never hide an actually connected Instagram account.
     setAccounts((accountRows ?? []) as Account[]);
+
+    const { data: profileRows, error: profilesError } = await igCommentsSupabase
+      .from("ig_comment_accounts")
+      .select("social_account_id,tone")
+      .eq("user_id", uid);
+
+    if (profilesError) {
+      console.warn("[IGComments] account profiles:", profilesError);
+      setAccountProfiles([]);
+      return;
+    }
+
     setAccountProfiles((profileRows ?? []) as AccountProfile[]);
   }
 
@@ -777,6 +783,61 @@ export default function IGComments() {
                   ))
                 )}
               </div>
+            </section>
+
+            <section style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <div style={{ fontWeight: 800, flex: 1 }}>Contas conectadas</div>
+                <span style={{ color: "#7dd3fc", fontSize: 11 }}>{accounts.length}</span>
+              </div>
+
+              {accounts.length === 0 ? (
+                <div style={{ color: "#64748b", fontSize: 12 }}>
+                  Nenhuma conta Instagram conectada.
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 7 }}>
+                  {accounts.map((account) => (
+                    <div
+                      key={account.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 9,
+                        padding: 10,
+                        borderRadius: 10,
+                        border: "1px solid rgba(148,163,184,.08)",
+                        background: "rgba(2,6,23,.45)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: "50%",
+                          background: "rgba(14,165,233,.12)",
+                          display: "grid",
+                          placeItems: "center",
+                          color: "#7dd3fc",
+                          fontWeight: 800,
+                          fontSize: 12,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {(account.username || account.display_name || "IG").slice(0, 1).toUpperCase()}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 12 }}>
+                          @{accountLabel(account)}
+                        </div>
+                        <div style={{ color: "#64748b", fontSize: 10 }}>
+                          {account.display_name || "Instagram"} · {account.status}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           </aside>
 
