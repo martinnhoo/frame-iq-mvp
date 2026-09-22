@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { igCommentsSupabase } from "@/integrations/supabase/igCommentsClient";
+import type { Database } from "@/integrations/supabase/types";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import {
@@ -29,15 +30,7 @@ type AccountProfile = {
   tone: string | null;
 };
 
-type Target = {
-  id: string;
-  user_id: string;
-  ad_url: string;
-  label: string | null;
-  context: string | null;
-  status: string;
-  created_at: string;
-};
+type Target = Database["public"]["Tables"]["ig_comment_targets"]["Row"];
 
 type AssignmentStatus =
   | "selected"
@@ -138,8 +131,8 @@ export default function IGComments() {
 
   const [adUrl, setAdUrl] = useState("");
   const [label, setLabel] = useState("");
-  const [context, setContext] = useState("");
   const [creating, setCreating] = useState(false);
+  const [inspectingTargetId, setInspectingTargetId] = useState<string | null>(null);
   const [savingSelection, setSavingSelection] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [bulkReviewing, setBulkReviewing] = useState(false);
@@ -396,6 +389,29 @@ export default function IGComments() {
     }
   }
 
+  async function inspectTarget(target: Target): Promise<Target> {
+    setInspectingTargetId(target.id);
+    try {
+      const { data, error } = await igCommentsSupabase.functions.invoke("ig-comments-inspect", {
+        body: { target_id: target.id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data?.message || data.error);
+
+      const updated = data?.target as Target | undefined;
+      if (!updated) throw new Error("A análise da publicação não retornou dados.");
+
+      setTargets((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+
+      return updated;
+    } finally {
+      setInspectingTargetId((current) => (current === target.id ? null : current));
+    }
+  }
+
   async function createTarget(event: FormEvent) {
     event.preventDefault();
     if (!user || !adUrl.trim()) return;
@@ -408,7 +424,7 @@ export default function IGComments() {
           user_id: user.id,
           ad_url: adUrl.trim(),
           label: label.trim() || null,
-          context: context.trim() || null,
+          context: null,
           status: "active",
         })
         .select("*")
@@ -421,9 +437,19 @@ export default function IGComments() {
       setTargetId(target.id);
       setAdUrl("");
       setLabel("");
-      setContext("");
       setSelectedAccountIds(new Set());
-      toast.success("Publicação adicionada.");
+
+      try {
+        await inspectTarget(target);
+        toast.success("Publicação adicionada e analisada.");
+      } catch (inspectionError) {
+        console.error(inspectionError);
+        toast.error(
+          inspectionError instanceof Error
+            ? inspectionError.message
+            : "Publicação adicionada, mas o link não pôde ser analisado.",
+        );
+      }
     } catch (error) {
       console.error(error);
       toast.error(error instanceof Error ? error.message : "Erro ao adicionar publicação.");
@@ -441,6 +467,15 @@ export default function IGComments() {
 
     setGenerating(true);
     try {
+      const readyTarget =
+        selectedTarget.inspection_status === "ready"
+          ? selectedTarget
+          : await inspectTarget(selectedTarget);
+
+      if (readyTarget.inspection_status !== "ready") {
+        throw new Error("Não consegui analisar esta publicação pelo link.");
+      }
+
       const activeAssignments = await persistSelection();
       if (!activeAssignments.length) throw new Error("Nenhuma conta selecionada.");
 
@@ -459,8 +494,7 @@ export default function IGComments() {
 
       const { data, error } = await igCommentsSupabase.functions.invoke("ig-comments-generate", {
         body: {
-          ad_url: selectedTarget.ad_url,
-          context: selectedTarget.context || "",
+          target_id: readyTarget.id,
           assignments: assignmentPayload,
         },
       });
@@ -483,7 +517,7 @@ export default function IGComments() {
 
           return {
             user_id: user.id,
-            target_id: selectedTarget.id,
+            target_id: readyTarget.id,
             assignment_id: assignment.id,
             social_account_id: socialAccountId,
             comment_text: text,
@@ -525,7 +559,7 @@ export default function IGComments() {
         if (assignmentError) throw assignmentError;
       }
 
-      await loadTargetWorkspace(user.id, selectedTarget.id);
+      await loadTargetWorkspace(user.id, readyTarget.id);
       const missingCount = Array.isArray(data?.missing) ? data.missing.length : 0;
       toast.success(
         `${rows.length} comentário${rows.length === 1 ? "" : "s"} gerado${rows.length === 1 ? "" : "s"}${
@@ -748,7 +782,9 @@ export default function IGComments() {
               <div style={{ display: "grid", gap: 8 }}>
                 <input style={inputStyle} value={adUrl} onChange={(e) => setAdUrl(e.target.value)} placeholder="URL da publicação" required />
                 <input style={inputStyle} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Nome interno" />
-                <textarea style={{ ...inputStyle, minHeight: 80 }} value={context} onChange={(e) => setContext(e.target.value)} placeholder="Contexto para a IA" />
+                <div style={{ color: "#64748b", fontSize: 11 }}>
+                  Cole só o link. O AdBrief lê e analisa a publicação automaticamente.
+                </div>
                 <button disabled={creating} style={{ ...btn, background: "#0ea5e9", color: "white" }}>
                   {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Adicionar
                 </button>
@@ -857,11 +893,74 @@ export default function IGComments() {
                       <a href={selectedTarget.ad_url} target="_blank" rel="noreferrer" style={{ color: "#38bdf8", fontSize: 11 }}>
                         {selectedTarget.ad_url}
                       </a>
-                      {selectedTarget.context && <div style={{ marginTop: 8, color: "#94a3b8", fontSize: 12 }}>{selectedTarget.context}</div>}
+                      <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color:
+                              selectedTarget.inspection_status === "ready"
+                                ? "#86efac"
+                                : selectedTarget.inspection_status === "failed"
+                                  ? "#fca5a5"
+                                  : "#fbbf24",
+                          }}
+                        >
+                          {inspectingTargetId === selectedTarget.id
+                            ? "Analisando link..."
+                            : selectedTarget.inspection_status === "ready"
+                              ? "Publicação analisada"
+                              : selectedTarget.inspection_status === "failed"
+                                ? "Falha ao ler publicação"
+                                : "Aguardando análise"}
+                        </span>
+                        {selectedTarget.source_username && (
+                          <span style={{ color: "#94a3b8", fontSize: 11 }}>
+                            @{selectedTarget.source_username}
+                          </span>
+                        )}
+                      </div>
+
+                      {selectedTarget.source_caption && (
+                        <div style={{ marginTop: 8, color: "#cbd5e1", fontSize: 12, lineHeight: 1.5 }}>
+                          {selectedTarget.source_caption.slice(0, 500)}
+                        </div>
+                      )}
+
+                      {selectedTarget.visual_summary && (
+                        <div style={{ marginTop: 8, color: "#94a3b8", fontSize: 11, lineHeight: 1.5 }}>
+                          {selectedTarget.visual_summary}
+                        </div>
+                      )}
+
+                      {selectedTarget.inspection_status === "failed" && selectedTarget.inspection_error && (
+                        <div style={{ marginTop: 8, color: "#fca5a5", fontSize: 11 }}>
+                          {selectedTarget.inspection_error}
+                        </div>
+                      )}
                     </div>
-                    <button onClick={clearTarget} style={{ ...btn, color: "#fca5a5", background: "rgba(239,68,68,.08)" }}>
-                      <Trash2 size={14} /> Excluir
-                    </button>
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button
+                        onClick={() =>
+                          inspectTarget(selectedTarget).catch((error) =>
+                            toast.error(error instanceof Error ? error.message : "Erro ao analisar publicação."),
+                          )
+                        }
+                        disabled={inspectingTargetId === selectedTarget.id}
+                        style={{ ...btn, color: "#7dd3fc", background: "rgba(14,165,233,.10)" }}
+                      >
+                        {inspectingTargetId === selectedTarget.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <RefreshCw size={14} />
+                        )}
+                        Reanalisar link
+                      </button>
+
+                      <button onClick={clearTarget} style={{ ...btn, color: "#fca5a5", background: "rgba(239,68,68,.08)" }}>
+                        <Trash2 size={14} /> Excluir
+                      </button>
+                    </div>
                   </div>
                 </section>
 
@@ -914,7 +1013,7 @@ export default function IGComments() {
                   <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <button
                       onClick={generateForSelectedAccounts}
-                      disabled={generating || selectedAccountIds.size === 0}
+                      disabled={generating || inspectingTargetId === selectedTarget.id || selectedAccountIds.size === 0}
                       style={{ ...btn, background: "#8b5cf6", color: "white" }}
                     >
                       {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}

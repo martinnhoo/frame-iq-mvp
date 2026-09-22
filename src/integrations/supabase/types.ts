@@ -7903,35 +7903,94 @@ export type Database = {
       ig_comment_targets: {
         Row: {
           ad_url: string
+          analysis_snapshot: Json
           context: string | null
+          conversation_summary: string | null
           created_at: string
           id: string
+          inspected_at: string | null
+          inspection_error: string | null
+          inspection_status: string
           label: string | null
+          manual_caption: string | null
+          manual_comments: string | null
+          manual_image_url: string | null
+          source_caption: string | null
+          source_comments: Json
+          source_media_id: string | null
+          source_media_type: string | null
+          source_media_url: string | null
+          source_social_account_id: string | null
+          source_thumbnail_url: string | null
+          source_username: string | null
           status: string
           updated_at: string
           user_id: string
+          visual_summary: string | null
         }
         Insert: {
           ad_url: string
+          analysis_snapshot?: Json
           context?: string | null
+          conversation_summary?: string | null
           created_at?: string
           id?: string
+          inspected_at?: string | null
+          inspection_error?: string | null
+          inspection_status?: string
           label?: string | null
+          manual_caption?: string | null
+          manual_comments?: string | null
+          manual_image_url?: string | null
+          source_caption?: string | null
+          source_comments?: Json
+          source_media_id?: string | null
+          source_media_type?: string | null
+          source_media_url?: string | null
+          source_social_account_id?: string | null
+          source_thumbnail_url?: string | null
+          source_username?: string | null
           status?: string
           updated_at?: string
           user_id: string
+          visual_summary?: string | null
         }
         Update: {
           ad_url?: string
+          analysis_snapshot?: Json
           context?: string | null
+          conversation_summary?: string | null
           created_at?: string
           id?: string
+          inspected_at?: string | null
+          inspection_error?: string | null
+          inspection_status?: string
           label?: string | null
+          manual_caption?: string | null
+          manual_comments?: string | null
+          manual_image_url?: string | null
+          source_caption?: string | null
+          source_comments?: Json
+          source_media_id?: string | null
+          source_media_type?: string | null
+          source_media_url?: string | null
+          source_social_account_id?: string | null
+          source_thumbnail_url?: string | null
+          source_username?: string | null
           status?: string
           updated_at?: string
           user_id?: string
+          visual_summary?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ig_comment_targets_source_social_account_id_fkey"
+            columns: ["source_social_account_id"]
+            isOneToOne: false
+            referencedRelation: "clip_social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invite_codes: {
         Row: {
