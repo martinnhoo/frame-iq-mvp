@@ -265,6 +265,8 @@ export default function IGComments() {
     await Promise.all([loadAccounts(uid), loadTargets(uid)]);
   }
 
+  // The initial workspace load intentionally runs only when this page mounts.
+  // Subsequent target changes are handled by the dedicated effect below.
   useEffect(() => {
     let alive = true;
 
@@ -295,6 +297,7 @@ export default function IGComments() {
       alive = false;
       subscription.unsubscribe();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -564,7 +567,7 @@ export default function IGComments() {
       toast.success(
         `${rows.length} comentário${rows.length === 1 ? "" : "s"} gerado${rows.length === 1 ? "" : "s"}${
           missingCount ? ` · ${missingCount} conta(s) sem resposta` : ""
-        }.` ,
+        }.`,
       );
     } catch (error) {
       console.error(error);
