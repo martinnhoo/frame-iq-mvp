@@ -267,7 +267,6 @@ export default function IGComments() {
 
   // The initial workspace load intentionally runs only when this page mounts.
   // Subsequent target changes are handled by the dedicated effect below.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     let alive = true;
 
@@ -298,6 +297,7 @@ export default function IGComments() {
       alive = false;
       subscription.unsubscribe();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
